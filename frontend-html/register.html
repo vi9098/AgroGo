@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriGo — नया किसान पंजीकरण (Farmer Registration)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .reg-hero {
+      background: var(--page-banner, linear-gradient(135deg, #1C3D12 0%, #2E5D1E 60%, #4C8C35 100%));
+      padding: 28px 24px;
+      color: #FFF;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(46, 93, 30, 0.15);
+    }
+    .reg-hero::after {
+      content: "🌱";
+      position: absolute;
+      right: 30px;
+      bottom: -15px;
+      font-size: 130px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .reg-container {
+      max-width: 760px;
+      margin: 30px auto 60px auto;
+      padding: 0 20px;
+    }
+    .reg-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-lg, 24px);
+      padding: 32px 30px;
+      box-shadow: var(--sh-md);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; gap: 12px; }
+      .reg-card { padding: 22px 18px; }
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 12px 0;
+      padding-bottom: 6px;
+      border-bottom: 1.5px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title:first-of-type { margin-top: 0; }
+  </style>
+</head>
+<body class="theme-farmer" data-page="farmer">
+
+  <!-- Universal Header -->
+  <div id="site-header-mount"></div>
+
+  <!-- Hero Banner -->
+  <div class="reg-hero">
+    <div style="max-width: 1100px; margin: 0 auto;">
+      <div style="display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.22); padding:4px 14px; border-radius:var(--r-full, 999px); font-size:11.5px; font-weight:600; margin-bottom:10px;">
+        🌾 निःशुल्क डिजिटल किसान खाता • Smart Krishi Portal
+      </div>
+      <h1 style="font-size: 26px; font-weight: 900; margin-bottom: 6px;">🌱 नया किसान पंजीकरण पोर्टल</h1>
+      <p style="font-size: 13.5px; opacity: 0.92; max-width: 640px; line-height: 1.55;">
+        अपने खेत और फसल की सटीक जानकारी दर्ज करें ताकि AgriGo AI आपकी मिट्टी, मौसम और स्थानीय मंडी के अनुसार सर्वोत्तम सलाह दे सके।
+      </p>
+    </div>
+  </div>
+
+  <main class="reg-container">
+    <div class="reg-card">
+      <form id="farmer-register-form" onsubmit="handleRegistrationSubmit(event)">
+
+        <!-- Personal Info -->
+        <div class="section-title">
+          <span>👤</span> व्यक्तिगत जानकारी (Personal Details)
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">किसान का पूरा नाम <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="reg-name" class="form-input" required placeholder="उदा. रामेश सिंह" minlength="2">
+          </div>
+          <div class="form-group">
+            <label class="form-label">10-अंकों का मोबाइल नंबर <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="reg-phone" class="form-input" required placeholder="उदा. 9876543210" pattern="[0-9]{10}" maxlength="10">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">पासवर्ड बनाएं (कम से कम 6 अक्षर) <span style="color:var(--danger)">*</span></label>
+          <input type="password" id="reg-password" class="form-input" required placeholder="••••••••" minlength="6">
+        </div>
+
+        <!-- Location Info with Cascading State & District -->
+        <div class="section-title">
+          <span>📍</span> स्थान विवरण (Select State & District)
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">राज्य (State) <span style="color:var(--danger)">*</span></label>
+            <select id="reg-state" class="form-select" required>
+              <option value="">-- राज्य चुनें (Select State) --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">जिला (District) <span style="color:var(--danger)">*</span></label>
+            <select id="reg-district" class="form-select" required disabled>
+              <option value="">-- पहले राज्य चुनें --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">तहसील / गांव का नाम</label>
+          <input type="text" id="reg-village" class="form-input" placeholder="उदा. रामपुर, तहसील सदर">
+        </div>
+
+        <!-- Farm & Agricultural Details -->
+        <div class="section-title">
+          <span>🚜</span> खेत व फसल विवरण (Farm & Crop Details)
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">खेत का कुल क्षेत्रफल (एकड़ में) <span style="color:var(--danger)">*</span></label>
+            <input type="number" id="reg-farm-area" class="form-input" required step="0.1" min="0.1" max="1000" placeholder="उदा. 3.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">वर्तमान मुख्य फसल <span style="color:var(--danger)">*</span></label>
+            <select id="reg-primary-crop" class="form-select" required>
+              <option value="">-- फसल चुनें --</option>
+              <option value="गेहूं (Wheat)">गेहूं (Wheat)</option>
+              <option value="धान / चावल (Paddy/Rice)">धान / चावल (Paddy/Rice)</option>
+              <option value="कपास (Cotton)">कपास (Cotton)</option>
+              <option value="सरसों (Mustard)">सरसों (Mustard)</option>
+              <option value="मक्का (Maize)">मक्का (Maize)</option>
+              <option value="गन्ना (Sugarcane)">गन्ना (Sugarcane)</option>
+              <option value="चना (Gram/Chickpea)">चना (Gram/Chickpea)</option>
+              <option value="सोयाबीन (Soybean)">सोयाबीन (Soybean)</option>
+              <option value="टमाटर (Tomato)">टमाटर (Tomato)</option>
+              <option value="आलू (Potato)">आलू (Potato)</option>
+              <option value="प्याज (Onion)">प्याज (Onion)</option>
+              <option value="मिर्च (Chilli)">मिर्च (Chilli)</option>
+              <option value="अन्य सब्जी/फल">अन्य सब्जी / फल</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">मिट्टी का प्रकार (Soil Type)</label>
+            <select id="reg-soil" class="form-select">
+              <option value="जलोढ़ मिट्टी (Alluvial Soil)">जलोढ़ मिट्टी (Alluvial Soil)</option>
+              <option value="काली मिट्टी (Black Soil / Regur)">काली मिट्टी (Black Soil / Regur)</option>
+              <option value="दोमट मिट्टी (Loamy Soil)">दोमट मिट्टी (Loamy Soil)</option>
+              <option value="लाल व पीली मिट्टी (Red & Yellow Soil)">लाल व पीली मिट्टी (Red Soil)</option>
+              <option value="बलुई / रेतीली मिट्टी (Sandy Soil)">बलुई / रेतीली मिट्टी (Sandy Soil)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">सिंचाई का मुख्य साधन (Irrigation Facility)</label>
+            <select id="reg-irrigation" class="form-select">
+              <option value="ट्यूबवेल / सबमर्सिबल (Borewell)">ट्यूबवेल / सबमर्सिबल (Borewell)</option>
+              <option value="सरकारी / निजी नहर (Canal)">सरकारी / निजी नहर (Canal)</option>
+              <option value="ड्रिप / स्प्रिंकलर (Drip/Micro)">ड्रिप / स्प्रिंकलर (Micro Irrigation)</option>
+              <option value="तालाब / नदी (Pond/River)">तालाब / नदी (Surface Water)</option>
+              <option value="पूर्णतः वर्षा-आधारित (Rainfed)">पूर्णतः वर्षा-आधारित (Rainfed)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <button type="submit" id="btn-submit-reg" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 800;">
+            🌾 पंजीकरण पूर्ण करें और पोर्टल में प्रवेश करें ➔
+          </button>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 13px; color: var(--text-muted);">
+          पहले से पंजीकृत हैं? <a href="farmer-login.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">यहाँ लॉगिन करें</a>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/locations.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize Cascading State -> District Dropdowns
+      setupCascadingStateDistrict("reg-state", "reg-district", {
+        defaultState: "उत्तर प्रदेश (Uttar Pradesh)",
+        defaultDistrict: "वाराणसी (Varanasi)"
+      });
+    });
+
+    async function handleRegistrationSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-reg");
+      btn.innerText = "पंजीकरण हो रहा है...";
+      btn.disabled = true;
+
+      const name = document.getElementById("reg-name").value.trim();
+      const phone = document.getElementById("reg-phone").value.trim();
+      const password = document.getElementById("reg-password").value.trim();
+      const state = document.getElementById("reg-state").value;
+      const district = document.getElementById("reg-district").value;
+      const village = document.getElementById("reg-village").value.trim() || "Rampur";
+      const farm_area = parseFloat(document.getElementById("reg-farm-area").value) || 2.5;
+      const primary_crop = document.getElementById("reg-primary-crop").value;
+      const soil_type = document.getElementById("reg-soil").value;
+      const irrigation_type = document.getElementById("reg-irrigation").value;
+
+      try {
+        const payload = {
+          name,
+          phone,
+          password,
+          state,
+          district,
+          village,
+          farm_area,
+          primary_crop,
+          soil_type,
+          irrigation_type,
+          preferred_language: "hi"
+        };
+
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || data.message || "पंजीकरण में त्रुटि हुई।");
+        }
+
+        alert("पंजीकरण सफल! AgriGo किसान पोर्टल में आपका स्वागत है।");
+        window.location.href = "farmer.html";
+      } catch (err) {
+        alert("पंजीकरण विफल: " + err.message);
+        btn.innerText = "🌾 पंजीकरण पूर्ण करें और पोर्टल में प्रवेश करें ➔";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

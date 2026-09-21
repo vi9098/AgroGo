@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/health", "destination": "/api/index.py" },
+    { "source": "/docs", "destination": "/api/index.py" },
+    { "source": "/openapi.json", "destination": "/api/index.py" },
+    { "source": "/frontend-html/(.*)", "destination": "/frontend-html/$1" },
+    { "source": "/css/(.*)", "destination": "/frontend-html/css/$1" },
+    { "source": "/js/(.*)", "destination": "/frontend-html/js/$1" },
+    { "source": "/favicon.ico", "destination": "/frontend-html/favicon.ico" },
+    { "source": "/favicon.png", "destination": "/frontend-html/favicon.png" },
+    { "source": "/favicon.svg", "destination": "/frontend-html/favicon.svg" },
+    { "source": "/", "destination": "/frontend-html/index.html" },
+    { "source": "/((?!api/|health|docs|openapi.json).*)", "destination": "/frontend-html/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ]
+}

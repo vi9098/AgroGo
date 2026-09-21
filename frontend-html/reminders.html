@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>AgriGo — स्मार्ट कृषि अनुस्मारक डैशबोर्ड | Sunrise Saffron Theme</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── REMINDERS PAGE: Dynamic Time-Management & Agriculture Background ── */
+    body.theme-reminders {
+      --page-banner: linear-gradient(135deg, #7A3E00 0%, #B45309 45%, #D97706 100%);
+      background-color: #FFFDF8;
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 15% 85%, rgba(180, 83, 9, 0.06) 0%, transparent 45%),
+        linear-gradient(180deg, #FFFDF8 0%, #FEF3C7 100%);
+      transition: background 0.6s ease;
+      position: relative;
+    }
+
+    /* Dynamic Category Shifting Backgrounds */
+    body.theme-reminders.cat-irrigation {
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%);
+    }
+    body.theme-reminders.cat-fertilizer {
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #FFFDF5 0%, #FEF3C7 100%);
+    }
+    body.theme-reminders.cat-pest {
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(220, 38, 38, 0.1) 0%, transparent 45%),
+        linear-gradient(180deg, #FFF8F8 0%, #FEE2E2 100%);
+    }
+    body.theme-reminders.cat-weeding {
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(22, 163, 74, 0.1) 0%, transparent 45%),
+        linear-gradient(180deg, #F0FDF4 0%, #DCFCE7 100%);
+    }
+    body.theme-reminders.cat-harvest {
+      background-image: 
+        radial-gradient(circle at 85% 15%, rgba(180, 83, 9, 0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #FFFDF5 0%, #FFEDD5 100%);
+    }
+
+    /* Subtle Animated Clock Watermark in Hero */
+    .rem-hero {
+      background: var(--page-banner);
+      padding: 26px 24px;
+      color: #FFF;
+      position: relative; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(180, 83, 9, 0.2);
+    }
+    .rem-clock-visual {
+      position: absolute; right: 24px; top: -10px; width: 140px; height: 140px;
+      border: 3px dashed rgba(255, 255, 255, 0.15); border-radius: 50%;
+      pointer-events: none; animation: clockSpin 60s linear infinite;
+    }
+    .rem-clock-hand {
+      position: absolute; top: 50%; left: 50%; width: 2px; height: 48px;
+      background: rgba(255, 255, 255, 0.35); transform-origin: top center;
+      animation: clockHandTick 12s linear infinite;
+    }
+    @keyframes clockSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes clockHandTick { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Category stats bar */
+    .cat-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .cat-stat {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 14px 16px;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .cat-stat:hover { transform: translateY(-2px); box-shadow: var(--sh-md); }
+    .cat-stat.active-filter { border-width: 2px; }
+
+    .cat-stat-num {
+      font-size: 26px; font-weight: 900;
+      display: block; margin-top: 2px;
+    }
+
+    .cat-stat-lbl {
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.4px; margin-top: 2px;
+    }
+
+    /* NLP input bar */
+    .nlp-bar {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--sh-sm);
+    }
+
+    /* Reminder card type accent */
+    .rem-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E5E7EB;
+      border-radius: var(--r-md);
+      padding: 16px 18px;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .rem-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    
+    .rem-card.rem-irrigation { border-left: 5px solid #0284C7; background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%); }
+    .rem-card.rem-fertilizer { border-left: 5px solid #D97706; background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%); }
+    .rem-card.rem-pest { border-left: 5px solid #DC2626; background: linear-gradient(180deg, #FFFFFF 0%, #FEF2F2 100%); }
+    .rem-card.rem-weeding { border-left: 5px solid #16A34A; background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%); }
+    .rem-card.rem-harvest { border-left: 5px solid #B45309; background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF5 100%); }
+    .rem-card.rem-general { border-left: 5px solid #64748B; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%); }
+    .rem-card.rem-done { opacity: 0.65; border-left: 5px solid #9CA3AF; background: #F9FAFB; }
+
+    .rem-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .rem-type-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .rem-irrigation .rem-type-icon { background: #E0F2FE; color: #0369A1; }
+    .rem-fertilizer .rem-type-icon { background: #FEF3C7; color: #B45309; }
+    .rem-pest .rem-type-icon { background: #FEE2E2; color: #B91C1C; }
+    .rem-weeding .rem-type-icon { background: #DCFCE7; color: #15803D; }
+    .rem-harvest .rem-type-icon { background: #FFEDD5; color: #C2410C; }
+    .rem-general .rem-type-icon { background: #F1F5F9; color: #475569; }
+
+    .badge-urgency {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .badge-overdue {
+      background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5;
+      animation: remPulse 2s infinite ease-in-out;
+    }
+    .badge-today {
+      background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D;
+      font-weight: 800;
+    }
+    .badge-upcoming {
+      background: #E0F2FE; color: #0284C7; border: 1px solid #BAE6FD;
+    }
+    .badge-completed {
+      background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC;
+    }
+
+    @keyframes remPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+
+    .rem-actions {
+      display: flex; gap: 8px; margin-top: 12px;
+      padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06);
+      justify-content: flex-end;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      grid-column: 1 / -1;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      background: #FFFFFF;
+      border-radius: var(--r-md);
+      border: 1.5px dashed var(--border);
+    }
+
+    .empty-state-icon {
+      font-size: 56px; display: block; margin-bottom: 14px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body class="theme-reminders" data-page="reminders">
+
+  <!-- Universal Header -->
+  <div id="site-header-mount"></div>
+
+  <!-- Page Hero Banner -->
+  <div class="rem-hero">
+    <div class="rem-clock-visual"><div class="rem-clock-hand"></div></div>
+    <div style="max-width:1140px; margin:0 auto; position:relative; z-index:2;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); padding:4px 13px; border-radius:var(--r-full); font-size:11.5px; font-weight:600; margin-bottom:10px;">
+            🌧️ मौसम-आधारित AI अनुस्मारक प्रणाली
+          </div>
+          <h1 style="font-size:24px; font-weight:900; margin-bottom:5px;">⏰ स्मार्ट कृषि अनुस्मारक डैशबोर्ड</h1>
+          <p id="weather-banner-desc" style="font-size:13px; opacity:0.9; max-width:540px; line-height:1.55;">
+            स्थानीय मौसम पूर्वानुमान के अनुसार आपकी सिंचाई और छिड़काव की तारीखें स्वतः समायोजित की जाती हैं।
+          </p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a href="mandi.html" class="btn btn-harvest" style="font-weight:700;">💰 मंडी भाव जांचें</a>
+          <button class="btn" style="background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.3); color:#FFF; font-weight:700;" onclick="openAddModal()">
+            + नया अनुस्मारक
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <!-- NLP Quick Add Bar -->
+    <div class="nlp-bar">
+      <label style="font-size:13px; font-weight:700; display:block; margin-bottom:8px; color:var(--primary);">
+        🗣️ बोलकर या लिखकर रिमाइंडर जोड़ें (AI Natural Language Scheduler):
+      </label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="text" id="nl-input" class="form-input" placeholder="उदा. 'हर रविवार गेहूं चेक करना' या 'कल शाम टमाटर में पानी देना'..." style="flex:1; min-width:200px;">
+        <button class="btn btn-primary" style="white-space:nowrap;" onclick="handleQuickAddNLP()">⚡ रिमाइंडर लगाएं ➔</button>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='कल सुबह 6 बजे गेहूं में पानी देना'; handleQuickAddNLP()">💧 गेहूं सिंचाई कल</button>
+        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='अगले हफ्ते यूरिया डालना'; handleQuickAddNLP()">🌱 यूरिया अगले हफ्ते</button>
+        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='हर शनिवार कीट निरीक्षण करना'; handleQuickAddNLP()">🔍 साप्ताहिक कीट जांच</button>
+      </div>
+    </div>
+
+    <!-- Category Stats Bar -->
+    <div class="cat-bar">
+      <div class="cat-stat" style="border-bottom:3px solid #0288D1;" onclick="filterReminders('irrigation', this)">
+        <div style="font-size:22px;">💧</div>
+        <span class="cat-stat-num" id="count-irrigation" style="color:#0288D1;">0</span>
+        <span class="cat-stat-lbl">सिंचाई (Irrigation)</span>
+      </div>
+      <div class="cat-stat" style="border-bottom:3px solid #2E7D32;" onclick="filterReminders('fertilizer', this)">
+        <div style="font-size:22px;">🌱</div>
+        <span class="cat-stat-num" id="count-fertilizer" style="color:#2E7D32;">0</span>
+        <span class="cat-stat-lbl">खाद / उर्वरक</span>
+      </div>
+      <div class="cat-stat" style="border-bottom:3px solid #E65100;" onclick="filterReminders('pest', this)">
+        <div style="font-size:22px;">🔍</div>
+        <span class="cat-stat-num" id="count-pest" style="color:#E65100;">0</span>
+        <span class="cat-stat-lbl">कीट निरीक्षण</span>
+      </div>
+      <div class="cat-stat" style="border-bottom:3px solid #7B1FA2;" onclick="filterReminders('weeding', this)">
+        <div style="font-size:22px;">🌿</div>
+        <span class="cat-stat-num" id="count-weeding" style="color:#7B1FA2;">0</span>
+        <span class="cat-stat-lbl">निराई-गुड़ाई</span>
+      </div>
+      <div class="cat-stat" style="border-bottom:3px solid var(--gold);" onclick="filterReminders('harvest', this)">
+        <div style="font-size:22px;">🌾</div>
+        <span class="cat-stat-num" id="count-harvest" style="color:var(--gold);">0</span>
+        <span class="cat-stat-lbl">कटाई / फसल</span>
+      </div>
+      <div class="cat-stat" style="border-bottom:3px solid #757575;" onclick="filterReminders('completed', this)">
+        <div style="font-size:22px;">✅</div>
+        <span class="cat-stat-num" id="count-completed" style="color:#757575;">0</span>
+        <span class="cat-stat-lbl">पूर्ण कार्य</span>
+      </div>
+    </div>
+
+    <!-- Filter Chips Row -->
+    <div class="section-head">
+      <div class="section-title">📋 कृषि कार्य सूची</div>
+      <div class="filter-chips">
+        <button class="filter-chip active" onclick="filterReminders('all', this)">🔖 सभी</button>
+        <button class="filter-chip" onclick="filterReminders('irrigation', this)">💧 सिंचाई</button>
+        <button class="filter-chip" onclick="filterReminders('fertilizer', this)">🌱 खाद</button>
+        <button class="filter-chip" onclick="filterReminders('pest', this)">🔍 कीट</button>
+        <button class="filter-chip" onclick="filterReminders('weeding', this)">🌿 निराई</button>
+        <button class="filter-chip" onclick="filterReminders('harvest', this)">🌾 कटाई</button>
+        <button class="filter-chip" onclick="filterReminders('completed', this)">✅ पूर्ण</button>
+      </div>
+    </div>
+
+    <!-- Reminders Grid -->
+    <div class="rem-grid" id="reminders-grid" style="margin-top:16px;">
+      <div style="text-align:center; grid-column:1/-1; padding:40px; color:var(--text-muted);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">⏰</span>
+        कृषि अनुस्मारक लोड हो रहे हैं...
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add Reminder Modal -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h3 style="font-size:18px; font-weight:800; color:var(--primary);">+ नया कृषि अनुस्मारक</h3>
+        <button onclick="closeAddModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">कार्य का नाम (Title)</label>
+        <input type="text" id="m-title" class="form-input" placeholder="उदा. गेहूं पहली सिंचाई (CRI Stage)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">श्रेणी (Category)</label>
+        <select id="m-type" class="form-select">
+          <option value="irrigation">💧 सिंचाई (Irrigation)</option>
+          <option value="fertilizer">🌱 खाद व उर्वरक (Fertilizer)</option>
+          <option value="pest">🔍 कीट निरीक्षण (Pest Scouting)</option>
+          <option value="weeding">🌿 निराई-गुड़ाई (Weeding)</option>
+          <option value="harvest">🌾 कटाई (Harvesting)</option>
+          <option value="general">📋 सामान्य (General)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">तारीख / समय (Due Date)</label>
+        <input type="text" id="m-due" class="form-input" placeholder="उदा. कल सुबह 06:00 AM या 25 Sep 2026">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">विवरण / निर्देश (Notes)</label>
+        <textarea id="m-desc" class="form-input" rows="2" placeholder="उदा. 45 मिनट ड्रिप चलाएं या 25kg यूरिया/एकड़ डालें"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">प्राथमिकता (Priority)</label>
+        <select id="m-priority" class="form-select">
+          <option value="high">🔴 उच्च (High)</option>
+          <option value="normal" selected>🟡 सामान्य (Normal)</option>
+          <option value="low">🟢 कम (Low)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+        <button class="btn btn-outline" onclick="closeAddModal()">रद्द करें</button>
+        <button class="btn btn-primary" onclick="handleSaveCustomReminder()">✓ सुरक्षित करें ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/reminders.js"></script>
+</body>
+</html>

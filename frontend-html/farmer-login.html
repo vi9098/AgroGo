@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>AgriGo — किसान लॉगिन पोर्टल (Farmer Login)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    :root {
+      --farmer-primary: #1A5C38;
+      --farmer-dark: #0F3D25;
+      --farmer-light: #E8F5E9;
+      --farmer-gold: #C98B00;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #F1F6EE;
+      background-image:
+        linear-gradient(180deg, rgba(241, 246, 238, 0.92) 0%, rgba(232, 245, 233, 0.95) 100%),
+        url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center top;
+      background-attachment: fixed;
+      color: #132210;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Hero Banner for Farmer Portal */
+    .farmer-login-hero {
+      background: linear-gradient(135deg, #0B2B19 0%, #15462A 50%, #1E5E38 100%);
+      color: #FFF;
+      padding: 28px 18px 22px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(11, 43, 25, 0.2);
+    }
+
+    .kisan-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #FFF;
+      padding: 5px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .farmer-hero-title {
+      font-size: 24px;
+      font-weight: 900;
+      margin: 0 0 6px 0;
+      color: #FFFFFF;
+      letter-spacing: -0.3px;
+    }
+
+    .farmer-hero-sub {
+      font-size: 13.5px;
+      color: #D8F3DC;
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Mobile-First Main Login Container */
+    .farmer-login-wrap {
+      flex: 1;
+      width: 100%;
+      max-width: 480px;
+      margin: 24px auto 48px auto;
+      padding: 0 16px;
+    }
+
+    .farmer-login-card {
+      background: #FFFFFF;
+      border: 1.5px solid rgba(46, 125, 50, 0.22);
+      border-top: 5px solid #2E7D32;
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgba(15, 61, 37, 0.12);
+      padding: 28px 24px;
+      position: relative;
+    }
+
+    @media (max-width: 480px) {
+      .farmer-login-card {
+        padding: 22px 18px;
+        border-radius: 16px;
+      }
+      .farmer-hero-title {
+        font-size: 21px;
+      }
+    }
+
+    /* Auth Switch Tabs */
+    .auth-tab-bar {
+      display: flex;
+      background: #EAF3E8;
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 22px;
+      border: 1px solid rgba(46, 125, 50, 0.18);
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 11px 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #2D5036;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+    }
+
+    .auth-tab-btn.active {
+      background: #1A5C38;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(26, 92, 56, 0.25);
+    }
+
+    /* Mobile Form Input Elements */
+    .field-group {
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1A3E26;
+      margin-bottom: 7px;
+    }
+
+    .field-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .phone-prefix-addon {
+      position: absolute;
+      left: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #1A5C38;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .mobile-input {
+      width: 100%;
+      height: 50px;
+      font-size: 16px; /* Prevents auto-zoom on iOS */
+      font-family: inherit;
+      padding: 12px 14px;
+      background: #FAFDF9;
+      border: 1.5px solid #BCD3BE;
+      border-radius: 10px;
+      color: #132210;
+      transition: all 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .mobile-input.phone-input {
+      padding-left: 72px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+    }
+
+    .mobile-input:focus {
+      border-color: #1A5C38;
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3.5px rgba(26, 92, 56, 0.16);
+    }
+
+    /* Password reveal toggle button */
+    .toggle-pass-btn {
+      position: absolute;
+      right: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 8px 10px;
+      color: #55725E;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* OTP Big Digit Input */
+    .otp-code-input {
+      text-align: center;
+      letter-spacing: 12px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #0F3D25;
+      background: #F4FAF2;
+      border: 2px dashed #81C784;
+    }
+
+    .otp-code-input:focus {
+      border-style: solid;
+      border-color: #2E7D32;
+      background: #FFFFFF;
+    }
+
+    /* Primary Action Buttons */
+    .btn-farmer-submit {
+      width: 100%;
+      min-height: 50px;
+      background: linear-gradient(135deg, #1E7E34 0%, #155724 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(30, 126, 52, 0.35);
+      margin-top: 10px;
+    }
+
+    .btn-farmer-submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, #28A745 0%, #1E7E34 100%);
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 18px rgba(30, 126, 52, 0.45);
+    }
+
+    .btn-farmer-submit:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-farmer-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-farmer-outline {
+      background: #FFFFFF;
+      color: #1A5C38;
+      border: 1.5px solid #1A5C38;
+      box-shadow: none;
+    }
+
+    .btn-farmer-outline:hover:not(:disabled) {
+      background: #E8F5E9;
+      color: #0F3D25;
+      transform: none;
+    }
+
+    /* Notification and Alert Badges */
+    .status-alert {
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .status-alert.error {
+      background: #FFEBEE;
+      border: 1.5px solid #EF9A9A;
+      color: #B71C1C;
+    }
+
+    .status-alert.success {
+      background: #E8F5E9;
+      border: 1.5px solid #A5D6A7;
+      color: #1B5E20;
+    }
+
+    .status-alert.info {
+      background: #E3F2FD;
+      border: 1.5px solid #90CAF9;
+      color: #0D47A1;
+    }
+
+    /* Quick Fill Test Demo Bar */
+    .demo-login-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #E8F5E9;
+      border: 1px dashed #81C784;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #1B5E20;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .demo-login-chip:hover {
+      background: #C8E6C9;
+    }
+
+    /* Footer Links within Card */
+    .card-footer-links {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #E0EADE;
+      text-align: center;
+    }
+  </style>
+</head>
+<body data-page="farmer">
+
+  <!-- Universal Header (injected by header.js) -->
+  <div id="site-header-mount"></div>
+
+  <!-- Hero Banner -->
+  <section class="farmer-login-hero">
+    <div class="kisan-pill">
+      <span>🌾</span>
+      <span>भारत का अपना कृषि AI मंच • ICAR सत्यापित</span>
+    </div>
+    <h1 class="farmer-hero-title">
+      किसान बंधु लॉगिन पोर्टल
+    </h1>
+    <p class="farmer-hero-sub">
+      अपने पंजीकृत मोबाइल नंबर से SMS OTP या पासवर्ड द्वारा सुरक्षित प्रवेश करें और अपनी फसलों की AI सलाह पाएं।
+    </p>
+  </section>
+
+  <!-- Main Login Card Area -->
+  <main class="farmer-login-wrap">
+    <div class="farmer-login-card">
+
+      <!-- Header Icon & Title -->
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+        <div style="width: 44px; height: 44px; background: #E8F5E9; border: 1.5px solid #A5D6A7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+          🌾
+        </div>
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800; color: #0F3D25; margin: 0;">
+            किसान पहचान सत्यापन
+          </h2>
+          <p style="font-size: 12px; color: #52735C; margin: 2px 0 0 0;">
+            OTP या पासवर्ड से त्वरित एवं सुरक्षित लॉगिन
+          </p>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div id="login-alert-success" class="status-alert success"></div>
+      <div id="login-alert-error"   class="status-alert error"></div>
+
+      <!-- Authentication Method Switcher Tabs -->
+      <div class="auth-tab-bar" role="tablist">
+        <button type="button" id="tab-btn-otp" class="auth-tab-btn active" onclick="switchLoginMode('otp')">
+          <span>📱</span> <span>OTP लॉगिन</span>
+        </button>
+        <button type="button" id="tab-btn-pass" class="auth-tab-btn" onclick="switchLoginMode('password')">
+          <span>🔑</span> <span>पासवर्ड लॉगिन</span>
+        </button>
+      </div>
+
+      <!-- ══════════════ TAB 1: OTP AUTHENTICATION ══════════════ -->
+      <div id="mode-otp-section">
+        <!-- Phone Number Input -->
+        <div class="field-group">
+          <label for="farmer-phone-input" class="field-label">10-अंकों का मोबाइल नंबर</label>
+          <div class="field-input-wrap">
+            <span class="phone-prefix-addon">🇮🇳 +91</span>
+            <input 
+              type="tel" 
+              id="farmer-phone-input" 
+              class="mobile-input phone-input" 
+              placeholder="9876543210" 
+              maxlength="10" 
+              inputmode="numeric" 
+              pattern="[0-9]*" 
+              autocomplete="tel"
+              oninput="handlePhoneInputChange(this)"
+            >
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span style="font-size: 11.5px; color: #6A8573;">केवल 10 अंकों का भारतीय नंबर</span>
+            <!-- Quick Test Helper -->
+            <button type="button" class="demo-login-chip" onclick="fillTestFarmerPhone('9876543210')" title="परीक्षण हेतु त्वरित दर्ज करें">
+              ⚡ रमेश सिंह (9876543210)
+            </button>
+          </div>
+        </div>
+
+        <!-- Request OTP Button -->
+        <button type="button" id="btn-request-otp" class="btn-farmer-submit" onclick="requestFarmerOTP()">
+          <span>📩</span> <span>SMS OTP कोड प्राप्त करें</span>
+        </button>
+
+        <!-- Dynamic SMS Status Banner (Zero OTP Leakage) -->
+        <div id="otp-dispatched-box" style="display:none; margin-top:16px; background:#E8F5E9; border:1.5px solid #81C784; border-radius:10px; padding:12px 14px;">
+          <div style="font-weight:800; font-size:13.5px; color:#1B5E20; display:flex; align-items:center; gap:6px;">
+            <span>✅</span> <span id="otp-dispatched-title">OTP आपके मोबाइल पर भेज दिया गया है</span>
+          </div>
+          <div id="otp-dispatched-desc" style="font-size:12px; color:#2E7D32; margin-top:4px; line-height:1.45;">
+            Authkey.io SMS गेटवे द्वारा आपके फोन के SMS इनबॉक्स में 6-अंकों का सत्यापन कोड भेजा गया है।
+          </div>
+        </div>
+
+        <!-- OTP Code Input Area (Reveals after request) -->
+        <div id="otp-verify-section" style="display:none; margin-top:18px;">
+          <div class="field-group">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+              <label for="farmer-otp-code" class="field-label" style="margin-bottom:0;">6-अंकों का सत्यापन कोड (OTP)</label>
+              <span id="otp-resend-timer" style="font-size:12px; color:#52735C; font-weight:700;"></span>
+            </div>
+            <input 
+              type="text" 
+              id="farmer-otp-code" 
+              class="mobile-input otp-code-input" 
+              maxlength="6" 
+              inputmode="numeric" 
+              pattern="[0-9]*" 
+              autocomplete="one-time-code" 
+              placeholder="••••••"
+              oninput="handleOtpCodeInput(this)"
+            >
+          </div>
+
+          <button type="button" id="btn-verify-otp" class="btn-farmer-submit" onclick="verifyFarmerOTP()">
+            <span>🌾</span> <span>सत्यापित करें और पोर्टल में प्रवेश करें ➔</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════ TAB 2: PASSWORD AUTHENTICATION ══════════════ -->
+      <div id="mode-password-section" style="display:none;">
+        <form onsubmit="handleFarmerPasswordAuth(event)">
+          <div class="field-group">
+            <label for="farmer-login-id" class="field-label">मोबाइल नंबर अथवा किसान ID</label>
+            <div class="field-input-wrap">
+              <input 
+                type="text" 
+                id="farmer-login-id" 
+                class="mobile-input" 
+                placeholder="उदा. 9876543210 या kisan_123" 
+                required 
+                autocomplete="username"
+              >
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <label for="farmer-login-pass" class="field-label">पासवर्ड (Password)</label>
+              <span style="font-size:11.5px; color:#6A8573;">Argon2id सुरक्षित</span>
+            </div>
+            <div class="field-input-wrap">
+              <input 
+                type="password" 
+                id="farmer-login-pass" 
+                class="mobile-input" 
+                placeholder="अपना पासवर्ड दर्ज करें" 
+                required 
+                autocomplete="current-password"
+              >
+              <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('farmer-login-pass', this)" title="पासवर्ड दिखाएं">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-pass-submit" class="btn-farmer-submit">
+            <span>🌾</span> <span>लॉगिन करें और प्रवेश करें ➔</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer Action Links -->
+      <div class="card-footer-links">
+        <div style="font-size: 13.5px; color: #43624D; margin-bottom: 10px;">
+          क्या आप नए किसान हैं?
+        </div>
+        <a href="register.html" class="btn-farmer-submit btn-farmer-outline" style="text-decoration:none; margin-bottom: 12px;">
+          <span>🌱</span> <span>नया किसान पंजीकरण करें (Register Free) ➔</span>
+        </a>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px;">
+          <a href="index.html" style="color: #1A5C38; text-decoration: none; font-weight: 700;">
+            🏠 मुख्य पृष्ठ (Home)
+          </a>
+          <a href="admin-login.html" style="color: #4338CA; text-decoration: none; font-weight: 700;">
+            🛡️ एडमिन पोर्टल ➔
+          </a>
+        </div>
+      </div>
+
+      <!-- Security Trust Badge -->
+      <div style="margin-top: 18px; background: #F1F6EE; border-radius: 8px; padding: 10px 12px; text-align: center; font-size: 11.5px; color: #52735C; line-height: 1.45;">
+        🔒 सुरक्षित सर्वर सत्र • भारतीय कृषि अनुसंधान परिषद (ICAR) डेटाबेस से सीधे जुड़ा
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Universal Footer Strip -->
+  <footer style="text-align: center; padding: 18px 16px; color: #52735C; font-size: 12px; border-top: 1px solid rgba(46, 125, 50, 0.15); background: #EAF2E8;">
+    AgriGo AI • भारत का संप्रभु कृषि AI मंच • 455,359+ सरकारी कृषि रिकॉर्ड्स • 2026
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script>
+    // State Tracking
+    let activeOtpLogId = null;
+    let resendTimerInterval = null;
+
+    // Check if farmer is already authenticated, unless explicit logout query
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("logged_out")) {
+        showAlert("success", "✅ आप सफलतापूर्वक लॉगआउट हो चुके हैं। (Logged out successfully)");
+        return;
+      }
+
+      try {
+        if (window.AgriAPI && window.AgriAPI.getMe) {
+          const me = await window.AgriAPI.getMe();
+          if (me && me.authenticated && me.user) {
+            // Already logged in! Redirect to farmer dashboard
+            window.location.replace("farmer.html");
+          }
+        }
+      } catch (_) {}
+    });
+
+    // Toggle Between OTP and Password tabs
+    function switchLoginMode(mode) {
+      const tabOtp = document.getElementById("tab-btn-otp");
+      const tabPass = document.getElementById("tab-btn-pass");
+      const secOtp = document.getElementById("mode-otp-section");
+      const secPass = document.getElementById("mode-password-section");
+      clearAlerts();
+
+      if (mode === "otp") {
+        tabOtp.classList.add("active");
+        tabPass.classList.remove("active");
+        secOtp.style.display = "block";
+        secPass.style.display = "none";
+      } else {
+        tabPass.classList.add("active");
+        tabOtp.classList.remove("active");
+        secPass.style.display = "block";
+        secOtp.style.display = "none";
+      }
+    }
+
+    // Toggle password visibility
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+      }
+    }
+
+    // Helper: Fill test phone for fast demo
+    function fillTestFarmerPhone(phone) {
+      const input = document.getElementById("farmer-phone-input");
+      if (input) {
+        input.value = phone;
+        input.focus();
+      }
+    }
+
+    // Filter non-numeric characters on phone input
+    function handlePhoneInputChange(input) {
+      input.value = input.value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    // Auto-verify when 6 digits are typed
+    function handleOtpCodeInput(input) {
+      input.value = input.value.replace(/\D/g, "").slice(0, 6);
+      if (input.value.length === 6) {
+        verifyFarmerOTP();
+      }
+    }
+
+    // Show Alert helper
+    function showAlert(type, message) {
+      const succ = document.getElementById("login-alert-success");
+      const err  = document.getElementById("login-alert-error");
+      clearAlerts();
+
+      if (type === "success" && succ) {
+        succ.textContent = message;
+        succ.style.display = "block";
+      } else if (err) {
+        err.textContent = message;
+        err.style.display = "block";
+      }
+    }
+
+    function clearAlerts() {
+      const succ = document.getElementById("login-alert-success");
+      const err  = document.getElementById("login-alert-error");
+      if (succ) succ.style.display = "none";
+      if (err)  err.style.display  = "none";
+    }
+
+    // -------------------------------------------------------------
+    // Request OTP flow via Authkey.io (Zero On-Screen OTP Leakage)
+    // -------------------------------------------------------------
+    async function requestFarmerOTP() {
+      clearAlerts();
+      const phoneInput = document.getElementById("farmer-phone-input");
+      const phone = phoneInput ? phoneInput.value.trim().replace(/\D/g, "") : "";
+
+      if (!phone || phone.length !== 10) {
+        showAlert("error", "कृपया 10-अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें।");
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+
+      const reqBtn = document.getElementById("btn-request-otp");
+      reqBtn.disabled = true;
+      reqBtn.innerHTML = "<span>⏳</span> <span>SMS OTP भेजा जा रहा है...</span>";
+
+      try {
+        const data = await AgriAPI.requestOTP(phone);
+        if (data && data.logid) {
+          activeOtpLogId = data.logid;
+        }
+
+        // Show dispatched status box
+        const box = document.getElementById("otp-dispatched-box");
+        const boxTitle = document.getElementById("otp-dispatched-title");
+        const boxDesc = document.getElementById("otp-dispatched-desc");
+
+        if (box) {
+          box.style.display = "block";
+          const masked = data.phone_masked || `+91-XXXXXX${phone.slice(-4)}`;
+          if (boxTitle) boxTitle.textContent = `OTP ${masked} पर भेज दिया गया है`;
+          if (boxDesc) {
+            boxDesc.textContent = "Authkey.io SMS गेटवे द्वारा आपके मोबाइल के SMS इनबॉक्स में 6-अंकों का कोड भेजा गया है।";
+          }
+        }
+
+        // Reveal OTP Input & Verify Button
+        const verifySec = document.getElementById("otp-verify-section");
+        const otpInput = document.getElementById("farmer-otp-code");
+        if (verifySec) verifySec.style.display = "block";
+        if (otpInput) {
+          otpInput.value = "";
+          otpInput.focus();
+        }
+
+        // Start 60-Second Cooldown Timer
+        startOtpCooldown(60);
+
+      } catch (err) {
+        showAlert("error", "OTP भेजने में त्रुटि: " + (err.message || "कृपया नंबर जांचें व पुनः प्रयास करें।"));
+        reqBtn.disabled = false;
+        reqBtn.innerHTML = "<span>📩</span> <span>SMS OTP कोड प्राप्त करें</span>";
+      }
+    }
+
+    function startOtpCooldown(seconds) {
+      if (resendTimerInterval) clearInterval(resendTimerInterval);
+      const reqBtn = document.getElementById("btn-request-otp");
+      const timerSpan = document.getElementById("otp-resend-timer");
+      let count = seconds;
+
+      reqBtn.disabled = true;
+      reqBtn.innerHTML = `<span>⏳</span> <span>OTP भेजा गया (${count}s)</span>`;
+      if (timerSpan) timerSpan.textContent = `पुनः भेजें: ${count}s में`;
+
+      resendTimerInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          reqBtn.innerHTML = `<span>⏳</span> <span>पुनः भेजें (${count}s)</span>`;
+          if (timerSpan) timerSpan.textContent = `पुनः भेजें: ${count}s में`;
+        } else {
+          clearInterval(resendTimerInterval);
+          reqBtn.disabled = false;
+          reqBtn.innerHTML = "<span>🔄</span> <span>OTP पुनः भेजें</span>";
+          if (timerSpan) timerSpan.textContent = "OTP प्राप्त नहीं हुआ? पुनः भेजें";
+        }
+      }, 1000);
+    }
+
+    // -------------------------------------------------------------
+    // Verify OTP flow
+    // -------------------------------------------------------------
+    async function verifyFarmerOTP() {
+      clearAlerts();
+      const phoneInput = document.getElementById("farmer-phone-input");
+      const otpInput   = document.getElementById("farmer-otp-code");
+      const verifyBtn  = document.getElementById("btn-verify-otp");
+
+      const phone = phoneInput ? phoneInput.value.trim().replace(/\D/g, "") : "";
+      const code  = otpInput ? otpInput.value.trim() : "";
+
+      if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+        showAlert("error", "कृपया 6-अंकों का सही संख्यात्मक OTP कोड दर्ज करें।");
+        if (otpInput) otpInput.focus();
+        return;
+      }
+
+      verifyBtn.disabled = true;
+      verifyBtn.innerHTML = "<span>⏳</span> <span>सत्यापित हो रहा है...</span>";
+
+      try {
+        await AgriAPI.verifyOTP(phone, code, activeOtpLogId);
+        showAlert("success", "सत्यापन सफल! किसान पोर्टल में प्रवेश कर रहे हैं...");
+        setTimeout(() => {
+          window.location.href = "farmer.html";
+        }, 300);
+      } catch (err) {
+        showAlert("error", "OTP सत्यापन विफल: " + (err.message || "कोड गलत अथवा समाप्त हो चुका है।"));
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = "<span>🌾</span> <span>सत्यापित करें और पोर्टल में प्रवेश करें ➔</span>";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Password login flow
+    // -------------------------------------------------------------
+    async function handleFarmerPasswordAuth(e) {
+      e.preventDefault();
+      clearAlerts();
+
+      const idInput = document.getElementById("farmer-login-id");
+      const passInput = document.getElementById("farmer-login-pass");
+      const submitBtn = document.getElementById("btn-pass-submit");
+
+      const id = idInput ? idInput.value.trim() : "";
+      const pass = passInput ? passInput.value.trim() : "";
+
+      if (!id || !pass) {
+        showAlert("error", "कृपया किसान ID / मोबाइल और पासवर्ड दोनों दर्ज करें।");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = "<span>⏳</span> <span>लॉगिन हो रहा है...</span>";
+
+      try {
+        await AgriAPI.farmerDirectLogin(id, pass);
+        showAlert("success", "लॉगिन सफल! किसान पोर्टल में प्रवेश कर रहे हैं...");
+        setTimeout(() => {
+          window.location.href = "farmer.html";
+        }, 300);
+      } catch (err) {
+        showAlert("error", "लॉगिन विफल: " + (err.message || "क्रेडेंशियल्स की जांच करें।"));
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "<span>🌾</span> <span>लॉगिन करें और प्रवेश करें ➔</span>";
+      }
+    }
+  </script>
+</body>
+</html>

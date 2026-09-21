@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriGo — भारत का कृषि AI मंच (Indian Agricultural Intelligence Platform)</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ---- HOME PAGE EXTRA STYLES ---- */
+
+    /* Loading Overlay */
+    #loading-overlay {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0F3D25 0%, #1A5C38 55%, #2E7D32 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    #loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #loading-overlay h2 { color: #FFF; font-size: 22px; font-weight: 800; margin-top: 14px; }
+    #loading-overlay p  { color: rgba(255,255,255,0.75); font-size: 13px; margin-top: 4px; }
+
+    /* Hero Section with Realistic Agricultural Farmland Background */
+    .home-hero {
+      text-align: center;
+      padding: 56px 20px 48px;
+      position: relative;
+      background: linear-gradient(180deg, rgba(8, 28, 14, 0.78) 0%, rgba(18, 48, 26, 0.85) 60%, rgba(13, 40, 24, 0.95) 100%),
+                  url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1920&q=85') center/cover no-repeat;
+      color: #FFF;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.15); color: #FFF;
+      padding: 6px 18px; border-radius: var(--r-full);
+      font-size: 12.5px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(8px);
+      margin-bottom: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .home-hero .hero-brand-name {
+      font-size: 64px;
+      font-weight: 900;
+      color: #FFFFFF;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      display: block;
+    }
+
+    .home-hero .hero-brand-name span {
+      background: linear-gradient(135deg, #81C784 0%, #A5D6A7 40%, #FFF59D 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .home-hero .hero-subtitle {
+      font-size: 20px;
+      font-weight: 700;
+      color: #E8F5E9;
+      margin-bottom: 14px;
+      letter-spacing: -0.3px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .home-hero p.hero-desc {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.92);
+      max-width: 680px;
+      margin: 0 auto 28px;
+      line-height: 1.7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-cta-strip {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    /* Quick Feature Mosaic */
+    .feature-mosaic {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 28px 0;
+    }
+
+    .mosaic-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 18px;
+      display: flex; align-items: flex-start; gap: 14px;
+      transition: all 0.2s; cursor: pointer; text-decoration: none; color: inherit;
+    }
+
+    .mosaic-card:hover {
+      box-shadow: var(--sh-md);
+      transform: translateY(-3px);
+      border-color: var(--primary);
+    }
+
+    .mosaic-card-icon {
+      width: 48px; height: 48px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+
+    .icon-green  { background: #E6F4ED; }
+    .icon-gold   { background: #FFF8E1; }
+    .icon-blue   { background: #E1F5FE; }
+    .icon-orange { background: #FFF3E0; }
+    .icon-purple { background: #F3E5F5; }
+    .icon-red    { background: #FFEBEE; }
+
+    .mosaic-card-title { font-size: 14px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+    .mosaic-card-sub   { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Banner Cards */
+    .feature-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 24px; border-radius: var(--r-md); color: #FFF;
+      box-shadow: var(--sh-md); flex-wrap: wrap; gap: 14px; margin-bottom: 14px;
+    }
+
+    .feature-banner-inner { display: flex; align-items: center; gap: 16px; }
+
+    .banner-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.15); border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      flex-shrink: 0; border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .banner-title  { font-weight: 800; font-size: 16px; line-height: 1.3; }
+    .banner-sub    { font-size: 12px; opacity: 0.88; margin-top: 3px; }
+
+    /* Full-Page Agricultural Atmosphere & Heritage Gallery */
+    .heritage-section {
+      margin: 48px 0 36px 0;
+    }
+
+    .heritage-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .heritage-header h2 {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .heritage-header p {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .heritage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .heritage-card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1.5px solid rgba(46, 125, 50, 0.22);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(15, 61, 37, 0.08);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .heritage-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(15, 61, 37, 0.16);
+      border-color: var(--primary);
+    }
+
+    .heritage-img-wrap {
+      width: 100%;
+      height: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .heritage-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .heritage-card:hover .heritage-img-wrap img {
+      transform: scale(1.06);
+    }
+
+    .heritage-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 61, 37, 0.88);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: var(--r-full);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .heritage-body {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .heritage-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    .heritage-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Rich Agricultural & Developer Footer */
+    .site-footer {
+      background: #0D2818;
+      color: #E8F5E9;
+      border-top: 3.5px solid #2E7D32;
+      padding: 44px 20px 24px 20px;
+      margin-top: 56px;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+
+    @media (max-width: 880px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
+
+    .footer-col-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #A5D6A7;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding-bottom: 8px;
+    }
+
+    .footer-links-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-links-list li {
+      margin-bottom: 11px;
+    }
+
+    .footer-links-list a {
+      color: #C8E6C9;
+      text-decoration: none;
+      font-size: 13px;
+      line-height: 1.45;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+
+    .footer-links-list a:hover {
+      color: #FFFFFF;
+      transform: translateX(4px);
+      text-decoration: underline;
+    }
+
+    .author-badge-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--r-md);
+      padding: 16px;
+      margin-top: 14px;
+    }
+
+    .team-credit-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(46, 125, 50, 0.45);
+      border: 1px solid rgba(129, 199, 132, 0.4);
+      color: #C8E6C9;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 8px 0 12px 0;
+    }
+
+    .social-links-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .linkedin-btn {
+      background: #0077B5;
+      color: #FFF;
+    }
+    .linkedin-btn:hover {
+      background: #005F92;
+      box-shadow: 0 2px 8px rgba(0,119,181,0.4);
+    }
+
+    .github-btn {
+      background: #24292E;
+      color: #FFF;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .github-btn:hover {
+      background: #1B1F23;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .footer-bottom-bar {
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #A5D6A7;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body data-page="home">
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="sprout-loader">🌱</div>
+    <h2>AgriGo AI</h2>
+    <p>कृषि विशेषज्ञ बुद्धिमत्ता लोड हो रही है...</p>
+    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  </div>
+
+  <!-- Universal Header (injected by header.js) -->
+  <div id="site-header-mount"></div>
+
+  <!-- Home Hero -->
+  <section class="home-hero">
+    <div class="hero-eyebrow">
+      🌾 भारत का संप्रभु कृषि AI मंच &nbsp;|&nbsp; 🏛️ 455,359+ सरकारी कृषि रिकॉर्ड्स &nbsp;|&nbsp; ICAR सत्यापित
+    </div>
+    <div class="hero-brand-name">
+      Agri<span>Go</span>
+    </div>
+    <div class="hero-subtitle">
+      भारतीय कृषि क्रांति • Intelligent Agricultural Ecosystem
+    </div>
+    <p class="hero-desc">
+      ऋग्वैदिक कृषि परंपरा से लेकर उपग्रह एग्रोमेट AI तक — 4.5 लाख+ सरकारी कृषि अभिलेखों, ICAR अनुसंधान व Agmarknet दैनिक मंडी भावों से सशक्त हर भारतीय किसान का भरोसेमंद डिजिटल साथी।
+    </p>
+    <div class="hero-cta-strip">
+      <a href="farmer-login.html" class="btn btn-primary" style="padding: 13px 30px; font-size: 15.5px; box-shadow: 0 4px 20px rgba(46, 125, 50, 0.4);">
+        🌾 किसान लॉगिन (Farmer Login)
+      </a>
+      <a href="register.html" class="btn btn-secondary" style="padding: 13px 26px; font-size: 15.5px; font-weight: 700;">
+        🌱 नया पंजीकरण (Register Free)
+      </a>
+      <a href="mandi.html" class="btn btn-harvest" style="padding: 13px 26px; font-size: 15.5px;">
+        💰 लाइव मंडी भाव व कैलकुलेटर
+      </a>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <!-- Key AgriGo AI Services Showcase (Clean, No Embedded Forms) -->
+    <div style="margin: 28px 0 24px 0;">
+      <div class="section-head" style="margin-bottom: 20px; text-align: center;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(26, 92, 56, 0.1); border: 1px solid rgba(26, 92, 56, 0.22); padding: 5px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px;">
+          🌾 सम्पूर्ण डिजिटल कृषि समाधान • Intelligent Farming AI 2026
+        </div>
+        <h2 style="font-size: 28px; font-weight: 900; color: var(--primary-dark); margin: 0 0 6px 0;">
+          AgriGo AI स्मार्ट सुविधाएं व सेवाएं
+        </h2>
+        <p style="font-size: 14.5px; color: var(--text-muted); max-width: 680px; margin: 0 auto; line-height: 1.6;">
+          भारत सरकार के 4.5 लाख+ अभिलेखों, ICAR वैज्ञानिक मॉडल्स व वास्तविक समय Agromet मौसम विश्लेषण से सशक्त कृषि सेवाएं।
+        </p>
+      </div>
+
+      <div class="feature-mosaic" style="margin-top: 0; margin-bottom: 0;">
+        <a href="farmer-login.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-green">🌾</div>
+          <div>
+            <div class="mosaic-card-title">AI किसान मित्र (Farmer Chat)</div>
+            <div class="mosaic-card-sub">ICAR-प्रमाणित कृषि सलाह, हिंदी व क्षेत्रीय भाषाओं में 24x7</div>
+          </div>
+        </a>
+
+        <a href="farmer-login.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-gold">📸</div>
+          <div>
+            <div class="mosaic-card-title">पत्ती फोटो रोग पहचान</div>
+            <div class="mosaic-card-sub">कैमरा फोटो से फसल रोग, कीट व त्वरित IPM उपचार पहचान</div>
+          </div>
+        </a>
+
+        <a href="mandi.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-gold">💰</div>
+          <div>
+            <div class="mosaic-card-title">लाइव मंडी भाव व MSP</div>
+            <div class="mosaic-card-sub">data.gov.in Agmarknet — 86+ जिंसें, सभी APMC मंडियां</div>
+          </div>
+        </a>
+
+        <a href="mandi.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-orange">📊</div>
+          <div>
+            <div class="mosaic-card-title">फसल आय कैलकुलेटर</div>
+            <div class="mosaic-card-sub">रकबा + पैदावार = सकल आय, लागत व शुद्ध मुनाफे का हिसाब</div>
+          </div>
+        </a>
+
+        <a href="weather.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-blue">🌦️</div>
+          <div>
+            <div class="mosaic-card-title">Agromet मौसम केंद्र</div>
+            <div class="mosaic-card-sub">24h प्रति घंटा पूर्वानुमान, छिड़काव खिड़की, बीमारी जोखिम</div>
+          </div>
+        </a>
+
+        <a href="reminders.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-orange">⏰</div>
+          <div>
+            <div class="mosaic-card-title">स्मार्ट कृषि अनुस्मारक</div>
+            <div class="mosaic-card-sub">सिंचाई, उर्वरक, निराई, कीट निरीक्षण की स्वतः याद</div>
+          </div>
+        </a>
+
+        <a href="farmer-login.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-green">🧠</div>
+          <div>
+            <div class="mosaic-card-title">AI फसल सिफारिश (ML)</div>
+            <div class="mosaic-card-sub">N-P-K, मौसम, मिट्टी से सर्वोत्तम फसल का वैज्ञानिक चयन</div>
+          </div>
+        </a>
+
+        <a href="farmer-login.html" class="mosaic-card">
+          <div class="mosaic-card-icon icon-purple">📈</div>
+          <div>
+            <div class="mosaic-card-title">जिला-वार पैदावार डेटा</div>
+            <div class="mosaic-card-sub">455,359 ऐतिहासिक रिकॉर्ड्स — कृषि मंत्रालय, भारत सरकार</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Feature Banners -->
+    <div style="margin: 28px 0;">
+
+      <!-- Mandi Banner -->
+      <div class="feature-banner" style="background: linear-gradient(135deg, #7B5E00 0%, #A07B0A 55%, #C98B00 100%);">
+        <div class="feature-banner-inner">
+          <div class="banner-icon">💰</div>
+          <div>
+            <div class="banner-title">भारत सरकार लाइव मंडी भाव (data.gov.in Agmarknet)</div>
+            <div class="banner-sub">दैनिक APMC मंडी दरें · MSP तुलना · फसल आय कैलकुलेटर · 86 से अधिक जिंसें</div>
+          </div>
+        </div>
+        <a href="mandi.html" class="btn btn-harvest" style="font-weight: 800; white-space: nowrap; border: 2px solid rgba(255,255,255,0.3);">
+          मंडी भाव खोलें ➔
+        </a>
+      </div>
+
+      <!-- Weather Banner -->
+      <div class="feature-banner" style="background: linear-gradient(135deg, #013A6E 0%, #01579B 55%, #0288D1 100%);">
+        <div class="feature-banner-inner">
+          <div class="banner-icon">🌤️</div>
+          <div>
+            <div class="banner-title">Material 3 कृषि मौसम केंद्र — 24h · 10-दिन इतिहास · 7-दिन पूर्वानुमान</div>
+            <div class="banner-sub">Open-Meteo Agromet · छिड़काव खिड़की · बीमारी जोखिम · GDD (Growth Degree Days)</div>
+          </div>
+        </div>
+        <a href="weather.html" class="btn btn-sky" style="font-weight: 800; white-space: nowrap; border: 2px solid rgba(255,255,255,0.3);">
+          मौसम केंद्र खोलें ➔
+        </a>
+      </div>
+    </div>
+
+    <!-- Dedicated Admin Portal Gateway (Zero Embedded Forms) -->
+    <div class="rangoli-divider"><span>🪷</span></div>
+    <div style="max-width: 760px; margin: 28px auto 36px auto;">
+      <div class="card" style="background: linear-gradient(135deg, #0E1020 0%, #161A36 100%); border: 1.5px solid rgba(92, 107, 192, 0.35); border-left: 5px solid #5C6BC0; color: #E8EAF6; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-radius: var(--r-md); box-shadow: 0 8px 30px rgba(0,0,0,0.25);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 48px; height: 48px; background: rgba(92, 107, 192, 0.2); border: 1.5px solid rgba(92, 107, 192, 0.4); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+            🛡️
+          </div>
+          <div>
+            <div style="font-size: 17px; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
+              <span>AgriGo नियंत्रण केंद्र (Admin Portal)</span>
+              <span class="badge" style="background: rgba(92, 107, 192, 0.25); color: #A5B4FC; font-size: 11px;">सुरक्षित प्रबंधन</span>
+            </div>
+            <p style="font-size: 12.5px; color: #94A3B8; margin: 4px 0 0 0;">
+              स्रोत रजिस्ट्री, किसान खाता प्रबंधन, AI टेलीमेट्री और सुरक्षा ऑडिट
+            </p>
+          </div>
+        </div>
+        <a href="admin-login.html" class="btn" style="background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%); color: #FFF; font-weight: 800; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-size: 13.5px; white-space: nowrap; box-shadow: 0 4px 15px rgba(92, 107, 192, 0.4);">
+          एडमिन लॉगिन खोलें ➔
+        </a>
+      </div>
+    </div>
+
+    <!-- Indian Agriculture Heritage to Modern AI Gallery -->
+    <div class="rangoli-divider" style="margin-top: 36px;"><span>🌾</span></div>
+    <section class="heritage-section">
+      <div class="heritage-header">
+        <h2>भारतीय कृषि की समृद्ध परंपरा — वेदों से AI तक</h2>
+        <p>भारत की प्राचीन जैविक खेती, जल संरक्षण परंपरा और 2026 के अत्याधुनिक उपग्रह एग्रोमेट AI का अद्भुत संगम।</p>
+      </div>
+
+      <div class="heritage-grid">
+        <!-- Heritage Card 1 -->
+        <div class="heritage-card">
+          <div class="heritage-img-wrap">
+            <img src="https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80" alt="पारंपरिक जुताई" loading="lazy">
+            <span class="heritage-badge">ऋग्वैदिक परंपरा</span>
+          </div>
+          <div class="heritage-body">
+            <div class="heritage-title">🐂 प्राकृतिक गो-आधारित जुताई</div>
+            <div class="heritage-desc">
+              सदियों पुरानी वैदिक कृषि पराशर परंपरा — प्राकृतिक खाद, देशी बैलों से जुताई और मिट्टी के सूक्ष्मजीवों का संरक्षण।
+            </div>
+          </div>
+        </div>
+
+        <!-- Heritage Card 2 -->
+        <div class="heritage-card">
+          <div class="heritage-img-wrap">
+            <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=800&q=80" alt="हरित सीढ़ीदार खेत" loading="lazy">
+            <span class="heritage-badge">पारिस्थितिक कृषि</span>
+          </div>
+          <div class="heritage-body">
+            <div class="heritage-title">🌿 हरित सीढ़ीदार धान खेत</div>
+            <div class="heritage-desc">
+              पहाड़ी व मैदानी इलाकों में जल प्रवाह का कुशल उपयोग, सीढ़ीदार खेतों से मृदा अपरदन की रोकथाम और सतत पैदावार।
+            </div>
+          </div>
+        </div>
+
+        <!-- Heritage Card 3 -->
+        <div class="heritage-card">
+          <div class="heritage-img-wrap">
+            <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80" alt="स्वर्णिम गेहूं व सरसों" loading="lazy">
+            <span class="heritage-badge">अन्नदाता का गौरव</span>
+          </div>
+          <div class="heritage-body">
+            <div class="heritage-title">🌾 स्वर्णिम रबी व खरीफ फसलें</div>
+            <div class="heritage-desc">
+              सिंधु-गंगा के उर्वरक मैदानों में गेहूं, धान, मक्का व सरसों की लहलहाती पैदावार, जो देश के 140 करोड़ नागरिकों का पोषण करती हैं।
+            </div>
+          </div>
+        </div>
+
+        <!-- Heritage Card 4 -->
+        <div class="heritage-card">
+          <div class="heritage-img-wrap">
+            <img src="https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?auto=format&fit=crop&w=800&q=80" alt="स्मार्ट आधुनिक कृषि" loading="lazy">
+            <span class="heritage-badge">AI व उपग्रह 2026</span>
+          </div>
+          <div class="heritage-body">
+            <div class="heritage-title">🛰️ आधुनिक परिशुद्ध AgriTech</div>
+            <div class="heritage-desc">
+              उपग्रह मॉनिटरिंग, कंबाइन हार्वेस्टिंग, कंप्यूटर विज़न रोग पहचान और डेटा-संचालित मौसम विश्लेषण से आधुनिक किसान का सशक्तीकरण।
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <div class="rangoli-divider" style="margin-top: 32px;"><span>🌻</span></div>
+    <div class="stat-grid" style="margin-top: 20px; margin-bottom: 32px;">
+      <div class="stat-card" style="border-top: 3px solid #2E7D32;">
+        <span class="stat-val">4.5 लाख+</span>
+        <span class="stat-lbl">सरकारी कृषि रिकॉर्ड्स</span>
+      </div>
+      <div class="stat-card" style="border-top: 3px solid #C98B00;">
+        <span class="stat-val">86+</span>
+        <span class="stat-lbl">मंडी जिंसें (Commodities)</span>
+      </div>
+      <div class="stat-card" style="border-top: 3px solid #0288D1;">
+        <span class="stat-val">500+</span>
+        <span class="stat-lbl">APMC मंडी बाजार</span>
+      </div>
+      <div class="stat-card" style="border-top: 3px solid #7B1FA2;">
+        <span class="stat-val">18+</span>
+        <span class="stat-lbl">राज्य व केंद्रशासित प्रदेश</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Rich Agricultural & Developer Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+
+        <!-- Column 1: Developer & Team OPTIMUS Details -->
+        <div class="footer-col">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <span style="font-size:26px;">🌾</span>
+            <span style="font-size:20px; font-weight:900; color:#FFFFFF; letter-spacing:0.5px;">AgriGo AI</span>
+          </div>
+          <p style="font-size:13px; color:#C8E6C9; line-height:1.55; margin-bottom:16px;">
+            भारत का सम्पूर्ण डिजिटल कृषि मंच — ICAR सत्यापित डेटा, AI फसल सलाह, live data.gov.in Agmarknet मंडी भाव एवं Android 15 & Material 3 मौसम केंद्र।
+          </p>
+
+          <div class="author-badge-card">
+            <div style="font-size:12px; color:#A5D6A7; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
+              👨‍💻 डेवलपर एवं प्रोजेक्ट क्रिएटर
+            </div>
+            <div style="font-size:16px; font-weight:800; color:#FFFFFF; margin:4px 0 2px 0;">
+              Legislative X Lucifer
+            </div>
+            <div>
+              <span class="team-credit-tag">🚀 made with collaborate Team OPTIMUS</span>
+            </div>
+            <div class="social-links-strip">
+              <a href="https://linkedin.com/in/vivekanand-rai-b270b0399" target="_blank" rel="noopener noreferrer" class="social-btn linkedin-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45c-.96 0-1.74.77-1.74 1.73a1.74 1.74 0 0 0 1.74 1.74c.96 0 1.74-.78 1.74-1.74 0-.96-.78-1.73-1.74-1.73Z"/></svg>
+                <span>LinkedIn</span>
+              </a>
+              <a href="https://github.com/vi9098" target="_blank" rel="noopener noreferrer" class="social-btn github-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"/></svg>
+                <span>GitHub</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Official Government Agriculture Links -->
+        <div class="footer-col">
+          <div class="footer-col-title">🏛️ महत्वपूर्ण सरकारी कृषि पोर्टल (Gov Sites)</div>
+          <ul class="footer-links-list">
+            <li>
+              <a href="https://agricoop.nic.in/" target="_blank" rel="noopener noreferrer">
+                🌾 कृषि एवं किसान कल्याण मंत्रालय (Ministry of Agriculture)
+              </a>
+            </li>
+            <li>
+              <a href="https://pmkisan.gov.in/" target="_blank" rel="noopener noreferrer">
+                💰 PM-KISAN सम्मान निधि योजना पोर्टल
+              </a>
+            </li>
+            <li>
+              <a href="https://pmfby.gov.in/" target="_blank" rel="noopener noreferrer">
+                🛡️ प्रधानमंत्री फसल बीमा योजना (PMFBY)
+              </a>
+            </li>
+            <li>
+              <a href="https://agmarknet.gov.in/" target="_blank" rel="noopener noreferrer">
+                🛒 Agmarknet — दैनिक APMC कृषि मंडी भाव नेटवर्क
+              </a>
+            </li>
+            <li>
+              <a href="https://enam.gov.in/" target="_blank" rel="noopener noreferrer">
+                🏪 e-NAM — राष्ट्रीय कृषि बाजार (National Agriculture Market)
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Agricultural Research, Data & Weather Portals -->
+        <div class="footer-col">
+          <div class="footer-col-title">📊 कृषि सांख्यिकी, मौसम व अनुसंधान</div>
+          <ul class="footer-links-list">
+            <li>
+              <a href="https://data.gov.in/" target="_blank" rel="noopener noreferrer">
+                📈 data.gov.in — खुला सरकारी डेटा मंच (Open Govt Data)
+              </a>
+            </li>
+            <li>
+              <a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener noreferrer">
+                🌤️ IMD Mausam — कृषि मौसम विज्ञान सलाहकार सेवाएं
+              </a>
+            </li>
+            <li>
+              <a href="https://soilhealth.dac.gov.in/" target="_blank" rel="noopener noreferrer">
+                🧪 मृदा स्वास्थ्य कार्ड पोर्टल (Soil Health Card)
+              </a>
+            </li>
+            <li>
+              <a href="https://kisansuvidha.gov.in/" target="_blank" rel="noopener noreferrer">
+                📱 किसान सुविधा पोर्टल (Kisan Suvidha)
+              </a>
+            </li>
+            <li>
+              <a href="https://icar.org.in/" target="_blank" rel="noopener noreferrer">
+                🔬 ICAR — भारतीय कृषि अनुसंधान परिषद
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom-bar">
+        <div>
+          🌾 AgriGo AI — भारत का अग्रणी डिजिटल कृषि मंच &nbsp;|&nbsp; डेटा स्रोत: <strong>data.gov.in (Agmarknet)</strong>, <strong>ICAR</strong>, <strong>Open-Meteo Agromet</strong>
+        </div>
+        <div style="margin-top: 6px; font-size: 11.5px; opacity: 0.85;">
+          सुरक्षा: Argon2id पासवर्ड एन्क्रिप्शन • सुरक्षित सर्वर-साइड HttpOnly सत्र • IDOR रोकथाम • OTP सत्यापन (Authkey.io)
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script>
+
+    // Hide loading overlay after load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const ov = document.getElementById('loading-overlay');
+        if (ov) ov.classList.add('hidden');
+      }, 1200);
+    });
+  </script>
+</body>
+</html>

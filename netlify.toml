@@ -1,0 +1,24 @@
+[build]
+  publish = "frontend-html"
+  command = "echo 'AgriGo production build: static frontend assets ready'"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Optional: If your Python FastAPI backend is hosted on Heroku or Render,
+# set this proxy to route /api requests directly to your backend domain:
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-agrigo-backend.herokuapp.com/api/:splat"
+#   status = 200
+#   force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+

@@ -1,0 +1,32 @@
+[project]
+name = "agrigo"
+version = "2.0.0"
+description = "AgriGo Agricultural AI Platform"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "motor>=3.4.0",
+    "pymongo>=4.7.0",
+    "pyjwt>=2.8.0",
+    "passlib[argon2,bcrypt]>=1.7.4",
+    "argon2-cffi>=23.1.0",
+    "pyotp>=2.9.0",
+    "qrcode>=7.4.2",
+    "python-multipart>=0.0.9",
+    "aiofiles>=23.2.1",
+    "httpx>=0.27.0",
+    "mangum>=0.17.0",
+    "slowapi>=0.1.9",
+    "requests>=2.31.0",
+    "urllib3>=2.0.0",
+    "joblib>=1.3.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "numpy>=1.24.0"
+]
+
+[tool.vercel]
+entrypoint = "backend.app.main:app"

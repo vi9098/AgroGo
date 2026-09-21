@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriGo — कृषि मौसम केंद्र (Material 3 & Android 15)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── WEATHER PAGE: Dynamic Full-Page Sky Environment ── */
+    body.theme-weather {
+      transition: background 0.8s ease;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0284C7 0%, #38BDF8 35%, #BAE6FD 75%, #F0F9FF 100%);
+    }
+    body.theme-weather.sky-sunny {
+      background: linear-gradient(180deg, #0284C7 0%, #38BDF8 35%, #BAE6FD 75%, #F0F9FF 100%);
+    }
+    body.theme-weather.sky-cloudy {
+      background: linear-gradient(180deg, #334155 0%, #475569 40%, #94A3B8 75%, #F1F5F9 100%);
+    }
+    body.theme-weather.sky-rainy {
+      background: linear-gradient(180deg, #0F172A 0%, #1E3A5F 40%, #0284C7 75%, #E0F2FE 100%);
+    }
+    body.theme-weather.sky-stormy {
+      background: linear-gradient(180deg, #090A0F 0%, #1E1B4B 40%, #312E81 75%, #EEF2FF 100%);
+    }
+    body.theme-weather.sky-foggy {
+      background: linear-gradient(180deg, #374151 0%, #4B5563 40%, #9CA3AF 75%, #F3F4F6 100%);
+    }
+
+    :root {
+      /* Material 3 / Android 15 Agromet Tonal System */
+      --md-sys-color-primary: #01579B;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #E1F2FB;
+      --md-sys-color-on-primary-container: #001F33;
+      
+      --md-sys-color-secondary: #0277BD;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #E1F5FE;
+      --md-sys-color-on-secondary-container: #002D4A;
+      
+      --md-sys-color-surface: #EFF7FC;
+      --md-sys-color-on-surface: #0E1F2C;
+      --md-sys-color-surface-variant: #D7E7F0;
+      --md-sys-color-on-surface-variant: #3A4C59;
+      
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container-low: #F4FAFD;
+      --md-sys-color-surface-container: #EBF4FA;
+      --md-sys-color-surface-container-high: #E2EFF7;
+      
+      --md-sys-color-outline: #5C7A8E;
+      --md-sys-color-outline-variant: #AADDEE;
+
+      --md-sys-shape-corner-small: 8px;
+      --md-sys-shape-corner-medium: 12px;
+      --md-sys-shape-corner-large: 16px;
+      --md-sys-shape-corner-extra-large: 24px;
+      --md-sys-shape-corner-full: 9999px;
+
+      --md-elevation-1: 0 1px 3px 1px rgba(1, 87, 155, 0.06), 0 1px 2px 0 rgba(0,0,0,0.06);
+      --md-elevation-2: 0 3px 8px 2px rgba(1, 87, 155, 0.08), 0 1px 3px 0 rgba(0,0,0,0.08);
+      --md-elevation-3: 0 6px 18px 3px rgba(1, 87, 155, 0.12), 0 2px 4px 0 rgba(0,0,0,0.09);
+    }
+
+    /* Page Hero Banner */
+    .weather-hero {
+      background: var(--page-banner, linear-gradient(135deg, #013A6E 0%, #01579B 60%, #0288D1 100%));
+      padding: 24px 24px 28px 24px;
+      color: #FFF;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(1, 87, 155, 0.15);
+    }
+
+    .weather-hero::after {
+      content: "🌤️";
+      position: absolute;
+      right: 28px;
+      bottom: -20px;
+      font-size: 130px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .m3-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 20px 60px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* District Quick Switcher Chips */
+    .location-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+    .location-strip::-webkit-scrollbar { display: none; }
+
+    .m3-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--md-sys-shape-corner-large);
+      background: #FFFFFF;
+      border: 1.5px solid #AADDEE;
+      color: #013A6E;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .m3-chip:hover:not(.active) {
+      background: #E1F2FB;
+      border-color: #0288D1;
+    }
+
+    .m3-chip.active {
+      background: #01579B;
+      color: #FFFFFF;
+      border-color: #01579B;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(1, 87, 155, 0.25);
+    }
+
+    /* Material 3 Segmented Navigation Tabs */
+    .m3-tabs-container {
+      display: flex;
+      background: #E1F2FB;
+      border: 1px solid #AADDEE;
+      border-radius: var(--md-sys-shape-corner-full);
+      padding: 4px;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .m3-tabs-container::-webkit-scrollbar { display: none; }
+
+    .m3-tab {
+      flex: 1;
+      min-width: 140px;
+      text-align: center;
+      padding: 10px 14px;
+      border-radius: var(--md-sys-shape-corner-full);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #013A6E;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+      white-space: nowrap;
+    }
+
+    .m3-tab:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .m3-tab.active {
+      background: #FFFFFF;
+      color: #01579B;
+      box-shadow: 0 2px 6px rgba(1, 87, 155, 0.15);
+      font-weight: 700;
+    }
+
+    /* Hero Weather Card (Material 3 Expressive Card) & Dynamic Weather Themes */
+    .hero-weather-card {
+      background: linear-gradient(135deg, #013A6E 0%, #01579B 55%, #0288D1 100%);
+      color: #FFFFFF;
+      border-radius: var(--md-sys-shape-corner-extra-large);
+      padding: 28px 24px;
+      box-shadow: 0 8px 24px rgba(1, 87, 155, 0.2);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: background 0.8s ease, box-shadow 0.8s ease;
+    }
+
+    .hero-weather-card.fx-sunny {
+      background: linear-gradient(135deg, #B45309 0%, #D97706 40%, #F59E0B 100%);
+      box-shadow: 0 8px 32px rgba(217, 119, 6, 0.35);
+    }
+    .hero-weather-card.fx-cloudy {
+      background: linear-gradient(135deg, #1E293B 0%, #334155 50%, #64748B 100%);
+      box-shadow: 0 8px 32px rgba(30, 41, 59, 0.35);
+    }
+    .hero-weather-card.fx-rainy {
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #0284C7 100%);
+      box-shadow: 0 8px 32px rgba(2, 132, 199, 0.4);
+    }
+    .hero-weather-card.fx-stormy {
+      background: linear-gradient(135deg, #090A0F 0%, #1E1B4B 50%, #312E81 100%);
+      box-shadow: 0 8px 32px rgba(49, 46, 129, 0.5);
+    }
+    .hero-weather-card.fx-foggy {
+      background: linear-gradient(135deg, #374151 0%, #4B5563 50%, #6B7280 100%);
+      box-shadow: 0 8px 32px rgba(75, 85, 99, 0.35);
+    }
+
+    /* Weather FX Stage Layer */
+    .weather-fx-stage {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Sunny Visual FX: Golden Sun Orb & Pulsing Rays */
+    .fx-sun-orb {
+      position: absolute; top: -35px; right: -35px; width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(254, 240, 138, 0.45) 0%, rgba(245, 158, 11, 0.2) 55%, transparent 70%);
+      animation: sunPulse 6s ease-in-out infinite alternate;
+    }
+    .fx-sun-ray {
+      position: absolute; top: -85px; right: -85px; width: 320px; height: 320px;
+      background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0.09) 0deg 15deg, transparent 15deg 30deg);
+      border-radius: 50%;
+      animation: sunSpin 28s linear infinite;
+    }
+    @keyframes sunSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes sunPulse { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(1.12); opacity: 0.6; } }
+
+    /* Cloudy Visual FX: Floating Realistic Cloud Layers */
+    .fx-cloud {
+      position: absolute; background: rgba(255, 255, 255, 0.13);
+      border-radius: 120px; filter: blur(3px);
+      animation: cloudDrift linear infinite;
+    }
+    .fx-cloud-1 { width: 190px; height: 50px; top: 18px; left: -220px; animation-duration: 25s; }
+    .fx-cloud-2 { width: 270px; height: 65px; top: 65px; left: -300px; animation-duration: 35s; animation-delay: 5s; }
+    .fx-cloud-3 { width: 150px; height: 42px; top: 130px; left: -180px; animation-duration: 20s; animation-delay: 10s; }
+    @keyframes cloudDrift {
+      0% { transform: translateX(0); opacity: 0; }
+      12% { opacity: 0.3; }
+      88% { opacity: 0.3; }
+      100% { transform: translateX(1400px); opacity: 0; }
+    }
+
+    /* Rainy & Stormy FX: Canvas Raindrops + Lightning Flash */
+    #fx-rain-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+    }
+    .fx-lightning {
+      position: absolute; inset: 0; background: rgba(255, 255, 255, 0);
+      animation: lightningStrike 8s infinite;
+    }
+    @keyframes lightningStrike {
+      0%, 94%, 96.5%, 100% { background: rgba(255, 255, 255, 0); }
+      94.8% { background: rgba(255, 255, 255, 0.28); }
+      95.2% { background: rgba(255, 255, 255, 0.05); }
+      95.8% { background: rgba(255, 255, 255, 0.36); }
+    }
+
+    /* Foggy Visual FX: Drifting Translucent Mist Waves */
+    .fx-mist {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: mistDrift 7s ease-in-out infinite alternate;
+    }
+    @keyframes mistDrift {
+      0% { transform: translateX(-25%); opacity: 0.25; }
+      100% { transform: translateX(25%); opacity: 0.55; }
+    }
+
+    .hero-top, .hero-temp-row, .hero-condition-text, .hero-agri-pills {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .hero-location-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: var(--md-sys-shape-corner-full);
+      font-size: 13.5px;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .hero-temp-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .hero-temp-display {
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .hero-icon-large {
+      font-size: 54px;
+      line-height: 1;
+    }
+
+    .hero-condition-text {
+      font-size: 18px;
+      font-weight: 600;
+      opacity: 0.95;
+      margin-bottom: 20px;
+    }
+
+    /* Android 15 Quick Pills inside Hero */
+    .hero-agri-pills {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .agri-pill-card {
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--md-sys-shape-corner-large);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .agri-pill-icon {
+      font-size: 24px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: var(--md-sys-shape-corner-full);
+      flex-shrink: 0;
+    }
+
+    .agri-pill-title {
+      font-size: 11.5px;
+      opacity: 0.88;
+    }
+
+    .agri-pill-val {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* M3 Surface Cards */
+    .m3-card {
+      background: #FFFFFF;
+      border-radius: var(--md-sys-shape-corner-extra-large);
+      padding: 22px 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      border: 1.5px solid #AADDEE;
+    }
+
+    .m3-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #013A6E;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #E1F2FB;
+    }
+
+    /* Hourly Forecast Horizontal Slider */
+    .hourly-track {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-width: thin;
+    }
+
+    .hourly-card {
+      flex: 0 0 96px;
+      background: #F4FAFD;
+      border-radius: var(--md-sys-shape-corner-large);
+      padding: 14px 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border: 1.5px solid #E1F2FB;
+    }
+
+    .hourly-card:hover {
+      background: #EAF5FC;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(1, 87, 155, 0.1);
+      border-color: #AADDEE;
+    }
+
+    .hourly-card.now {
+      background: #E1F2FB;
+      border-color: #01579B;
+      box-shadow: 0 2px 8px rgba(1, 87, 155, 0.15);
+    }
+
+    .hourly-time {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.85;
+      color: #013A6E;
+    }
+
+    .hourly-temp {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0E1F2C;
+    }
+
+    .hourly-spray-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: var(--md-sys-shape-corner-full);
+      font-weight: 700;
+    }
+
+    .spray-ok { background: #C8E6C9; color: #1B5E20; }
+    .spray-bad { background: #FFCDD2; color: #B71C1C; }
+
+    /* 7-Day Forecast & Last 10 Days List */
+    .day-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: var(--md-sys-shape-corner-medium);
+      background: #F4FAFD;
+      border: 1px solid #E1F2FB;
+      margin-bottom: 8px;
+      font-size: 13.5px;
+      transition: all 0.15s ease;
+    }
+
+    .day-row:hover {
+      background: #EAF5FC;
+      border-color: #AADDEE;
+    }
+
+    .day-name {
+      font-weight: 700;
+      width: 120px;
+      color: #013A6E;
+    }
+
+    .day-icon-cond {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      color: #3A4C59;
+    }
+
+    .day-temp-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 140px;
+      font-weight: 700;
+      justify-content: flex-end;
+    }
+
+    /* Agricultural Intelligence Grid */
+    .intel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .intel-card {
+      background: #F4FAFD;
+      border-radius: var(--md-sys-shape-corner-large);
+      padding: 18px;
+      border: 1px solid #E1F2FB;
+      border-left: 4px solid #01579B;
+    }
+
+    .intel-card.alert {
+      border-left-color: #E65100;
+      background: #FFF8E1;
+      border-color: #FFE082;
+    }
+
+    .intel-card-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5C7A8E;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .intel-card-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #013A6E;
+      margin-bottom: 4px;
+    }
+
+    .intel-card.alert .intel-card-val {
+      color: #C62828;
+    }
+
+    .intel-card-desc {
+      font-size: 12.5px;
+      color: #3A4C59;
+      line-height: 1.45;
+    }
+
+    /* Material 3 Floating Action Button (FAB) */
+    .m3-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #01579B;
+      color: #FFFFFF;
+      border-radius: 999px;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(1, 87, 155, 0.35);
+      cursor: pointer;
+      text-decoration: none;
+      z-index: 99;
+      transition: all 0.2s ease;
+    }
+
+    .m3-fab:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(1, 87, 155, 0.5);
+      background: #013A6E;
+    }
+
+    @media (max-width: 600px) {
+      .m3-container { padding: 14px; gap: 16px; }
+      .hero-weather-card { padding: 22px 18px; }
+      .hero-temp-display { font-size: 52px; }
+      .hero-agri-pills { grid-template-columns: 1fr; }
+      .day-row { font-size: 12.5px; }
+      .day-name { width: 90px; }
+      .weather-hero { padding: 18px 16px; }
+    }
+  </style>
+</head>
+<body class="theme-weather" data-page="weather">
+
+  <!-- Universal Header (Injected by header.js) -->
+  <div id="site-header-mount"></div>
+
+  <!-- Monsoon Sky Blue Page Hero Banner -->
+  <div class="weather-hero">
+    <div style="max-width: 1100px; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.22); padding: 4px 14px; border-radius: var(--r-full, 999px); font-size: 11.5px; font-weight: 600; margin-bottom: 10px;">
+            🛰️ Open-Meteo ECMWF & IMD Agromet Advisory | Material 3 & Android 15
+          </div>
+          <h1 style="font-size: 26px; font-weight: 900; margin-bottom: 6px; letter-spacing: -0.3px;">🌤️ AgriGo कृषि मौसम केंद्र</h1>
+          <p style="font-size: 13px; opacity: 0.92; max-width: 600px; line-height: 1.55;">
+            अति-स्थानीय (Hyper-Local) प्रति घंटा व 7-दिवसीय मौसम पूर्वानुमान, छिड़काव सुरक्षा खिड़की और रोग जोखिम रडार।
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button class="btn" onclick="fetchLocationGPS()" style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.35); color: #FFF; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 999px; font-family: inherit; font-size: 13px;" title="वर्तमान GPS स्थान से मौसम देखें">
+            <span>🛰️</span> वर्तमान GPS स्थान
+          </button>
+          <a href="mandi.html" class="btn" style="background: #FEF7EA; border: 1.5px solid #E6B800; color: #8A5800; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13px;" title="ताजा मंडी भाव व कैलकुलेटर">
+            <span>💰</span> मंडी भाव कैलकुलेटर
+          </a>
+          <a href="reminders.html" class="btn" style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.35); color: #FFF; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13px;" title="स्मार्ट अनुस्मारक">
+            <span>⏰</span> अनुस्मारक
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="m3-container">
+
+    <!-- State & District Dynamic Selector Bar -->
+    <div class="m3-card" style="padding: 16px 20px; background: #FFFFFF; border-radius: 16px; border: 1.5px solid #AADDEE;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">📍</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 800; color: #013A6E;">राज्य व जिला मौसम चयन (Select State & District)</div>
+            <div style="font-size: 11.5px; color: var(--md-sys-color-outline);">भारत के किसी भी राज्य व जिले का लाइव मौसम पूर्वानुमान देखें</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <select id="weather-state-select" class="form-select" style="min-width: 190px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #AADDEE; font-weight: 600; color: #013A6E; background: #F4FAFD; font-size: 13px;">
+            <option value="">-- राज्य चुनें (State) --</option>
+          </select>
+          <select id="weather-district-select" class="form-select" style="min-width: 190px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #AADDEE; font-weight: 600; color: #013A6E; background: #F4FAFD; font-size: 13px;" disabled>
+            <option value="">-- पहले राज्य चुनें --</option>
+          </select>
+          <button class="btn btn-primary" id="btn-apply-weather-loc" onclick="handleApplyWeatherLocation()" style="padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;">
+            🌤️ मौसम देखें
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- District Quick Switcher Chips -->
+    <div class="location-strip" id="location-chips">
+      <span style="font-size: 12px; font-weight: 700; color: var(--md-sys-color-outline); margin-right: 4px;">त्वरित केंद्र:</span>
+      <button class="m3-chip active" onclick="switchLocation(25.3176, 82.9739, 'वाराणसी (UP)', this)">📍 वाराणसी (UP)</button>
+      <button class="m3-chip" onclick="switchLocation(30.2110, 74.9455, 'बठिंडा (Punjab)', this)">📍 बठिंडा (Punjab)</button>
+      <button class="m3-chip" onclick="switchLocation(29.6857, 76.9905, 'करनाल (Haryana)', this)">📍 करनाल (Haryana)</button>
+      <button class="m3-chip" onclick="switchLocation(22.7196, 75.8577, 'इंदौर (MP)', this)">📍 इंदौर (MP)</button>
+      <button class="m3-chip" onclick="switchLocation(19.9975, 73.7898, 'नासिक (MH)', this)">📍 नासिक (MH)</button>
+      <button class="m3-chip" onclick="switchLocation(26.9124, 75.7873, 'जयपुर (RJ)', this)">📍 जयपुर (RJ)</button>
+    </div>
+
+    <!-- Segmented Navigation Tabs -->
+    <nav class="m3-tabs-container">
+      <button class="m3-tab active" id="tab-forecast" onclick="switchTab('forecast')">🌤️ वर्तमान व 7-दिवसीय</button>
+      <button class="m3-tab" id="tab-hourly" onclick="switchTab('hourly')">⏱️ 24 घंटे का पूर्वानुमान</button>
+      <button class="m3-tab" id="tab-past10" onclick="switchTab('past10')">📅 पिछले 10 दिन</button>
+      <button class="m3-tab" id="tab-intel" onclick="switchTab('intel')">🌾 कृषि विश्लेषण व जोखिम</button>
+    </nav>
+
+    <!-- SECTION 1: Current & Forecast -->
+    <section id="view-forecast">
+      <!-- Hero Weather Card -->
+      <div class="hero-weather-card" id="hero-weather-card">
+        <!-- Dynamic Weather FX Animated Stage -->
+        <div id="weather-fx-stage" class="weather-fx-stage"></div>
+
+        <div class="hero-top">
+          <div class="hero-location-badge">
+            <span id="hero-loc-name">📍 वाराणसी, उत्तर प्रदेश</span>
+          </div>
+          <span style="font-size: 12px; opacity: 0.85;" id="live-time-stamp">अपडेटेड: अभी</span>
+        </div>
+
+        <div class="hero-temp-row">
+          <div class="hero-temp-display" id="hero-temp">28.5°</div>
+          <div class="hero-icon-large" id="hero-icon">🌤️</div>
+        </div>
+
+        <div class="hero-condition-text" id="hero-condition">मुख्यतः साफ (Mainly Clear)</div>
+
+        <!-- Android 15 Quick Pills -->
+        <div class="hero-agri-pills">
+          <div class="agri-pill-card">
+            <div class="agri-pill-icon">💨</div>
+            <div>
+              <div class="agri-pill-title">हवा की गति (Wind)</div>
+              <div class="agri-pill-val" id="pill-wind">8.0 km/h</div>
+            </div>
+          </div>
+          <div class="agri-pill-card">
+            <div class="agri-pill-icon">💧</div>
+            <div>
+              <div class="agri-pill-title">आर्द्रता (Humidity)</div>
+              <div class="agri-pill-val" id="pill-humidity">65%</div>
+            </div>
+          </div>
+          <div class="agri-pill-card">
+            <div class="agri-pill-icon">🌧️</div>
+            <div>
+              <div class="agri-pill-title">बारिश संभावना (Rain)</div>
+              <div class="agri-pill-val" id="pill-rain-prob">10%</div>
+            </div>
+          </div>
+          <div class="agri-pill-card">
+            <div class="agri-pill-icon">🛡️</div>
+            <div>
+              <div class="agri-pill-title">छिड़काव सुरक्षा खिड़की</div>
+              <div class="agri-pill-val" id="pill-spray">सुरक्षित ✓</div>
+            </div>
+          </div>
+          <div class="agri-pill-card">
+            <div class="agri-pill-icon">🚜</div>
+            <div>
+              <div class="agri-pill-title">सिंचाई सलाह</div>
+              <div class="agri-pill-val" id="pill-irrigation">सिंचाई अनुकूल</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7-Day Forecast Card -->
+      <div class="m3-card" style="margin-top: 20px;">
+        <div class="m3-card-title">
+          <span>📅 आगामी 7 दिनों का मौसम पूर्वानुमान</span>
+          <span style="font-size: 12px; color: var(--md-sys-color-outline); font-weight: 500;">Open-Meteo ECMWF</span>
+        </div>
+        <div id="forecast-7d-list">
+          <!-- Populated by JS -->
+          <div style="text-align: center; padding: 20px; color: var(--md-sys-color-outline);">डेटा लोड हो रहा है...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: 24-Hour Hourly View -->
+    <section id="view-hourly" style="display: none;">
+      <div class="m3-card">
+        <div class="m3-card-title">
+          <span>⏱️ अगले 24 घंटे का विस्तृत प्रति घंटा मौसम व छिड़काव विंडो</span>
+          <span style="font-size: 11.5px; color: var(--md-sys-color-outline);">हवा गति &lt; 15 km/h छिड़काव हेतु सुरक्षित</span>
+        </div>
+        <p style="font-size: 12.5px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 14px;">
+          दाहिनी ओर स्क्रॉल करके अगले 24 घंटों का तापमान, बारिश की संभावना और अनुकूल स्प्रे समय देखें।
+        </p>
+        <div class="hourly-track" id="hourly-track-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Last 10 Days History -->
+    <section id="view-past10" style="display: none;">
+      <div class="m3-card">
+        <div class="m3-card-title">
+          <span>📅 पिछले 10 दिनों का वास्तविक मौसम इतिहास (Agromet Log)</span>
+          <span style="font-size: 12px; color: var(--md-sys-color-outline); font-weight: 500;">Recorded History</span>
+        </div>
+        <p style="font-size: 12.5px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 14px;">
+          यह रिकॉर्ड पिछले 10 दिनों में हुई वास्तविक बारिश और तापमान उतार-चढ़ाव को दर्शाता है, जिससे कीट/रोग प्रकोप की सटीक भविष्यवाणी की जाती है।
+        </p>
+        <div id="past-10d-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Agricultural Intelligence & Risk Radar -->
+    <section id="view-intel" style="display: none;">
+      <div class="m3-card">
+        <div class="m3-card-title">
+          <span>🌾 कृषि मौसम विश्लेषण एवं रोग/सिंचाई जोखिम रडार</span>
+          <span style="font-size: 12px; color: var(--md-sys-color-outline);">AI Computed</span>
+        </div>
+
+        <div class="intel-grid" style="margin-top: 10px;">
+          <div class="intel-card">
+            <div class="intel-card-header">🌧️ पिछले 10 दिनों की कुल वर्षा</div>
+            <div class="intel-card-val" id="intel-rain-10d">0.0 mm</div>
+            <div class="intel-card-desc" id="intel-soil-status">मृदा नमी: पर्याप्त नमी उपलब्ध है।</div>
+          </div>
+
+          <div class="intel-card">
+            <div class="intel-card-header">🌡️ संचयी हीट यूनिट्स (GDD 10°C)</div>
+            <div class="intel-card-val" id="intel-gdd">175.4 GDD</div>
+            <div class="intel-card-desc">फसल वानस्पतिक वृद्धि व पकने की गति अनुकूल सामान्य दर पर है।</div>
+          </div>
+
+          <div class="intel-card alert" id="intel-fungal-card">
+            <div class="intel-card-header">🦠 फफूंद व रोग प्रकोप जोखिम</div>
+            <div class="intel-card-val" id="intel-fungal-risk">Low ✓</div>
+            <div class="intel-card-desc" id="intel-fungal-desc">लगातार उच्च आर्द्रता (&gt;80%) न होने के कारण झुलसा/मरोड़िया का जोखिम कम है।</div>
+          </div>
+
+          <div class="intel-card">
+            <div class="intel-card-header">🎯 सर्वश्रेष्ठ छिड़काव समय (Best Spray Window)</div>
+            <div class="intel-card-val" style="font-size: 15px;" id="intel-spray-window">प्रातः 06:30 AM – 09:30 AM</div>
+            <div class="intel-card-desc">सुबह के समय हवा शांत रहती है और ओस सूखने पर कीटनाशक बेहतर चिपकता है।</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 14px; background: #F4FAFD; border: 1px solid #E1F2FB; border-radius: var(--md-sys-shape-corner-medium); font-size: 12.5px; line-height: 1.6; color: #0E1F2C;">
+          📌 <strong>सत्यापित मौसम स्रोत:</strong> Open-Meteo API (ECMWF & GFS Models) व भारत मौसम विज्ञान विभाग (IMD Agromet Advisory Service)।
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Action Button to AI Chat -->
+  <a href="farmer.html" class="m3-fab" title="AgriGo AI साथी से बात करें">
+    <span>💬</span> AI साथी से सलाह लें
+  </a>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/locations.js"></script>
+  <script src="js/weather.js"></script>
+</body>
+</html>

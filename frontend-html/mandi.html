@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriGo — भारत सरकार लाइव मंडी भाव व फसल आय कैलकुलेटर (Agmarknet)</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── MANDI PAGE: Turmeric & Mustard Gold ── */
+
+    .mandi-hero {
+      background: var(--page-banner);
+      padding: 28px 24px;
+      color: #FFF;
+      position: relative; overflow: hidden;
+    }
+
+    .mandi-hero::after {
+      content: "💰";
+      position: absolute; right: 30px; bottom: -20px;
+      font-size: 130px; opacity: 0.06; pointer-events: none;
+    }
+
+    /* Calculator Card */
+    .calc-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-top: 4px solid var(--gold, #C98B00);
+      border-radius: var(--r-md);
+      padding: 24px;
+      box-shadow: var(--sh-sm);
+      margin-bottom: 24px;
+    }
+
+    /* Quick crop chips */
+    .crop-chip {
+      padding: 7px 15px;
+      border-radius: var(--r-full);
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .crop-chip:hover, .crop-chip.active {
+      background: var(--gold, #C98B00);
+      color: #FFF;
+      border-color: var(--gold, #C98B00);
+    }
+
+    /* Result metrics */
+    .result-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .metric-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      display: block;
+      margin-top: 4px;
+    }
+
+    .metric-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .metric-box.profit .metric-val { color: #1B5E20; background: #E8F5E9; border-radius: var(--r-xs); padding: 2px 6px; }
+    .metric-box.cost .metric-val   { color: #B71C1C; }
+    .metric-box.rate .metric-val   { color: #7B5E00; }
+
+    /* Price table */
+    .price-strong {
+      font-size: 15px; font-weight: 800; color: #7B5E00;
+      background: #FFFBEC; padding: 3px 9px;
+      border-radius: 6px; display: inline-block;
+    }
+
+    .msp-badge-above { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .msp-badge-below { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+
+    /* Sync button */
+    .sync-btn-row {
+      display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap; margin-top: 12px;
+    }
+  </style>
+</head>
+<body class="theme-mandi" data-page="mandi">
+
+  <!-- Universal Header -->
+  <div id="site-header-mount"></div>
+
+  <!-- Page Hero -->
+  <div class="mandi-hero">
+    <div style="max-width:1140px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); padding:4px 14px; border-radius:var(--r-full); font-size:11.5px; font-weight:600; margin-bottom:12px;">
+            🏛️ भारत सरकार ओपन गवर्नमेंट डेटा (OGD) | Agmarknet | data.gov.in
+          </div>
+          <h1 style="font-size:24px; font-weight:900; margin-bottom:7px;">💰 ताजा दैनिक मंडी भाव व फसल आय कैलकुलेटर</h1>
+          <p style="font-size:13px; opacity:0.9; max-width:580px; line-height:1.55;">
+            भारत भर की प्रमुख APMC मंडियों के आधिकारिक मॉडल, न्यूनतम व अधिकतम भाव। 
+            अपनी फसल की आय, लागत और MSP से तुलना देखें।
+          </p>
+          <div class="sync-btn-row">
+            <button id="btn-sync-mandi" class="btn" style="background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.3); color:#FFF; font-weight:700;">
+              <span id="sync-spinner">🔄</span> सरकारी डेटा रीफ्रेश करें
+            </button>
+            <div id="sync-status" style="font-size:11.5px; opacity:0.8;">अंतिम सिंक: आज का सत्यापित Agmarknet रिकॉर्ड</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:var(--r-md); padding:14px 18px; min-width:160px; text-align:center;">
+          <div style="font-size:32px; font-weight:900;" id="mandi-total-count">—</div>
+          <div style="font-size:11px; opacity:0.8; margin-top:2px; font-weight:600;">रिकॉर्ड्स उपलब्ध</div>
+          <div style="font-size:10px; opacity:0.65; margin-top:4px;">86+ जिंसें · 12+ राज्य</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <!-- Revenue Calculator -->
+    <div class="calc-card">
+      <div class="section-head">
+        <div>
+          <div class="section-title">📊 फसल आय व मुनाफा कैलकुलेटर</div>
+          <div class="section-sub">लाइव मंडी दर × आपकी पैदावार = अनुमानित सकल आय, लागत व शुद्ध मुनाफा</div>
+        </div>
+        <span class="badge badge-gold">MSP & Agmarknet Live</span>
+      </div>
+
+      <!-- Quick Crop Chips -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+        <button class="crop-chip active" data-crop="Wheat">🌾 गेहूं</button>
+        <button class="crop-chip" data-crop="Paddy(Common)">🍚 धान</button>
+        <button class="crop-chip" data-crop="Mustard">🟡 सरसों</button>
+        <button class="crop-chip" data-crop="Bengal Gram(Gram)(Whole)">🟤 चना</button>
+        <button class="crop-chip" data-crop="Maize">🌽 मक्का</button>
+        <button class="crop-chip" data-crop="Soyabean">🌱 सोयाबीन</button>
+        <button class="crop-chip" data-crop="Cotton">⚪ कपास</button>
+        <button class="crop-chip" data-crop="Tomato">🍅 टमाटर</button>
+        <button class="crop-chip" data-crop="Potato">🥔 आलू</button>
+        <button class="crop-chip" data-crop="Onion">🧅 प्याज</button>
+      </div>
+
+      <form id="revenue-calc-form" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; align-items:flex-end;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">फसल का नाम (Crop)</label>
+          <input type="text" id="calc-crop-input" class="form-input" value="Wheat" placeholder="गेहूं, Wheat, सरसों...">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">कुल रकबा (Acres)</label>
+          <input type="number" step="0.1" min="0.1" id="calc-acres-input" class="form-input" value="2.5">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">पैदावार (क्विं/एकड़)</label>
+          <input type="number" step="0.5" min="1" id="calc-yield-input" class="form-input" value="18.0">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">राज्य (वैकल्पिक)</label>
+          <select id="calc-state-select" class="form-select">
+            <option value="All">संपूर्ण भारत</option>
+            <option value="Uttar Pradesh">उत्तर प्रदेश (UP)</option>
+            <option value="Punjab">पंजाब</option>
+            <option value="Haryana">हरियाणा</option>
+            <option value="Madhya Pradesh">मध्य प्रदेश</option>
+            <option value="Rajasthan">राजस्थान</option>
+            <option value="Maharashtra">महाराष्ट्र</option>
+            <option value="Gujarat">गुजरात</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-harvest" style="width:100%; height:42px; font-weight:700;">
+            गणना करें ➔
+          </button>
+        </div>
+      </form>
+
+      <!-- Result -->
+      <div id="calc-result-box" style="display:none; margin-top:20px;">
+        <div style="background:linear-gradient(135deg,#FFFDF5,#FFF8E1); border:1.5px solid #EDD97A; border-radius:var(--r-md); padding:18px 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:15px; font-weight:800; color:#7B5E00;" id="calc-crop-title">🌾 गेहूं — 2.5 एकड़ आय विवरण</div>
+            <div id="calc-msp-badge"></div>
+          </div>
+          <div class="result-metrics">
+            <div class="metric-box">
+              <span class="metric-lbl">कुल पैदावार</span>
+              <span class="metric-val" id="res-total-production">—</span>
+            </div>
+            <div class="metric-box rate">
+              <span class="metric-lbl">मंडी मॉडल भाव</span>
+              <span class="metric-val" id="res-rate-per-qtl">—</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-lbl">सकल बाजार मूल्य</span>
+              <span class="metric-val" id="res-gross-revenue" style="color:#1565C0;">—</span>
+            </div>
+            <div class="metric-box cost">
+              <span class="metric-lbl">ICAR लागत</span>
+              <span class="metric-val" id="res-estimated-cost">—</span>
+            </div>
+            <div class="metric-box profit">
+              <span class="metric-lbl">शुद्ध किसान लाभ</span>
+              <span class="metric-val" id="res-net-profit">—</span>
+            </div>
+          </div>
+          <div style="margin-top:14px; background:#FFF; border:1px solid #EDD97A; border-radius:var(--r-sm); padding:10px 14px; font-size:13px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <span>🏛️ <strong>श्रेष्ठ मंडी:</strong> <span id="res-top-mandi" style="color:#7B5E00; font-weight:700;">—</span></span>
+            <span id="res-disclaimer" style="font-size:11.5px; color:var(--text-muted);">*Agmarknet मॉडल दरों व ICAR लागत पर आधारित</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Mandi Price Board -->
+    <div class="card" style="padding:24px;">
+      <div class="section-head" style="margin-bottom:16px;">
+        <div>
+          <div class="section-title">📋 दैनिक मंडी भाव लाइव बोर्ड</div>
+          <div class="section-sub">APMC मंडियों के न्यूनतम, अधिकतम और मॉडल भाव (₹/क्विंटल)</div>
+        </div>
+        <span class="badge badge-gold" id="mandi-record-count">लोड हो रहा है...</span>
+      </div>
+
+      <!-- Search & Filters -->
+      <div style="display:grid; grid-template-columns:2fr 1.5fr auto; gap:12px; margin-bottom:16px;">
+        <input type="text" id="mandi-search-input" class="form-input" placeholder="🔍 फसल खोजें — गेहूं, Wheat, सरसों, Tomato, Onion, धान...">
+        <select id="mandi-state-select" class="form-select">
+          <option value="All">सभी राज्य (All States)</option>
+        </select>
+        <button id="btn-reset-filters" class="btn btn-outline" style="height:42px; padding:0 16px;">↺ रीसेट</button>
+      </div>
+
+      <!-- Price Table -->
+      <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--r-sm);">
+        <table class="mandi-table">
+          <thead>
+            <tr>
+              <th>फसल / किस्म</th>
+              <th>मंडी व जिला</th>
+              <th>राज्य</th>
+              <th>मॉडल भाव</th>
+              <th>न्यूनतम — अधिकतम</th>
+              <th>MSP स्थिति</th>
+              <th>तिथि</th>
+            </tr>
+          </thead>
+          <tbody id="mandi-table-body">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">🌾 मंडी भाव लोड हो रहे हैं...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:12.5px; color:var(--text-muted);">
+        <div id="mandi-pagination-info">—</div>
+        <div style="display:flex; gap:8px;">
+          <button id="btn-prev-page" class="btn btn-outline" style="padding:4px 12px; font-size:12px;" disabled>‹ पिछला</button>
+          <button id="btn-next-page" class="btn btn-outline" style="padding:4px 12px; font-size:12px;">अगला ›</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px; border-top:1px solid var(--border); background:var(--card); margin-top:20px;">
+    🌾 AgriGo | डेटा स्रोत: <strong>data.gov.in (Agmarknet)</strong> व भारत सरकार कृषि एवं किसान कल्याण मंत्रालय
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/mandi.js"></script>
+</body>
+</html>

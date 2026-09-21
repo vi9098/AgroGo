@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>AgriGo — किसान AI मित्र | Kharif-Rabi Farmer Portal</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Leaflet Satellite Map Assets -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* ── FARMER PAGE: Kharif/Rabi Crop Green ── */
+    body.theme-farmer {
+      --page-banner: linear-gradient(135deg, #1C3D12 0%, #2E5D1E 55%, #5A9E3C 100%);
+    }
+
+    /* Page accent strip below header */
+    .farmer-accent-strip {
+      background: var(--page-banner);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .farmer-info-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.2);
+      padding: 5px 13px; border-radius: var(--r-full);
+      font-size: 12.5px; font-weight: 600; color: #FFFFFFEE;
+    }
+
+    /* Sidebar scrollable on mobile */
+    .chat-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: calc(100vh - 160px);
+    }
+
+    /* Sidebar section header */
+    .sidebar-head {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary-dark, #1C3D12);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    /* Mini mandi row */
+    .mini-mandi-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg); padding: 7px 10px; border-radius: var(--r-xs);
+      border: 1px solid var(--border); font-size: 12.5px;
+      transition: background 0.15s;
+    }
+    .mini-mandi-row:hover { background: var(--primary-light); }
+
+    .mini-mandi-price { font-weight: 800; color: var(--primary-dark); }
+
+    /* Calc result mini */
+    #calc-result-box {
+      background: var(--primary-light);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      font-size: 12.5px;
+      margin-top: 10px;
+    }
+
+    /* Chat bubble typing indicator */
+    .typing-indicator {
+      display: flex; align-items: center; gap: 5px;
+      padding: 12px 16px;
+      background: #FFF;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border-subtle, #DFF0DB);
+      border-left: 4px solid var(--primary);
+      align-self: flex-start;
+      max-width: 90px;
+    }
+
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--primary); opacity: 0.5;
+      animation: typingPulse 1.2s ease infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingPulse {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50%       { transform: translateY(-4px); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="theme-farmer" data-page="farmer">
+
+  <!-- Universal Header -->
+  <div id="site-header-mount"></div>
+
+  <!-- Farmer Context Accent Strip -->
+  <div class="farmer-accent-strip">
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <span class="farmer-info-pill">🌾 <span id="farmer-name-display">लोड हो रहा है...</span></span>
+      <span class="farmer-info-pill" id="farmer-location-display">📍 ग्राम: लोड हो रहा है...</span>
+      <span class="farmer-info-pill" id="farmer-field-display">🌿 किसान खाता लोड हो रहा है...</span>
+      <span class="farmer-info-pill" id="supabase-cloud-pill" style="background:rgba(0,180,80,0.25); border-color:rgba(129,199,132,0.6);" title="Supabase Cloud Database Connected">⚡ Supabase: <strong>499k+ रिकॉर्ड्स</strong></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="mandi.html" class="btn btn-harvest" style="padding:5px 14px; font-size:12px;">💰 मंडी भाव</a>
+      <a href="reminders.html" class="btn btn-secondary" style="padding:5px 14px; font-size:12px; background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.2); color:#FFF;">⏰ अनुस्मारक</a>
+      <a href="index.html" class="btn btn-outline" style="padding:5px 12px; font-size:12px; background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); color:#FFF;">लॉगआउट</a>
+    </div>
+  </div>
+
+  <!-- Real Farmer Field Details Bar -->
+  <div class="farmer-field-bar" style="background: rgba(255,255,255,0.92); border-bottom: 1.5px solid var(--border); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12.5px; backdrop-filter: blur(8px);">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+      <span>🏡 <strong>खेत:</strong> <span id="farmer-farm-name">मुख्य खेत (Main Farm)</span></span>
+      <span>📐 <strong>रकबा/क्षेत्रफल:</strong> <span id="farmer-field-acres" style="font-weight:700; color:#1B5E20;">5.0 एकड़</span></span>
+      <span>🧪 <strong>मृदा:</strong> <span id="farmer-soil-type">जलोढ़ दोमट (Alluvial Loam)</span></span>
+      <span>💧 <strong>सिंचाई:</strong> <span id="farmer-irrigation-source">नहर व नलकूप</span></span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="badge badge-green" id="farmer-current-crop-badge">🌱 वर्तमान फसल: धान / चावल (Paddy)</span>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="chat-container">
+
+      <!-- ══ LEFT SIDEBAR ══ -->
+      <aside class="chat-sidebar">
+
+        <!-- Satellite Farm Imagery (Google Earth / Esri World Imagery Style) -->
+        <div class="card card-satellite" style="padding: 14px; border-top: 3.5px solid #2E7D32;">
+          <div class="sidebar-head">
+            🛰️ उपग्रह खेत दृश्य <span class="badge badge-green" style="font-size:10px; margin-left:auto;">Esri Satellite</span>
+          </div>
+          <div id="satellite-map" style="width: 100%; height: 185px; border-radius: 8px; border: 1.5px solid var(--border); overflow: hidden; background: #1C2018;"></div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span id="sat-coords" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">📍 उपग्रह निर्देशांक लोड हो रहे हैं...</span>
+            <span style="font-weight: 700; color: #2E7D32; white-space:nowrap;">16x Zoom</span>
+          </div>
+        </div>
+
+        <!-- Mandi Mini Widget -->
+        <div class="card card-mandi" style="padding: 15px;">
+          <div class="sidebar-head">💰 आज के मंडी भाव <span class="badge badge-gold" style="font-size:10px; margin-left:auto;">Agmarknet</span></div>
+          <div style="display:flex; flex-direction:column; gap:7px;" id="farmer-mandi-mini">
+            <div style="text-align:center; padding:10px; font-size:12px; color:var(--text-muted);">दैनिक मंडी भाव लोड हो रहे हैं...</div>
+          </div>
+          <a href="mandi.html" class="btn btn-harvest" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+            💰 आय कैलकुलेटर खोलें ➔
+          </a>
+        </div>
+
+        <!-- Weather Card -->
+        <div class="card card-zaid" style="padding: 15px;">
+          <div class="sidebar-head">🌤️ मौसम व छिड़काव <span class="badge badge-blue" style="font-size:10px; margin-left:auto;">Open-Meteo</span></div>
+          <div style="font-size:13px; color:var(--text-muted); line-height:1.7;" id="weather-details">
+            तापमान: <strong id="w-temp">डेटा लोड हो रहा है...</strong><br>
+            बारिश संभावना: <strong id="w-rain">—</strong><br>
+            छिड़काव: <span id="w-spray" class="badge badge-green">जाँच हो रही है...</span>
+          </div>
+          <a href="weather.html" class="btn btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+            🌤️ Agromet मौसम केंद्र ➔
+          </a>
+        </div>
+
+        <!-- Active Crops Timeline -->
+        <div class="card card-kharif" style="padding: 15px;">
+          <div class="sidebar-head">🌾 सक्रिय फसलें <span class="badge badge-green" style="font-size:10px; margin-left:auto;" id="active-crops-count">0 फसलें</span></div>
+          <div id="crops-timeline-list" style="display:flex; flex-direction:column; gap:9px; font-size:13px;">
+            <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px;">फसलें लोड हो रही हैं...</div>
+          </div>
+        </div>
+
+        <!-- Smart Reminders -->
+        <div class="card card-rabi" style="padding: 15px;">
+          <div class="sidebar-head">⏰ कृषि अनुस्मारक</div>
+          <div id="reminders-list" style="display:flex; flex-direction:column; gap:8px; font-size:12.5px;">
+            <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px;">अनुस्मारक लोड हो रहे हैं...</div>
+          </div>
+          <a href="reminders.html" class="btn btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+            ⏰ अनुस्मारक डैशबोर्ड ➔
+          </a>
+          <div style="margin-top:10px;">
+            <div style="display:flex; gap:5px;">
+              <input type="text" id="nl-reminder-input" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="उदा. कल यूरिया डालना...">
+              <button class="btn btn-primary" style="padding:6px 10px; font-size:12px;" onclick="handleCreateNaturalReminder()">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Yield Calculator -->
+        <div class="card" style="padding: 15px;">
+          <div class="sidebar-head">📊 AI पैदावार कैलकुलेटर <span class="badge badge-green" style="font-size:10px; margin-left:auto;">ML</span></div>
+          <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px;">कृषि मंत्रालय के 4.5 लाख+ रिकॉर्ड्स पर प्रशिक्षित AI।</p>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+            <select id="calc-state" class="form-input" style="padding:6px; font-size:12px;" onchange="handleStateChange()">
+              <option value="">-- राज्य चुनें (Select State) --</option>
+            </select>
+            <select id="calc-district" class="form-input" style="padding:6px; font-size:12px;">
+              <option value="">-- जिला चुनें (Select District) --</option>
+            </select>
+            <div style="display:flex; gap:6px;">
+              <select id="calc-crop" class="form-input" style="padding:6px; font-size:12px; flex:1;">
+                <option value="Wheat">गेहूं</option><option value="Rice">धान</option>
+                <option value="Cotton">कपास</option><option value="Maize">मक्का</option>
+                <option value="Chickpea">चना</option><option value="Soybean">सोयाबीन</option>
+              </select>
+              <input type="number" id="calc-acres" class="form-input" value="2.5" min="0.1" step="0.5" style="width:72px; padding:6px; font-size:12px;">
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-primary" style="flex:1; padding:6px; font-size:11.5px;" onclick="handlePredictYieldUI()">📈 पैदावार</button>
+              <button class="btn btn-secondary" style="padding:6px 10px; font-size:11.5px;" onclick="handleRecommendCropUI()">🌱 श्रेष्ठ फसल</button>
+            </div>
+          </div>
+          <div id="calc-result-box" style="display:none;"></div>
+        </div>
+
+      </aside>
+
+      <!-- ══ RIGHT CHAT AREA ══ -->
+      <section class="chat-box">
+        <!-- Chat Header -->
+        <div class="chat-header-bar">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:38px; height:38px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:2px solid rgba(255,255,255,0.3);">
+              🌾
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:15px;">AgriGo AI कृषि मित्र</div>
+              <div style="font-size:11.5px; opacity:0.88;">🟢 सक्रिय | ICAR + TNAU + FAO | 455k+ रिकॉर्ड्स प्रशिक्षित</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="badge badge-outline-white" style="font-size:11px;">हिंदी / Multilingual</span>
+            <select id="chat-lang-select" class="form-select" style="width:auto; padding:4px 8px; font-size:11px; background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.2); color:#FFF; border-radius:var(--r-full);">
+              <option value="hi">हिंदी</option>
+              <option value="en">English</option>
+              <option value="ta">தமிழ்</option>
+              <option value="te">తెలుగు</option>
+              <option value="pa">ਪੰਜਾਬੀ</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-bubble ai">
+            🌾 <strong>नमस्ते रमेश जी! मैं आपका AgriGo कृषि AI साथी हूँ।</strong><br><br>
+            आप किसी भी फसल (गेहूं, धान, सरसों, मक्का, टमाटर, कपास, सोयाबीन आदि) की <strong>बुवाई, खाद, सिंचाई, रोग, कीट, उपज</strong> और <strong>मंडी भाव</strong> के बारे में पूछ सकते हैं। हमारे AI मॉडल कृषि मंत्रालय के 4.5 लाख+ रिकॉर्ड्स और ICAR के शोध पर आधारित हैं।
+            <div class="evidence-tag">📚 स्रोत: ICAR, TNAU, FAO AGROVOC, भारत सरकार कृषि मंत्रालय</div>
+          </div>
+        </div>
+
+        <!-- Quick Question Pills -->
+        <div class="quick-pills">
+          <button class="pill-btn" onclick="sendQuickPrompt('मेरी जमीन के लिए कौन सी फसल सबसे अच्छी रहेगी?')">🌱 कौन सी फसल बोएं?</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('5 एकड़ जमीन में गेहूं की पैदावार कितनी होगी?')">📈 पैदावार अनुमान</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('सरसों की संपूर्ण खेती विधि बताएं — बुवाई से कटाई तक')">🟡 सरसों की खेती</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('क्या आज सिंचाई करनी चाहिए? मौसम कैसा है?')">💧 आज सिंचाई?</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('टमाटर के पत्तों पर पीले धब्बे पड़ रहे हैं, क्या करूं?')">🍅 टमाटर रोग</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('गेहूं और सरसों का ताजा मंडी भाव क्या है?')">💰 मंडी भाव</button>
+          <button class="pill-btn" onclick="sendQuickPrompt('धान की खेती में अब क्या काम करना चाहिए?')">🍚 धान खेती</button>
+          <a href="weather.html" class="pill-btn" style="text-decoration:none; background:#E1F5FE; border-color:#81D4FA;">🌤️ Agromet मौसम</a>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <button class="btn btn-outline" id="btn-voice-mic" style="border-radius:var(--r-full); padding:10px 12px;" title="बोलकर पूछें" onclick="toggleVoiceRecognition()">🎤</button>
+          <label class="btn btn-outline" style="border-radius:var(--r-full); padding:10px 12px; cursor:pointer;" title="पत्ती की फोटो">
+            📷
+            <input type="file" id="leaf-photo-input" accept="image/*" style="display:none;" onchange="handleLeafPhotoUpload(this)">
+          </label>
+          <input type="text" id="chat-input" class="form-input" placeholder="अपनी फसल की समस्या या प्रश्न यहाँ लिखें..." style="flex:1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
+          <button class="btn btn-primary" id="btn-send-chat" onclick="sendChatMessage()">भेजें ➔</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/locations.js"></script>
+  <script src="js/farmer.js"></script>
+</body>
+</html>

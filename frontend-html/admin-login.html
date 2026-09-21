@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriGo — एडमिन नियंत्रण केंद्र लॉगिन (Admin Login Portal)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      background: #080A14;
+      color: #E2E8F0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-login-hero {
+      background: linear-gradient(180deg, rgba(28, 32, 64, 0.9) 0%, rgba(8, 10, 20, 0.95) 100%);
+      padding: 30px 20px 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(92, 107, 192, 0.2);
+    }
+
+    .cyber-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(92, 107, 192, 0.15);
+      border: 1px solid rgba(92, 107, 192, 0.4);
+      color: #A5B4FC;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .admin-login-card {
+      background: #111322;
+      border: 1.5px solid rgba(92, 107, 192, 0.35);
+      border-top: 5px solid #5C6BC0;
+      border-radius: var(--r-lg, 20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      max-width: 460px;
+      width: 100%;
+      margin: 40px auto 60px auto;
+      padding: 36px 32px;
+    }
+
+    .admin-input {
+      background: #1A1D33;
+      border: 1.5px solid #2B315B;
+      color: #FFFFFF;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .admin-input:focus {
+      outline: none;
+      border-color: #5C6BC0;
+      box-shadow: 0 0 0 3px rgba(92, 107, 192, 0.25);
+      background: #202440;
+    }
+
+    .admin-btn {
+      background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.4);
+      transition: all 0.2s;
+    }
+
+    .admin-btn:hover {
+      background: linear-gradient(135deg, #7986CB 0%, #3F51B5 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(92, 107, 192, 0.6);
+    }
+
+    .admin-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #FCA5A5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6EE7B7;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body data-page="admin">
+
+  <!-- Universal Header -->
+  <div id="site-header-mount"></div>
+
+  <!-- Header Banner -->
+  <div class="admin-login-hero">
+    <div class="cyber-badge">
+      <span>🛡️</span> <span>AgriGo Intelligence Command Center</span>
+    </div>
+    <h1 style="font-size: 26px; font-weight: 900; color: #FFFFFF; margin: 0 0 8px 0;">
+      एडमिन नियंत्रण केंद्र लॉगिन
+    </h1>
+    <p style="font-size: 13.5px; color: #94A3B8; max-width: 500px; margin: 0 auto; line-height: 1.5;">
+      सुरक्षित सर्वर-साइड प्रमाणीकरण • टेलीमेट्री, ज्ञान स्रोत, और उपयोगकर्ता प्रबंधन
+    </p>
+  </div>
+
+  <!-- Main Login Card -->
+  <div class="container" style="flex: 1;">
+    <div class="admin-login-card">
+
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 22px;">
+        <div style="width: 44px; height: 44px; background: rgba(92, 107, 192, 0.2); border: 1.5px solid rgba(92, 107, 192, 0.4); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+          🛡️
+        </div>
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800; color: #FFFFFF; margin: 0;">
+            एडमिन क्रेडेंशियल्स दर्ज करें
+          </h2>
+          <p style="font-size: 12px; color: #8890BB; margin: 2px 0 0 0;">
+            केवल अधिकृत प्रबंधकों व ऑपरेटरों के लिए
+          </p>
+        </div>
+      </div>
+
+      <div id="login-success-msg" class="alert-success"></div>
+      <div id="login-error-msg" class="alert-error"></div>
+
+      <form id="admin-login-form" onsubmit="handleDedicatedAdminLogin(event)">
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label class="form-label" style="color: #A5B4FC; font-size: 13px; font-weight: 600;">एडमिन ईमेल या ID</label>
+          <input type="text" id="admin-login-identifier" class="admin-input" placeholder="admin@agrigo.com" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <label class="form-label" style="color: #A5B4FC; font-size: 13px; font-weight: 600;">पासवर्ड (Password)</label>
+            <span style="font-size: 11px; color: #64748B;">Argon2id Encrypted</span>
+          </div>
+          <input type="password" id="admin-login-password" class="admin-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="btn-admin-submit" class="admin-btn">
+          कंट्रोल सेंटर में प्रवेश करें ➔
+        </button>
+      </form>
+
+      <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+        <span style="font-size: 12.5px; color: #94A3B8;">क्या आप किसान हैं?</span>
+        <a href="farmer-login.html" style="color: #89F8BE; font-size: 12.5px; font-weight: 700; margin-left: 6px; text-decoration: none;">
+          🌾 किसान पोर्टल पर जाएं ➔
+        </a>
+      </div>
+
+      <div style="margin-top: 18px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 10px 14px; text-align: center; font-size: 11px; color: #64748B;">
+        🔒 सुरक्षा प्रणाली: दर सीमा (Rate-Limit) • HttpOnly सत्र • ऑडिट ट्रैकिंग
+      </div>
+
+    </div>
+  </div>
+
+  <footer style="text-align:center; padding:18px 16px; color:#64748B; font-size:12px; border-top:1px solid rgba(255,255,255,0.06); background:#05070D;">
+    AgriGo Admin Gateway • सुरक्षित प्रबंधन प्रणाली • भारत सरकार कृषि सांख्यिकी 2026
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script>
+    // Check session on load, unless user explicitly logged out
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("logged_out")) {
+        const succBox = document.getElementById("login-success-msg");
+        if (succBox) {
+          succBox.textContent = "✅ आप सफलतापूर्वक लॉगआउट हो चुके हैं। (Logged out successfully)";
+          succBox.style.display = "block";
+        }
+        return; // Do NOT auto-redirect if user just logged out
+      }
+
+      try {
+        if (window.AgriAPI && window.AgriAPI.getMe) {
+          const me = await window.AgriAPI.getMe();
+          if (me && me.authenticated && me.user && me.user.role === "admin") {
+            window.location.replace("admin.html");
+          }
+        }
+      } catch (_) {}
+    });
+
+    async function handleDedicatedAdminLogin(e) {
+      e.preventDefault();
+      const errBox = document.getElementById("login-error-msg");
+      const btn = document.getElementById("btn-admin-submit");
+      errBox.style.display = "none";
+
+      const identifier = document.getElementById("admin-login-identifier").value.trim();
+      const password = document.getElementById("admin-login-password").value;
+
+      if (!identifier || !password) {
+        errBox.textContent = "कृपया ईमेल और पासवर्ड दोनों दर्ज करें।";
+        errBox.style.display = "block";
+        return;
+      }
+
+      btn.textContent = "सत्यापन हो रहा है...";
+      btn.disabled = true;
+
+      try {
+        const BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:8000' : '';
+        const res = await fetch(`${BASE}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            identifier: identifier,
+            password: password,
+            role: "admin"
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "एडमिन लॉगिन विफल। क्रेडेंशियल्स की जांच करें।");
+        }
+
+        if (data.user && data.user.role !== "admin") {
+          throw new Error("आपके पास एडमिनिस्ट्रेटिव अधिकार नहीं हैं।");
+        }
+
+        window.location.href = "admin.html";
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = "block";
+        btn.textContent = "कंट्रोल सेंटर में प्रवेश करें ➔";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
