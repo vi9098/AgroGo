@@ -62,9 +62,12 @@ const AgriAPI = (() => {
       clearTimeout(timeoutId);
       if (!response.ok) {
         const errData = await response.json().catch(() => ({ detail: response.statusText }));
-        const msg = errData.detail || errData.error || `Request failed (${response.status})`;
+        const detailMsg = (errData && typeof errData.detail === "object") ? (errData.detail.message || errData.detail.error) : errData.detail;
+        const msg = detailMsg || errData.error || `Request failed (${response.status})`;
         const error = new Error(msg);
         error.status = response.status;
+        error.data = errData;
+        error.detail = errData.detail;
         throw error;
       }
       return await response.json();

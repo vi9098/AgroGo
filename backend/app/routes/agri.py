@@ -114,6 +114,15 @@ def sync_live_mandi(limit: int = 500, commodity: Optional[str] = None):
 @router.post("/agriculture/market/calculate-revenue")
 def calculate_crop_revenue(payload: RevenueCalculationRequest):
     """Calculates crop revenue, production, net farmer earnings, and MSP comparison."""
+    if not MarketDataProviderAdapter.is_valid_commodity(payload.commodity):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_CROP",
+                "message": "अमान्य फसल का नाम (Invalid Crop Name)। कृपया सही फसल का नाम लिखें ताकि सही परिणाम मिल सके (उदा. गेहूं, धान, सरसों, चना, मक्का, टमाटर, आलू, प्याज आदि)।",
+                "message_en": "Invalid crop name. Please enter a valid crop name to get accurate market calculation (e.g. Wheat, Mustard, Paddy, Gram, Tomato, etc.)."
+            }
+        )
     res = MarketDataProviderAdapter.calculate_revenue(
         commodity=payload.commodity,
         area_acres=payload.area_acres,
@@ -121,6 +130,15 @@ def calculate_crop_revenue(payload: RevenueCalculationRequest):
         custom_rate_per_qtl=payload.custom_rate_per_qtl,
         state=payload.state
     )
+    if not res.get("valid", True):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": res.get("error", "INVALID_CROP"),
+                "message": res.get("message", "अमान्य फसल का नाम। कृपया सही फसल का नाम लिखें।"),
+                "message_en": res.get("message_en", "Invalid crop name. Please enter a valid crop name.")
+            }
+        )
     return {"status": "OK", "data": res}
 
 @router.get("/agriculture/soil/{farmer_id}")

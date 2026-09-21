@@ -29,12 +29,118 @@ document.addEventListener("DOMContentLoaded", () => {
   const calcYieldInput = document.getElementById("calc-yield-input");
   const calcStateSelect = document.getElementById("calc-state-select");
   const calcResultBox = document.getElementById("calc-result-box");
-  const quickChips = document.querySelectorAll("#quick-crop-chips .chip-btn");
+  const calcErrorBox = document.getElementById("calc-error-box");
+  const calcErrorTitle = document.getElementById("calc-error-title");
+  const calcErrorMsg = document.getElementById("calc-error-msg");
+  const quickChips = document.querySelectorAll(".crop-chip, #quick-crop-chips .chip-btn");
 
   // Format currency
   function formatINR(val) {
     if (val === null || val === undefined || isNaN(val)) return "₹0";
     return "₹" + Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  }
+
+  // Error messaging helpers for calculator
+  function showCalcError(title, msg) {
+    if (calcResultBox) calcResultBox.style.display = "none";
+    if (calcErrorBox) {
+      if (calcErrorTitle && title) calcErrorTitle.textContent = title;
+      if (calcErrorMsg && msg) calcErrorMsg.textContent = msg;
+      calcErrorBox.style.display = "block";
+      if (window.innerWidth < 768) {
+        calcErrorBox.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }
+
+  function hideCalcError() {
+    if (calcErrorBox) calcErrorBox.style.display = "none";
+  }
+
+  // Comprehensive recognized crops and aliases
+  const KNOWN_CROPS = [
+    // Cereals
+    "wheat", "गेहूं", "gehu", "gehun",
+    "paddy", "dhan", "धान", "चावल", "chawal", "rice",
+    "maize", "makka", "makki", "मक्का", "bhutta", "corn",
+    "bajra", "बाजरा", "pearl millet", "millet",
+    "barley", "jau", "जौ",
+    "jowar", "sorghum", "ज्वार",
+    "ragi", "रागी", "finger millet",
+    // Oilseeds
+    "mustard", "sarso", "sarson", "सरसों", "राई", "rai", "mustard seed",
+    "groundnut", "peanut", "mungfali", "moongfali", "मूंगफली",
+    "soyabean", "soybean", "सोयाबीन",
+    "sunflower", "surajmukhi", "सूरजमुखी",
+    "sesame", "til", "तिल",
+    // Pulses
+    "gram", "chana", "चना", "chane", "chickpea", "chickpeas", "bengal gram",
+    "arhar", "tur", "tuvar", "अरहर", "तूर",
+    "moong", "mung", "मूंग",
+    "urad", "उड़द", "mash",
+    "masoor", "masur", "lentil", "मसूर",
+    "peas", "matar", "मटर", "green peas",
+    // Commercial
+    "cotton", "kapas", "कपास", "rui", "रुई",
+    "sugarcane", "ganna", "गन्ना",
+    "jute", "पटसन", "patson",
+    // Vegetables
+    "tomato", "tamatar", "टमाटर",
+    "potato", "aloo", "alu", "आलू",
+    "onion", "pyaj", "pyaz", "प्याज",
+    "garlic", "lahsun", "लहसुन",
+    "ginger", "adrak", "अदरक",
+    "chilli", "mirch", "मिर्च", "capsicum", "shimla mirch", "शिमला मिर्च",
+    "brinjal", "baingan", "बैंगन", "eggplant",
+    "cabbage", "patta gobhi", "पत्तागोभी", "band gobhi",
+    "cauliflower", "phool gobhi", "फूलगोभी", "gobhi", "गोभी",
+    "okra", "bhindi", "भिंडी", "ladyfinger",
+    "carrot", "gajar", "गाजर",
+    "radish", "mooli", "muli", "मूली",
+    "spinach", "palak", "पालक",
+    "bottle gourd", "lauki", "लौकी", "ghia",
+    "bitter gourd", "karela", "करेला",
+    "pumpkin", "kaddu", "कद्दू",
+    "cucumber", "kheera", "खीरा",
+    // Fruits
+    "banana", "kela", "केला",
+    "apple", "seb", "सेब",
+    "mango", "aam", "आम",
+    "guava", "amrood", "अमरूद",
+    "papaya", "papita", "पपीता",
+    "orange", "santra", "संतरा",
+    "pomegranate", "anar", "anaar", "अनार",
+    "watermelon", "tarbooj", "तरबूज",
+    // Spices
+    "turmeric", "haldi", "हल्दी",
+    "coriander", "dhaniya", "धनिया",
+    "cumin", "jeera", "जीरा",
+    "fenugreek", "methi", "मेथी"
+  ];
+
+  function isValidCropQuery(query) {
+    if (!query || typeof query !== "string") return false;
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return false;
+
+    // Reject pure numbers or punctuation
+    if (/^[\d\W_]+$/.test(q)) return false;
+
+    // 1. Direct exact match
+    if (KNOWN_CROPS.includes(q)) return true;
+
+    // 2. Token / word boundary match
+    const tokens = q.split(/[\s,._\-\/]+/).filter(t => t.length >= 2);
+    for (const token of tokens) {
+      if (KNOWN_CROPS.includes(token)) return true;
+    }
+
+    // 3. Multi-word phrases
+    for (const crop of KNOWN_CROPS) {
+      if (crop.includes(" ") && q.includes(crop)) return true;
+    }
+
+    return false;
   }
 
   // Crop yield defaults for quick chips
@@ -168,6 +274,10 @@ document.addEventListener("DOMContentLoaded", () => {
       btnPrev.disabled = currentOffset === 0;
       btnNext.disabled = endIdx >= totalRecords;
 
+      if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+        window.AgriI18n.applyTranslation(mandiTableBody);
+      }
+
     } catch (err) {
       console.error("Error loading mandi prices:", err);
       mandiTableBody.innerHTML = `
@@ -182,12 +292,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3. Revenue Calculator Action
   async function calculateRevenue() {
+    hideCalcError();
     const commodity = calcCropInput.value.trim();
     const acres = parseFloat(calcAcresInput.value) || 1.0;
     const yieldPerAcre = parseFloat(calcYieldInput.value) || 15.0;
     const state = calcStateSelect.value === "All" ? null : calcStateSelect.value;
 
-    if (!commodity) return;
+    if (!commodity) {
+      showCalcError(
+        "फसल का नाम खाली है (Crop Name Required)",
+        "कृपया फसल का नाम दर्ज करें (उदा. गेहूं, धान, सरसों, चना, मक्का आदि)।"
+      );
+      return;
+    }
+
+    // Client-side pre-validation: reject garbage, random strings, non-crops immediately
+    if (!isValidCropQuery(commodity)) {
+      showCalcError(
+        "अमान्य फसल का नाम (Invalid Crop Name)",
+        `"${commodity}" कोई मान्य कृषि फसल नहीं है। कृपया सही फसल का नाम लिखें ताकि सही परिणाम मिल सके (उदा. गेहूं, धान, सरसों, चना, मक्का, टमाटर, आलू, प्याज आदि)।`
+      );
+      return;
+    }
 
     try {
       const res = await AgriAPI.calculateCropRevenue({
@@ -198,9 +324,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = res.data;
-      if (!data) return;
+      if (!data || data.valid === false) {
+        showCalcError(
+          "अमान्य फसल का नाम (Invalid Crop Name)",
+          (data && data.message) ? data.message : `"${commodity}" के लिए सही फसल का नाम लिखें ताकि सही परिणाम मिल सके।`
+        );
+        return;
+      }
 
-      // Update UI
+      // Hide any previous error and display calculation
+      hideCalcError();
       calcResultBox.style.display = "block";
       document.getElementById("calc-crop-title").textContent = `🌾 ${data.commodity} — ${data.area_acres} एकड़ अनुमानित आय विवरण`;
 
@@ -235,27 +368,41 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
     } catch (err) {
-      console.warn("AgriAPI calculateCropRevenue fallback triggered:", err);
-      // Client-side benchmark calculation ensures calculation never fails
+      console.warn("AgriAPI calculateCropRevenue error:", err);
+
+      // Check if server rejected as invalid crop
+      const isInvalidCrop = err.status === 400 || 
+        (err.message && (err.message.includes("अमान्य") || err.message.includes("Invalid") || err.message.includes("INVALID_CROP"))) ||
+        (err.detail && (err.detail.error === "INVALID_CROP" || (typeof err.detail === "string" && err.detail.includes("INVALID_CROP"))));
+
+      if (isInvalidCrop) {
+        const errorMsg = (err.detail && typeof err.detail === "object" && err.detail.message)
+          ? err.detail.message
+          : (err.message && !err.message.startsWith("Request failed") ? err.message : `"${commodity}" कोई मान्य फसल नहीं है। कृपया सही फसल का नाम लिखें ताकि सही परिणाम मिल सके।`);
+        showCalcError("अमान्य फसल का नाम (Invalid Crop Name)", errorMsg);
+        return;
+      }
+
+      // Client-side fallback ONLY if commodity matches a real recognized crop
       const fallbackRates = {
-        "wheat": 2275, "गेहूं": 2275,
-        "paddy": 2300, "paddy(common)": 2300, "धान": 2300, "धान (सामान्य)": 2300,
-        "mustard": 5650, "सरसों": 5650,
-        "bengal gram": 5440, "chana": 5440, "चना": 5440,
-        "cotton": 7122, "कपास": 7122,
-        "maize": 2090, "मक्का": 2090,
-        "soyabean": 4600, "सोयाबीन": 4600,
-        "tomato": 2100, "टमाटर": 2100,
-        "potato": 1450, "आलू": 1450,
-        "onion": 2400, "प्याज": 2400
+        "wheat": 2275, "गेहूं": 2275, "gehu": 2275,
+        "paddy": 2300, "paddy(common)": 2300, "धान": 2300, "धान (सामान्य)": 2300, "rice": 2300, "chawal": 2300,
+        "mustard": 5650, "सरसों": 5650, "sarso": 5650, "sarson": 5650,
+        "bengal gram": 5440, "chana": 5440, "चना": 5440, "gram": 5440,
+        "cotton": 7122, "कपास": 7122, "kapas": 7122,
+        "maize": 2090, "मक्का": 2090, "makka": 2090, "corn": 2090,
+        "soyabean": 4600, "सोयाबीन": 4600, "soybean": 4600,
+        "tomato": 2100, "टमाटर": 2100, "tamatar": 2100,
+        "potato": 1450, "आलू": 1450, "aloo": 1450,
+        "onion": 2400, "प्याज": 2400, "pyaz": 2400
       };
       const fallbackCosts = {
-        "wheat": 14500, "गेहूं": 14500,
-        "paddy": 18000, "paddy(common)": 18000, "धान": 18000,
-        "mustard": 11500, "सरसों": 11500,
+        "wheat": 14500, "गेहूं": 14500, "gehu": 14500,
+        "paddy": 18000, "paddy(common)": 18000, "धान": 18000, "rice": 18000,
+        "mustard": 11500, "सरसों": 11500, "sarso": 11500,
         "bengal gram": 10500, "chana": 10500, "चना": 10500,
         "cotton": 22000, "कपास": 22000,
-        "maize": 13500, "मक्का": 13500,
+        "maize": 13500, "मक्का": 13500, "corn": 13500,
         "soyabean": 13000, "सोयाबीन": 13000,
         "tomato": 35000, "टमाटर": 35000,
         "potato": 32000, "आलू": 32000,
@@ -263,21 +410,30 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       const cLow = commodity.toLowerCase();
-      let rate = 2275;
-      let costPerAcre = 15000;
-      for (const [k, v] of Object.entries(fallbackRates)) {
-        if (cLow.includes(k) || k.includes(cLow)) {
-          rate = v;
-          costPerAcre = fallbackCosts[k] || 15000;
+      let matchedKey = null;
+      for (const k of Object.keys(fallbackRates)) {
+        if (cLow === k || cLow.split(/\s+/).includes(k)) {
+          matchedKey = k;
           break;
         }
       }
 
+      if (!matchedKey) {
+        showCalcError(
+          "अमान्य फसल का नाम (Invalid Crop Name)",
+          `"${commodity}" कोई मान्य फसल नहीं है या इसके लिए मंडी भाव उपलब्ध नहीं हैं। कृपया सही फसल का नाम लिखें (उदा. गेहूं, धान, सरसों, चना आदि)।`
+        );
+        return;
+      }
+
+      const rate = fallbackRates[matchedKey];
+      const costPerAcre = fallbackCosts[matchedKey] || 15000;
       const totalProd = Math.round(acres * yieldPerAcre * 100) / 100;
       const grossRev = Math.round(totalProd * rate);
       const totalCost = Math.round(acres * costPerAcre);
       const netProf = grossRev - totalCost;
 
+      hideCalcError();
       calcResultBox.style.display = "block";
       document.getElementById("calc-crop-title").textContent = `🌾 ${commodity} — ${acres} एकड़ अनुमानित आय विवरण`;
       document.getElementById("calc-msp-badge").innerHTML = `<span class="badge badge-gold">MSP मानक आधार (₹${rate}/क्विं)</span>`;
@@ -297,6 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Quick Crop Chips Event
   quickChips.forEach(chip => {
     chip.addEventListener("click", () => {
+      hideCalcError();
       quickChips.forEach(c => c.classList.remove("active"));
       chip.classList.add("active");
       const cropName = chip.getAttribute("data-crop");
@@ -310,6 +467,11 @@ document.addEventListener("DOMContentLoaded", () => {
       loadMandiPrices();
       calculateRevenue();
     });
+  });
+
+  // Hide error banner when typing in crop input
+  calcCropInput.addEventListener("input", () => {
+    hideCalcError();
   });
 
   // Event Listeners
@@ -380,4 +542,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMeta();
   loadMandiPrices();
   calculateRevenue(); // calculate default Wheat
+
+  window.addEventListener("agrigo:langchange", () => {
+    if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+      window.AgriI18n.applyTranslation();
+    }
+  });
 });

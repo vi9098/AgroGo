@@ -1,10 +1,8 @@
 /* ==========================================================================
    AgriGo — Indian Agricultural AI Platform
    Theme: Authentic Rural India, Season-Based Page Palettes, Universal Header Taskbar
-   Fonts: Google Fonts (Poppins + Noto Sans Devanagari)
+   Fonts: Google Fonts (Poppins + Noto Sans Devanagari) loaded asynchronously via link tags
    ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap');
 
 /* ---- GLOBAL PALETTE (Home / Gateway) ---- */
 :root {
@@ -1335,17 +1333,63 @@ body.theme-admin .form-select:focus {
 }
 
 /* ==========================================================================
-   MOBILE & ACCESSIBILITY CONSTRAINTS (Touch Targets >= 44px)
+   MOBILE & ACCESSIBILITY CONSTRAINTS (Touch Targets, Fast Tap & Smooth Scroll)
    ========================================================================== */
-button, input[type="button"], input[type="submit"], a.btn {
-  min-height: 44px;
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.btn, a.btn, input[type="button"], input[type="submit"] {
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
+}
+
+.form-input, .form-select {
+  min-height: 40px;
+  touch-action: manipulation;
 }
 
 .header-top button, .header-top select {
-  min-height: 38px;
+  min-height: 36px;
+  touch-action: manipulation;
+}
+
+.taskbar {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Mobile Performance Optimizations */
+@media (max-width: 768px) {
+  .home-hero {
+    padding: 36px 16px 32px;
+    background: linear-gradient(180deg, #092613 0%, #134222 55%, #0B2B16 100%) !important;
+    background-image: none !important;
+  }
+  .home-hero .hero-brand-name {
+    font-size: 38px !important;
+  }
+  .table-wrap, .table-container, .mandi-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+  .card, .calc-card {
+    padding: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

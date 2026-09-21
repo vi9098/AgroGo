@@ -46,24 +46,63 @@ GOV_MSP_BENCHMARKS: Dict[str, Dict[str, Any]] = {
 
 # Commodity Name Normalization (Hindi/Hinglish aliases -> canonical name)
 COMMODITY_ALIASES: Dict[str, str] = {
+    # Cereals
     "wheat": "Wheat", "गेहूं": "Wheat", "gehu": "Wheat", "gehun": "Wheat",
-    "paddy": "Paddy(Common)", "dhan": "Paddy(Common)", "धान": "Paddy(Common)", "चावल": "Paddy(Common)", "rice": "Paddy(Common)",
-    "mustard": "Mustard", "sarso": "Mustard", "sarson": "Mustard", "सरसों": "Mustard", "राई": "Mustard",
-    "maize": "Maize", "makka": "Maize", "मक्का": "Maize", "bhutta": "Maize",
-    "gram": "Bengal Gram(Gram)(Whole)", "chana": "Bengal Gram(Gram)(Whole)", "चना": "Bengal Gram(Gram)(Whole)",
+    "paddy": "Paddy(Common)", "dhan": "Paddy(Common)", "धान": "Paddy(Common)", "चावल": "Paddy(Common)", "chawal": "Paddy(Common)", "rice": "Paddy(Common)",
+    "maize": "Maize", "makka": "Maize", "makki": "Maize", "मक्का": "Maize", "bhutta": "Maize", "corn": "Maize",
+    "bajra": "Bajra", "बाजरा": "Bajra", "pearl millet": "Bajra", "millet": "Bajra",
+    "barley": "Barley", "jau": "Barley", "जौ": "Barley",
+    "jowar": "Jowar", "sorghum": "Jowar", "ज्वार": "Jowar",
+    "ragi": "Ragi", "रागी": "Ragi", "finger millet": "Ragi",
+    # Oilseeds
+    "mustard": "Mustard", "sarso": "Mustard", "sarson": "Mustard", "सरसों": "Mustard", "राई": "Mustard", "rai": "Mustard", "mustard seed": "Mustard",
+    "groundnut": "Groundnut", "peanut": "Groundnut", "mungfali": "Groundnut", "moongfali": "Groundnut", "मूंगफली": "Groundnut",
     "soyabean": "Soyabean", "soybean": "Soyabean", "सोयाबीन": "Soyabean",
-    "cotton": "Cotton", "kapas": "Cotton", "कपास": "Cotton",
+    "sunflower": "Sunflower", "surajmukhi": "Sunflower", "सूरजमुखी": "Sunflower",
+    "sesame": "Sesamum(Sesame,Gingelly,Til)", "til": "Sesamum(Sesame,Gingelly,Til)", "तिल": "Sesamum(Sesame,Gingelly,Til)",
+    # Pulses
+    "gram": "Bengal Gram(Gram)(Whole)", "chana": "Bengal Gram(Gram)(Whole)", "चना": "Bengal Gram(Gram)(Whole)", "chane": "Bengal Gram(Gram)(Whole)", "chickpea": "Bengal Gram(Gram)(Whole)", "chickpeas": "Bengal Gram(Gram)(Whole)",
+    "arhar": "Arhar (Tur)", "tur": "Arhar (Tur)", "tuvar": "Arhar (Tur)", "अरहर": "Arhar (Tur)", "तूर": "Arhar (Tur)",
+    "moong": "Moong", "mung": "Moong", "मूंग": "Moong",
+    "urad": "Urad", "mash": "Urad", "उड़द": "Urad",
+    "masoor": "Masur", "lentil": "Masur", "मसूर": "Masur",
+    "peas": "Peas(Wet)", "matar": "Peas(Wet)", "मटर": "Peas(Wet)", "green peas": "Peas(Wet)",
+    # Commercial & Fiber
+    "cotton": "Cotton", "kapas": "Cotton", "कपास": "Cotton", "rui": "Cotton", "रुई": "Cotton",
+    "sugarcane": "Sugarcane", "ganna": "Sugarcane", "गन्ना": "Sugarcane",
+    "jute": "Jute", "पटसन": "Jute", "patson": "Jute",
+    # Vegetables
     "tomato": "Tomato", "tamatar": "Tomato", "टमाटर": "Tomato",
     "potato": "Potato", "aloo": "Potato", "alu": "Potato", "आलू": "Potato",
     "onion": "Onion", "pyaj": "Onion", "pyaz": "Onion", "प्याज": "Onion",
-    "banana": "Banana", "kela": "Banana", "केला": "Banana",
-    "brinjal": "Brinjal", "baingan": "Brinjal", "बैंगन": "Brinjal",
-    "cabbage": "Cabbage", "patta gobhi": "Cabbage", "पत्तागोभी": "Cabbage",
-    "cauliflower": "Cauliflower", "phool gobhi": "Cauliflower", "फूलगोभी": "Cauliflower",
-    "bajra": "Bajra", "बाजरा": "Bajra",
     "garlic": "Garlic", "lahsun": "Garlic", "लहसुन": "Garlic",
     "ginger": "Ginger(Dry)", "adrak": "Ginger(Dry)", "अदरक": "Ginger(Dry)",
-    "chilli": "Chilly Capsicum", "mirch": "Chilly Capsicum", "मिर्च": "Chilly Capsicum"
+    "chilli": "Chilly Capsicum", "mirch": "Chilly Capsicum", "मिर्च": "Chilly Capsicum", "green chilli": "Chilly Capsicum", "capsicum": "Chilly Capsicum", "shimla mirch": "Chilly Capsicum", "शिमला मिर्च": "Chilly Capsicum",
+    "brinjal": "Brinjal", "baingan": "Brinjal", "बैंगन": "Brinjal", "eggplant": "Brinjal",
+    "cabbage": "Cabbage", "patta gobhi": "Cabbage", "पत्तागोभी": "Cabbage", "band gobhi": "Cabbage",
+    "cauliflower": "Cauliflower", "phool gobhi": "Cauliflower", "फूलगोभी": "Cauliflower", "gobhi": "Cauliflower", "गोभी": "Cauliflower",
+    "okra": "Bhindi(Ladies Finger)", "ladyfinger": "Bhindi(Ladies Finger)", "bhindi": "Bhindi(Ladies Finger)", "भिंडी": "Bhindi(Ladies Finger)",
+    "carrot": "Carrot", "gajar": "Carrot", "गाजर": "Carrot",
+    "radish": "Raddish", "mooli": "Raddish", "muli": "Raddish", "मूली": "Raddish",
+    "spinach": "Spinach", "palak": "Spinach", "पालक": "Spinach",
+    "bottle gourd": "Bottle Gourd", "lauki": "Bottle Gourd", "लौकी": "Bottle Gourd", "ghia": "Bottle Gourd",
+    "bitter gourd": "Bitter Gourd", "karela": "Bitter Gourd", "करेला": "Bitter Gourd",
+    "pumpkin": "Pumpkin", "kaddu": "Pumpkin", "कद्दू": "Pumpkin",
+    "cucumber": "Cucumber(Kheera)", "kheera": "Cucumber(Kheera)", "खीरा": "Cucumber(Kheera)",
+    # Fruits
+    "banana": "Banana", "kela": "Banana", "केला": "Banana",
+    "apple": "Apple", "seb": "Apple", "सेब": "Apple",
+    "mango": "Mango", "aam": "Mango", "आम": "Mango",
+    "guava": "Guava", "amrood": "Guava", "अमरूद": "Guava",
+    "papaya": "Papaya", "papita": "Papaya", "पपीता": "Papaya",
+    "orange": "Orange", "santra": "Orange", "संतरा": "Orange",
+    "pomegranate": "Pomegranate", "anar": "Pomegranate", "anaar": "Pomegranate", "अनार": "Pomegranate",
+    "watermelon": "Water Melon", "tarbooj": "Water Melon", "तरबूज": "Water Melon",
+    # Spices
+    "turmeric": "Turmeric", "haldi": "Turmeric", "हल्दी": "Turmeric",
+    "coriander": "Coriander(Leaves)", "dhaniya": "Coriander(Leaves)", "धनिया": "Coriander(Leaves)",
+    "cumin": "Cummin Seed(Jeera)", "jeera": "Cummin Seed(Jeera)", "जीरा": "Cummin Seed(Jeera)",
+    "fenugreek": "Methi(Leaves)", "methi": "Methi(Leaves)", "मेथी": "Methi(Leaves)",
 }
 
 def ensure_mandi_table():
@@ -94,6 +133,74 @@ class MarketDataProviderAdapter:
     """Provides authoritative daily Mandi commodity rates, caching, and revenue calculation."""
 
     @classmethod
+    def is_valid_commodity(cls, query: str) -> bool:
+        """
+        Validates whether the entered query corresponds to a real agricultural crop or mandi commodity.
+        Rejects random strings, gibberish, non-agricultural items.
+        """
+        if not query or len(query.strip()) < 2:
+            return False
+        q = query.strip().lower()
+
+        # Reject pure numeric or punctuation queries
+        if re.match(r'^[\d\W_]+$', q):
+            return False
+
+        # 1. Exact match in commodity aliases
+        if q in COMMODITY_ALIASES:
+            return True
+
+        # 2. Check official MSP benchmark names
+        for msp_crop in GOV_MSP_BENCHMARKS.keys():
+            if msp_crop.lower() == q:
+                return True
+
+        # 3. Check canonical values in COMMODITY_ALIASES
+        for canon in COMMODITY_ALIASES.values():
+            if canon.lower() == q:
+                return True
+
+        # 4. Token-based matching: split query into distinct words
+        tokens = [w.lower() for w in re.findall(r'[\w\u0900-\u097F]+', q) if len(w) >= 2]
+        for token in tokens:
+            if token in COMMODITY_ALIASES:
+                return True
+            for canon in COMMODITY_ALIASES.values():
+                if canon.lower() == token:
+                    return True
+            for msp_crop in GOV_MSP_BENCHMARKS.keys():
+                if msp_crop.lower() == token:
+                    return True
+
+        # 5. Multi-word alias check (e.g., 'green peas', 'bottle gourd', 'patta gobhi')
+        for alias in COMMODITY_ALIASES.keys():
+            if " " in alias and alias in q:
+                return True
+
+        # 6. Check against live_mandi_prices table in SQLite cache (exact or token match, NOT open LIKE %q%)
+        try:
+            ensure_mandi_table()
+            row = query_one(
+                "SELECT id FROM live_mandi_prices WHERE LOWER(commodity) = ? LIMIT 1",
+                (q,)
+            )
+            if row:
+                return True
+
+            for token in tokens:
+                if len(token) >= 3:
+                    row = query_one(
+                        "SELECT id FROM live_mandi_prices WHERE LOWER(commodity) = ? LIMIT 1",
+                        (token,)
+                    )
+                    if row:
+                        return True
+        except Exception:
+            pass
+
+        return False
+
+    @classmethod
     def normalize_commodity_name(cls, query: str) -> str:
         """Translates hindi or vernacular search queries to canonical API commodity names."""
         if not query:
@@ -102,7 +209,7 @@ class MarketDataProviderAdapter:
         if q in COMMODITY_ALIASES:
             return COMMODITY_ALIASES[q]
         for alias, canon in COMMODITY_ALIASES.items():
-            if alias in q:
+            if alias in q or (len(q) >= 4 and q in alias):
                 return canon
         return query.strip()
 
@@ -373,6 +480,15 @@ class MarketDataProviderAdapter:
 
         canon = cls.normalize_commodity_name(commodity)
 
+        # Validate commodity before calculating
+        if not cls.is_valid_commodity(commodity):
+            return {
+                "valid": False,
+                "error": "INVALID_CROP",
+                "message": "अमान्य फसल का नाम (Invalid Crop Name)। कृपया सही फसल का नाम लिखें ताकि सही परिणाम मिल सके (उदा. गेहूं, धान, सरसों, चना, मक्का, टमाटर, आलू, प्याज आदि)।",
+                "message_en": "Invalid crop name. Please enter a valid crop name to get accurate market calculation (e.g. Wheat, Mustard, Paddy, Gram, Tomato, etc.)."
+            }
+
         # Baseline average yield per acre if not supplied (quintals/acre)
         default_yields = {
             "Wheat": 18.0,
@@ -388,6 +504,41 @@ class MarketDataProviderAdapter:
             "Onion": 90.0,
             "Banana": 180.0,
             "Bajra": 11.0,
+            "Groundnut": 12.0,
+            "Barley": 14.0,
+            "Jowar": 10.0,
+            "Ragi": 8.0,
+            "Arhar (Tur)": 6.5,
+            "Moong": 5.0,
+            "Urad": 4.5,
+            "Masur": 5.5,
+            "Peas(Wet)": 35.0,
+            "Sugarcane": 320.0,
+            "Garlic": 35.0,
+            "Ginger(Dry)": 25.0,
+            "Chilly Capsicum": 40.0,
+            "Brinjal": 90.0,
+            "Cabbage": 110.0,
+            "Cauliflower": 95.0,
+            "Bhindi(Ladies Finger)": 45.0,
+            "Carrot": 85.0,
+            "Raddish": 80.0,
+            "Spinach": 40.0,
+            "Bottle Gourd": 95.0,
+            "Bitter Gourd": 50.0,
+            "Pumpkin": 100.0,
+            "Cucumber(Kheera)": 70.0,
+            "Apple": 50.0,
+            "Mango": 40.0,
+            "Guava": 60.0,
+            "Papaya": 150.0,
+            "Orange": 55.0,
+            "Pomegranate": 45.0,
+            "Water Melon": 130.0,
+            "Turmeric": 25.0,
+            "Coriander(Leaves)": 20.0,
+            "Cummin Seed(Jeera)": 4.0,
+            "Methi(Leaves)": 30.0
         }
         
         # Approximate input cost per acre (seeds, fertilizer, water, labor)
@@ -404,6 +555,58 @@ class MarketDataProviderAdapter:
             "Onion": 28000.0,
             "Banana": 45000.0,
             "Bajra": 9500.0,
+            "Groundnut": 16000.0,
+            "Barley": 11000.0,
+            "Jowar": 10500.0,
+            "Ragi": 9500.0,
+            "Arhar (Tur)": 12500.0,
+            "Moong": 10500.0,
+            "Urad": 10000.0,
+            "Masur": 9800.0,
+            "Peas(Wet)": 16000.0,
+            "Sugarcane": 38000.0,
+            "Garlic": 42000.0,
+            "Ginger(Dry)": 45000.0,
+            "Chilly Capsicum": 32000.0,
+            "Brinjal": 25000.0,
+            "Cabbage": 22000.0,
+            "Cauliflower": 24000.0,
+            "Bhindi(Ladies Finger)": 22000.0,
+            "Carrot": 20000.0,
+            "Raddish": 16000.0,
+            "Spinach": 14000.0,
+            "Bottle Gourd": 18000.0,
+            "Bitter Gourd": 22000.0,
+            "Pumpkin": 16000.0,
+            "Cucumber(Kheera)": 20000.0,
+            "Apple": 55000.0,
+            "Mango": 35000.0,
+            "Guava": 28000.0,
+            "Papaya": 30000.0,
+            "Orange": 32000.0,
+            "Pomegranate": 48000.0,
+            "Water Melon": 22000.0,
+            "Turmeric": 32000.0,
+            "Coriander(Leaves)": 15000.0,
+            "Cummin Seed(Jeera)": 18000.0,
+            "Methi(Leaves)": 14000.0
+        }
+
+        # Standard APMC / market rate benchmarks for valid crops when not present in today's arrival cache
+        standard_benchmarks = {
+            "Wheat": 2275.0, "Paddy(Common)": 2300.0, "Paddy": 2300.0, "Mustard": 5650.0,
+            "Bengal Gram(Gram)(Whole)": 5440.0, "Gram": 5440.0, "Maize": 2090.0, "Soyabean": 4892.0,
+            "Cotton": 7121.0, "Bajra": 2625.0, "Groundnut": 6783.0, "Barley": 1850.0, "Jowar": 3371.0,
+            "Ragi": 4290.0, "Arhar (Tur)": 7550.0, "Moong": 8682.0, "Urad": 7400.0, "Masur": 6425.0,
+            "Peas(Wet)": 3200.0, "Sugarcane": 315.0, "Jute": 5050.0, "Tomato": 2100.0, "Potato": 1450.0,
+            "Onion": 2400.0, "Garlic": 9500.0, "Ginger(Dry)": 8500.0, "Chilly Capsicum": 12000.0,
+            "Brinjal": 1700.0, "Cabbage": 1500.0, "Cauliflower": 1800.0, "Bhindi(Ladies Finger)": 2600.0,
+            "Carrot": 1600.0, "Raddish": 1200.0, "Spinach": 1400.0, "Bottle Gourd": 1300.0,
+            "Bitter Gourd": 2400.0, "Pumpkin": 1100.0, "Cucumber(Kheera)": 1500.0, "Banana": 1900.0,
+            "Apple": 6500.0, "Mango": 4200.0, "Guava": 2200.0, "Papaya": 1800.0, "Orange": 3200.0,
+            "Pomegranate": 7000.0, "Water Melon": 1200.0, "Turmeric": 8500.0, "Coriander(Leaves)": 3500.0,
+            "Cummin Seed(Jeera)": 24000.0, "Methi(Leaves)": 4500.0, "Sesamum(Sesame,Gingelly,Til)": 9267.0,
+            "Sunflower": 7280.0
         }
 
         yield_per_acre = expected_yield_qtl_per_acre or default_yields.get(canon, 15.0)
@@ -450,9 +653,16 @@ class MarketDataProviderAdapter:
                 avg_modal = sum(r["modal_price"] for r in rows) / len(rows)
                 applicable_rate = round(avg_modal, 2)
         else:
-            # Fallback to MSP or standard benchmark
+            # Fallback to MSP or standard crop benchmark
             msp_info = GOV_MSP_BENCHMARKS.get(canon)
-            applicable_rate = msp_info["msp"] if msp_info else 2200.0
+            if msp_info:
+                applicable_rate = msp_info["msp"]
+            elif canon in standard_benchmarks:
+                applicable_rate = standard_benchmarks[canon]
+            elif custom_rate_per_qtl:
+                applicable_rate = custom_rate_per_qtl
+            else:
+                applicable_rate = 2200.0
 
         # Calculations
         gross_revenue = round(total_production_quintals * applicable_rate, 2)
@@ -480,6 +690,7 @@ class MarketDataProviderAdapter:
             }
 
         return {
+            "valid": True,
             "commodity": commodity,
             "canonical_commodity": canon,
             "area_acres": area_acres,

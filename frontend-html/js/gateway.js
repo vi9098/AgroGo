@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => {
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.add("hidden");
-  }, 400);
+  }, 80);
 
   // Note: No automatic redirect on home page load; user remains on home page
 

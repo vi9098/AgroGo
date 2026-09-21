@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgriGo — भारत का कृषि AI मंच (Indian Agricultural Intelligence Platform)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
     /* ---- HOME PAGE EXTRA STYLES ---- */
@@ -14,7 +17,7 @@
       background: linear-gradient(135deg, #0F3D25 0%, #1A5C38 55%, #2E7D32 100%);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s;
+      z-index: 9999; transition: opacity 0.3s ease, visibility 0.3s;
     }
     #loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     #loading-overlay h2 { color: #FFF; font-size: 22px; font-weight: 800; margin-top: 14px; }
@@ -29,6 +32,12 @@
                   url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1920&q=85') center/cover no-repeat;
       color: #FFF;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    @media (max-width: 768px) {
+      .home-hero {
+        padding: 38px 16px 30px !important;
+        background: linear-gradient(180deg, #092613 0%, #134222 55%, #0B2B16 100%) !important;
+      }
     }
 
     .hero-eyebrow {
@@ -762,16 +771,23 @@
   </footer>
 
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/header.js"></script>
   <script>
-
-    // Hide loading overlay after load
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const ov = document.getElementById('loading-overlay');
-        if (ov) ov.classList.add('hidden');
-      }, 1200);
-    });
+    // Fast, seamless loading overlay dismissal
+    function dismissOverlay() {
+      const ov = document.getElementById('loading-overlay');
+      if (ov && !ov.classList.contains('hidden')) {
+        ov.classList.add('hidden');
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(dismissOverlay, 60));
+    } else {
+      setTimeout(dismissOverlay, 60);
+    }
+    // Safety fallback
+    setTimeout(dismissOverlay, 300);
   </script>
 </body>
 </html>

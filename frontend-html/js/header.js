@@ -5,16 +5,6 @@
  */
 
 (function () {
-  // Ensure i18n translation engine is loaded
-  if (typeof window !== "undefined" && !window.AgriI18n && !document.querySelector('script[src*="i18n.js"]')) {
-    const s = document.createElement('script');
-    s.src = 'js/i18n.js';
-    s.onload = () => {
-      if (window.AgriI18n) window.AgriI18n.applyTranslation();
-    };
-    document.head.appendChild(s);
-  }
-
   function injectHeader(opts) {
     opts = opts || {};
     const page = opts.page || 'home';
@@ -129,7 +119,7 @@
     const langSel = document.getElementById('hdr-lang-select');
     if (langSel) {
       if (window.AgriI18n) {
-        langSel.value = (window.AgriI18n.getLanguage() === 'hi') ? 'hi' : 'en';
+        langSel.value = window.AgriI18n.getLanguage();
       }
       langSel.addEventListener('change', (e) => {
         if (window.AgriI18n) {
@@ -340,7 +330,10 @@
   async function _loadHeaderWeather() {
     try {
       const BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:8000/api/v1' : '/api/v1';
-      const res = await fetch(`${BASE}/agriculture/weather`, { credentials: "include" });
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 3500);
+      const res = await fetch(`${BASE}/agriculture/weather`, { credentials: "include", signal: c.signal });
+      clearTimeout(t);
       const data = await res.json();
       const el = document.getElementById('hdr-temp');
       if (el && data.temperature_c !== undefined) {
@@ -357,7 +350,10 @@
   async function _loadHeaderMandi() {
     try {
       const BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:8000/api/v1' : '/api/v1';
-      const res = await fetch(`${BASE}/agriculture/market/live?limit=3`, { credentials: "include" });
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 3500);
+      const res = await fetch(`${BASE}/agriculture/market/live?limit=3`, { credentials: "include", signal: c.signal });
+      clearTimeout(t);
       const data = await res.json();
       const el = document.getElementById('hdr-mandi-text');
       const prices = data.prices || [];

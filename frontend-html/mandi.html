@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgriGo — भारत सरकार लाइव मंडी भाव व फसल आय कैलकुलेटर (Agmarknet)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
     /* ── MANDI PAGE: Turmeric & Mustard Gold ── */
@@ -197,6 +200,21 @@
         </div>
       </form>
 
+      <!-- Error Box for Invalid Crop -->
+      <div id="calc-error-box" style="display:none; margin-top:20px;">
+        <div style="background:#FFF3F3; border:1.5px solid #FF8A80; border-left:5px solid #D32F2F; border-radius:var(--r-md); padding:16px 20px;">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="font-size:24px; line-height:1;">⚠️</span>
+            <div>
+              <div id="calc-error-title" style="font-size:15px; font-weight:800; color:#C62828;">अमान्य फसल का नाम (Invalid Crop Name)</div>
+              <div id="calc-error-msg" style="font-size:13px; color:#444; margin-top:5px; line-height:1.5;">
+                कृपया सही फसल का नाम लिखें ताकि सही परिणाम मिल सके (उदा. गेहूं, धान, सरसों, चना, मक्का, टमाटर, आलू, प्याज आदि)।
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Result -->
       <div id="calc-result-box" style="display:none; margin-top:20px;">
         <div style="background:linear-gradient(135deg,#FFFDF5,#FFF8E1); border:1.5px solid #EDD97A; border-radius:var(--r-md); padding:18px 20px;">
@@ -290,6 +308,7 @@
   </footer>
 
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/header.js"></script>
   <script src="js/mandi.js"></script>
 </body>

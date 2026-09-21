@@ -377,7 +377,8 @@ async function sendChatMessage(presetText = null) {
 
   try {
     const fid = currentFarmer ? currentFarmer.id : null;
-    const result = await AgriAPI.askAgriculturalAI(query, "hi", null, fid);
+    const activeLang = (window.AgriI18n ? window.AgriI18n.getLanguage() : "hi") || "hi";
+    const result = await AgriAPI.askAgriculturalAI(query, activeLang, null, fid);
     const temp = document.getElementById("typing-temp");
     if (temp) temp.remove();
 
@@ -401,10 +402,11 @@ function initSpeechRecognition() {
     return;
   }
 
+  const activeLang = (window.AgriI18n ? window.AgriI18n.getLanguage() : "hi") || "hi";
   speechRecognition = new SpeechRec();
   speechRecognition.continuous = false;
   speechRecognition.interimResults = false;
-  speechRecognition.lang = "hi-IN";
+  speechRecognition.lang = (activeLang === "en") ? "en-IN" : "hi-IN";
 
   speechRecognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
@@ -430,6 +432,9 @@ function toggleVoiceRecognition() {
     return;
   }
 
+  const activeLang = (window.AgriI18n ? window.AgriI18n.getLanguage() : "hi") || "hi";
+  speechRecognition.lang = (activeLang === "en") ? "en-IN" : "hi-IN";
+
   const mic = document.getElementById("btn-voice-mic");
   if (!isRecording) {
     speechRecognition.start();
@@ -445,11 +450,12 @@ function toggleVoiceRecognition() {
 // Text to Speech
 function speakText(btn) {
   const bubble = btn.closest(".chat-bubble");
-  const cleanText = bubble.innerText.replace("🔊 बोलकर सुनाएं", "").replace(/🏛️.*$/s, "");
+  const cleanText = bubble.innerText.replace("🔊 बोलकर सुनाएं", "").replace("🔊 Speak Aloud", "").replace(/🏛️.*$/s, "");
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = "hi-IN";
+    const activeLang = (window.AgriI18n ? window.AgriI18n.getLanguage() : "hi") || "hi";
+    utterance.lang = (activeLang === "en") ? "en-IN" : "hi-IN";
     utterance.rate = 0.95;
     window.speechSynthesis.speak(utterance);
   } else {
@@ -645,3 +651,9 @@ async function handleRecommendCropUI() {
     resBox.innerHTML = `<div style="color: red;">त्रुटि: ${err.message}</div>`;
   }
 }
+
+window.addEventListener("agrigo:langchange", () => {
+  if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+    window.AgriI18n.applyTranslation();
+  }
+});

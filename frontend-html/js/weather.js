@@ -44,6 +44,10 @@ async function loadWeatherData(lat, lon, locName) {
     renderAgriIntelligence(data.agricultural_intelligence || {});
 
     document.getElementById("live-time-stamp").innerText = `अपडेटेड: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+    if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+      window.AgriI18n.applyTranslation();
+    }
   } catch (err) {
     console.error("Error loading detailed weather:", err);
   }
@@ -371,3 +375,9 @@ function handleApplyWeatherLocation() {
     switchLocation(loc.lat, loc.lon, loc.name, null);
   }
 }
+
+window.addEventListener("agrigo:langchange", () => {
+  if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+    window.AgriI18n.applyTranslation();
+  }
+});
