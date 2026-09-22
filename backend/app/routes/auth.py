@@ -11,6 +11,7 @@ import uuid
 import json
 import secrets
 import os
+import re
 
 from app.config import settings
 from app.database import query_one, execute_db
@@ -28,6 +29,22 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1, description="Account password")
     role: Optional[str] = Field(None, description="Optional role hint ('farmer' or 'admin')")
     totp_code: Optional[str] = Field(None, description="Optional 2FA code for admin")
+
+class QuickLoginRequest(BaseModel):
+    phone: str = Field(..., min_length=10, max_length=15, description="10-digit registered farmer phone number")
+
+class FarmerProfileUpdateRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    phone: Optional[str] = Field(None, min_length=10, max_length=15)
+    password: Optional[str] = Field(None, min_length=6)
+    state: Optional[str] = None
+    district: Optional[str] = None
+    village: Optional[str] = None
+    preferred_language: Optional[str] = None
+    farm_area: Optional[float] = None
+    primary_crop: Optional[str] = None
+    soil_type: Optional[str] = None
+    irrigation_type: Optional[str] = None
 
 class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
@@ -220,6 +237,12 @@ async def register_farmer(req: RegisterRequest, request: Request, response: Resp
     ALWAYS assigns role='farmer', completely ignoring any client-sent role.
     """
     clean_phone = req.phone.strip()
+    if not clean_phone.isdigit() or len(clean_phone) != 10:
+        raise HTTPException(
+            status_code=400,
+            detail="मोबाइल नंबर केवल 10 अंकों का संख्यात्मक पूर्णांक होना चाहिए (Mobile number must be exactly 10 numeric digits)."
+        )
+
     existing = query_one("SELECT id FROM users WHERE phone = ?", (clean_phone,))
     if existing:
         raise HTTPException(status_code=400, detail="A farmer account with this phone number already exists.")
@@ -282,6 +305,221 @@ async def register_farmer(req: RegisterRequest, request: Request, response: Resp
         "success": True,
         "message": "Farmer registration successful.",
         "user": user_data
+    }
+
+@router.post("/api/auth/quick-login")
+@router.post("/api/v1/auth/quick-login")
+async def quick_mobile_login(req: QuickLoginRequest, request: Request, response: Response):
+    """
+    Direct 1-click mobile login for registered farmers without requiring SMS OTP.
+    """
+    clean_phone = req.phone.strip()
+    if not clean_phone.isdigit() or len(clean_phone) != 10:
+        raise HTTPException(status_code=400, detail="कृपया 10 अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें।")
+
+    farmer_row = query_one("SELECT * FROM users WHERE phone = ?", (clean_phone,))
+    if not farmer_row:
+        raise HTTPException(
+            status_code=404,
+            detail="इस मोबाइल नंबर से कोई किसान खाता पंजीकृत नहीं है। कृपया पहले नया पंजीकरण (Registration) करें।"
+        )
+
+    farmer_dict = dict(farmer_row)
+    if farmer_dict.get("status") == "suspended":
+        raise HTTPException(status_code=403, detail="यह खाता व्यवस्थापक द्वारा निलंबित (Suspended) है। कृपया सहायता से संपर्क करें।")
+
+    client_ip = request.client.host if request.client else ""
+    user_agent = request.headers.get("user-agent", "")
+    old_session_id = request.cookies.get(COOKIE_NAME)
+
+    session_data = SessionService.rotate_session(
+        old_session_id=old_session_id,
+        user_id=farmer_dict["id"],
+        role=farmer_dict.get("role", "farmer"),
+        ip_address=client_ip,
+        user_agent=user_agent
+    )
+    _set_session_cookie(response, session_data["session_id"], session_data["max_age"])
+
+    await AuditService.log_event(
+        actor_id=farmer_dict["id"],
+        actor_type="farmer",
+        action="QUICK_LOGIN",
+        resource_type="session",
+        resource_id=session_data["session_id"][:8]
+    )
+
+    return {
+        "success": True,
+        "message": f"स्वागत है, {farmer_dict['name']}!",
+        "user": {
+            "id": farmer_dict["id"],
+            "phone": farmer_dict["phone"],
+            "name": farmer_dict["name"],
+            "state": farmer_dict.get("state", "Uttar Pradesh"),
+            "district": farmer_dict.get("district", "Varanasi"),
+            "village": farmer_dict.get("village", "Rampur"),
+            "preferred_language": farmer_dict.get("preferred_language", "hi"),
+            "role": farmer_dict.get("role", "farmer"),
+            "status": farmer_dict.get("status", "active")
+        }
+    }
+
+@router.get("/api/v1/farmer/profile")
+@router.get("/api/farmer/profile")
+async def get_farmer_profile(user: Dict[str, Any] = Depends(require_auth)):
+    """
+    Fetches the authenticated farmer's complete profile and agricultural properties.
+    """
+    farmer_id = user["id"]
+    user_row = query_one("SELECT id, phone, name, preferred_language, state, district, village, status, role FROM users WHERE id = ?", (farmer_id,))
+    if not user_row:
+        raise HTTPException(status_code=404, detail="Farmer record not found.")
+
+    profile = dict(user_row)
+
+    # Fetch farm details
+    farm_row = query_one("SELECT * FROM farms WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1", (farmer_id,))
+    if farm_row:
+        profile["farm_id"] = farm_row["id"]
+        profile["farm_name"] = farm_row["name"]
+        profile["farm_area"] = farm_row["total_area_acres"]
+        profile["soil_type"] = farm_row["soil_type"]
+        profile["irrigation_type"] = farm_row["irrigation_type"]
+    else:
+        profile["farm_area"] = 2.5
+        profile["soil_type"] = "Alluvial Loam"
+        profile["irrigation_type"] = "Borewell / Canal"
+
+    # Fetch current crop
+    crop_row = query_one("SELECT crop_name, stage, health_status, area_acres FROM crops WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1", (farmer_id,))
+    if crop_row:
+        profile["primary_crop"] = crop_row["crop_name"]
+        profile["crop_stage"] = crop_row["stage"]
+    else:
+        cycle_row = query_one("SELECT crop_name, current_stage FROM crop_cycles WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1", (farmer_id,))
+        profile["primary_crop"] = cycle_row["crop_name"] if cycle_row else "धान / चावल (Paddy)"
+        profile["crop_stage"] = cycle_row["current_stage"] if cycle_row else "Vegetative"
+
+    return {"status": "OK", "profile": profile}
+
+@router.put("/api/v1/farmer/profile")
+@router.put("/api/farmer/profile")
+async def update_farmer_profile(req: FarmerProfileUpdateRequest, user: Dict[str, Any] = Depends(require_auth)):
+    """
+    Updates the authenticated farmer's personal and farm details.
+    Strictly verifies integer-only phone, checks phone uniqueness, and updates user + farm + crops tables.
+    """
+    farmer_id = user["id"]
+    user_row = query_one("SELECT * FROM users WHERE id = ?", (farmer_id,))
+    if not user_row:
+        raise HTTPException(status_code=404, detail="Farmer account not found.")
+
+    # 1. Phone number validation & uniqueness
+    current_phone = user_row["phone"]
+    target_phone = current_phone
+    if req.phone:
+        clean_phone = req.phone.strip()
+        if not clean_phone.isdigit() or len(clean_phone) != 10:
+            raise HTTPException(status_code=400, detail="मोबाइल नंबर केवल 10 अंकों का संख्यात्मक पूर्णांक होना चाहिए।")
+        if clean_phone != current_phone:
+            exists = query_one("SELECT id FROM users WHERE phone = ? AND id != ?", (clean_phone, farmer_id))
+            if exists:
+                raise HTTPException(status_code=400, detail="यह मोबाइल नंबर किसी अन्य किसान खाते द्वारा पहले से पंजीकृत है।")
+            target_phone = clean_phone
+
+    # 2. Update users table fields
+    target_name = req.name.strip() if (req.name and req.name.strip()) else user_row["name"]
+    target_state = req.state.strip() if req.state else user_row.get("state", "Uttar Pradesh")
+    target_district = req.district.strip() if req.district else user_row.get("district", "Varanasi")
+    target_village = req.village.strip() if req.village else user_row.get("village", "Rampur")
+    target_lang = req.preferred_language.strip() if req.preferred_language else user_row.get("preferred_language", "hi")
+
+    if req.password and len(req.password.strip()) >= 6:
+        new_pwd_hash = hash_password(req.password.strip())
+        execute_db("""
+            UPDATE users
+            SET name = ?, phone = ?, password_hash = ?, state = ?, district = ?, village = ?, preferred_language = ?
+            WHERE id = ?
+        """, (target_name, target_phone, new_pwd_hash, target_state, target_district, target_village, target_lang, farmer_id))
+    else:
+        execute_db("""
+            UPDATE users
+            SET name = ?, phone = ?, state = ?, district = ?, village = ?, preferred_language = ?
+            WHERE id = ?
+        """, (target_name, target_phone, target_state, target_district, target_village, target_lang, farmer_id))
+
+    # 3. Update or insert into farms table
+    now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    farm_row = query_one("SELECT * FROM farms WHERE farmer_id = ? LIMIT 1", (farmer_id,))
+    target_area = float(req.farm_area) if (req.farm_area is not None and req.farm_area > 0) else (float(farm_row["total_area_acres"]) if farm_row else 2.5)
+    target_soil = req.soil_type.strip() if req.soil_type else (farm_row["soil_type"] if farm_row else "Alluvial Loam")
+    target_irrigation = req.irrigation_type.strip() if req.irrigation_type else (farm_row["irrigation_type"] if farm_row else "Borewell / Canal")
+
+    if farm_row:
+        execute_db("""
+            UPDATE farms
+            SET total_area_acres = ?, soil_type = ?, irrigation_type = ?
+            WHERE id = ?
+        """, (target_area, target_soil, target_irrigation, farm_row["id"]))
+        farm_id = farm_row["id"]
+    else:
+        farm_id = f"farm-{uuid.uuid4().hex[:8]}"
+        execute_db("""
+            INSERT INTO farms (id, farmer_id, name, total_area_acres, soil_type, irrigation_type, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (farm_id, farmer_id, f"{target_name} का खेत", target_area, target_soil, target_irrigation, now_str))
+
+    # 4. Update crops & crop_cycles if primary crop specified
+    if req.primary_crop and req.primary_crop.strip():
+        crop_name = req.primary_crop.strip()
+        crop_entry = query_one("SELECT id FROM crops WHERE farmer_id = ? LIMIT 1", (farmer_id,))
+        if crop_entry:
+            execute_db("""
+                UPDATE crops
+                SET crop_name = ?, area_acres = ?
+                WHERE id = ?
+            """, (crop_name, target_area, crop_entry["id"]))
+        else:
+            execute_db("""
+                INSERT INTO crops (id, farm_id, farmer_id, crop_name, stage, health_status, area_acres, created_at)
+                VALUES (?, ?, ?, ?, 'Vegetative', 'Good', ?, ?)
+            """, (f"crop-{uuid.uuid4().hex[:8]}", farm_id, farmer_id, crop_name, target_area, now_str))
+
+        # Also update latest crop_cycle
+        cycle_entry = query_one("SELECT id FROM crop_cycles WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1", (farmer_id,))
+        if cycle_entry:
+            execute_db("""
+                UPDATE crop_cycles
+                SET crop_name = ?, area_acres = ?, soil_type = ?, irrigation_method = ?
+                WHERE id = ?
+            """, (crop_name, target_area, target_soil, target_irrigation, cycle_entry["id"]))
+
+    await AuditService.log_event(
+        actor_id=farmer_id,
+        actor_type="farmer",
+        action="UPDATE_PROFILE",
+        resource_type="user",
+        resource_id=farmer_id,
+        details={"phone": target_phone, "name": target_name, "area": target_area}
+    )
+
+    return {
+        "status": "OK",
+        "message": "किसान प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई।",
+        "profile": {
+            "id": farmer_id,
+            "name": target_name,
+            "phone": target_phone,
+            "state": target_state,
+            "district": target_district,
+            "village": target_village,
+            "preferred_language": target_lang,
+            "farm_area": target_area,
+            "primary_crop": req.primary_crop.strip() if req.primary_crop else None,
+            "soil_type": target_soil,
+            "irrigation_type": target_irrigation
+        }
     }
 
 # ----------------- OTP Flow (Also creates server session & sets cookie) -----------------

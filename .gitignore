@@ -44,3 +44,7 @@ backend/app/ml/yield_regressor.joblib
 __pycache__/
 *.py[cod]
 *$py.class
+
+# ephemeral binaries & mobile tunnels
+backend/cloudflared.exe
+mobile_link.txt

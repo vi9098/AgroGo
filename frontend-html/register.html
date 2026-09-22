@@ -96,8 +96,21 @@
             <input type="text" id="reg-name" class="form-input" required placeholder="उदा. रामेश सिंह" minlength="2">
           </div>
           <div class="form-group">
-            <label class="form-label">10-अंकों का मोबाइल नंबर <span style="color:var(--danger)">*</span></label>
-            <input type="tel" id="reg-phone" class="form-input" required placeholder="उदा. 9876543210" pattern="[0-9]{10}" maxlength="10">
+            <label class="form-label">10-अंकों का मोबाइल नंबर <span style="color:var(--danger)">*</span> (केवल संख्या)</label>
+            <input 
+              type="tel" 
+              id="reg-phone" 
+              class="form-input" 
+              required 
+              placeholder="उदा. 9876543210" 
+              pattern="[0-9]{10}" 
+              maxlength="10" 
+              inputmode="numeric"
+              autocomplete="tel"
+              oninput="this.value = this.value.replace(/\D/g, '').slice(0, 10);"
+              onkeypress="return (event.charCode >= 48 && event.charCode <= 57);"
+              onpaste="setTimeout(() => { this.value = this.value.replace(/\D/g, '').slice(0, 10); }, 0);"
+            >
           </div>
         </div>
 
@@ -219,7 +232,17 @@
       btn.disabled = true;
 
       const name = document.getElementById("reg-name").value.trim();
-      const phone = document.getElementById("reg-phone").value.trim();
+      const phoneInput = document.getElementById("reg-phone");
+      const phone = phoneInput ? phoneInput.value.replace(/\D/g, "").slice(0, 10) : "";
+
+      if (!/^\d{10}$/.test(phone)) {
+        alert("कृपया केवल 10 अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें (उदा. 9876543210)। केवल संख्या (Integer) ही मान्य है।");
+        if (phoneInput) phoneInput.focus();
+        btn.innerText = "🌾 पंजीकरण पूर्ण करें और पोर्टल में प्रवेश करें ➔";
+        btn.disabled = false;
+        return;
+      }
+
       const password = document.getElementById("reg-password").value.trim();
       const state = document.getElementById("reg-state").value;
       const district = document.getElementById("reg-district").value;

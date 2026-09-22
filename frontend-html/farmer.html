@@ -118,7 +118,8 @@
       <span class="farmer-info-pill" id="farmer-field-display">🌿 किसान खाता लोड हो रहा है...</span>
       <span class="farmer-info-pill" id="supabase-cloud-pill" style="background:rgba(0,180,80,0.25); border-color:rgba(129,199,132,0.6);" title="Supabase Cloud Database Connected">⚡ Supabase: <strong>499k+ रिकॉर्ड्स</strong></span>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <button type="button" onclick="openEditProfileModal()" class="btn btn-harvest" style="padding:5px 14px; font-size:12px; background:#2E7D32; border-color:#81C784;">✏️ प्रोफ़ाइल विवरण</button>
       <a href="mandi.html" class="btn btn-harvest" style="padding:5px 14px; font-size:12px;">💰 मंडी भाव</a>
       <a href="reminders.html" class="btn btn-secondary" style="padding:5px 14px; font-size:12px; background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.2); color:#FFF;">⏰ अनुस्मारक</a>
       <a href="index.html" class="btn btn-outline" style="padding:5px 12px; font-size:12px; background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); color:#FFF;">लॉगआउट</a>
@@ -135,165 +136,317 @@
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
       <span class="badge badge-green" id="farmer-current-crop-badge">🌱 वर्तमान फसल: धान / चावल (Paddy)</span>
+      <button type="button" onclick="openEditProfileModal()" class="btn btn-outline" style="padding:3px 10px; font-size:11.5px; border-color:var(--primary); color:var(--primary-dark); font-weight:700; background:#FFF;">✏️ विवरण बदलें</button>
     </div>
   </div>
 
   <main class="container">
-    <div class="chat-container">
 
-      <!-- ══ LEFT SIDEBAR ══ -->
-      <aside class="chat-sidebar">
-
-        <!-- Satellite Farm Imagery (Google Earth / Esri World Imagery Style) -->
-        <div class="card card-satellite" style="padding: 14px; border-top: 3.5px solid #2E7D32;">
-          <div class="sidebar-head">
-            🛰️ उपग्रह खेत दृश्य <span class="badge badge-green" style="font-size:10px; margin-left:auto;">Esri Satellite</span>
+    <!-- ══ EXPANDED FULL-WIDTH FARMER AI CHAT SECTION ══ -->
+    <section class="chat-box chat-box-expanded">
+      <!-- Chat Header -->
+      <div class="chat-header-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:42px; height:42px; background:rgba(255,255,255,0.22); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:2px solid rgba(255,255,255,0.35); box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+            🌾
           </div>
-          <div id="satellite-map" style="width: 100%; height: 185px; border-radius: 8px; border: 1.5px solid var(--border); overflow: hidden; background: #1C2018;"></div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <span id="sat-coords" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">📍 उपग्रह निर्देशांक लोड हो रहे हैं...</span>
-            <span style="font-weight: 700; color: #2E7D32; white-space:nowrap;">16x Zoom</span>
-          </div>
-        </div>
-
-        <!-- Mandi Mini Widget -->
-        <div class="card card-mandi" style="padding: 15px;">
-          <div class="sidebar-head">💰 आज के मंडी भाव <span class="badge badge-gold" style="font-size:10px; margin-left:auto;">Agmarknet</span></div>
-          <div style="display:flex; flex-direction:column; gap:7px;" id="farmer-mandi-mini">
-            <div style="text-align:center; padding:10px; font-size:12px; color:var(--text-muted);">दैनिक मंडी भाव लोड हो रहे हैं...</div>
-          </div>
-          <a href="mandi.html" class="btn btn-harvest" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
-            💰 आय कैलकुलेटर खोलें ➔
-          </a>
-        </div>
-
-        <!-- Weather Card -->
-        <div class="card card-zaid" style="padding: 15px;">
-          <div class="sidebar-head">🌤️ मौसम व छिड़काव <span class="badge badge-blue" style="font-size:10px; margin-left:auto;">Open-Meteo</span></div>
-          <div style="font-size:13px; color:var(--text-muted); line-height:1.7;" id="weather-details">
-            तापमान: <strong id="w-temp">डेटा लोड हो रहा है...</strong><br>
-            बारिश संभावना: <strong id="w-rain">—</strong><br>
-            छिड़काव: <span id="w-spray" class="badge badge-green">जाँच हो रही है...</span>
-          </div>
-          <a href="weather.html" class="btn btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
-            🌤️ Agromet मौसम केंद्र ➔
-          </a>
-        </div>
-
-        <!-- Active Crops Timeline -->
-        <div class="card card-kharif" style="padding: 15px;">
-          <div class="sidebar-head">🌾 सक्रिय फसलें <span class="badge badge-green" style="font-size:10px; margin-left:auto;" id="active-crops-count">0 फसलें</span></div>
-          <div id="crops-timeline-list" style="display:flex; flex-direction:column; gap:9px; font-size:13px;">
-            <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px;">फसलें लोड हो रही हैं...</div>
+          <div>
+            <div style="font-weight:800; font-size:16px; letter-spacing:0.2px;">AgriGo AI कृषि मित्र</div>
+            <div style="font-size:12px; opacity:0.9; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:8px; height:8px; background:#4CAF50; border-radius:50%;"></span>
+              <span>सक्रिय AI | Google Gemini 3.6 Flash | ICAR + TNAU + Agromet</span>
+            </div>
           </div>
         </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="badge badge-outline-white" style="font-size:11px; padding:4px 9px;">🌐 बहुभाषी AI</span>
+          <select id="chat-lang-select" class="form-select" style="width:auto; padding:5px 10px; font-size:12px; background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.28); color:#FFF; border-radius:var(--r-full);">
+            <option value="hi">हिंदी</option>
+            <option value="en">English</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+          </select>
+        </div>
+      </div>
 
-        <!-- Smart Reminders -->
-        <div class="card card-rabi" style="padding: 15px;">
-          <div class="sidebar-head">⏰ कृषि अनुस्मारक</div>
-          <div id="reminders-list" style="display:flex; flex-direction:column; gap:8px; font-size:12.5px;">
-            <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px;">अनुस्मारक लोड हो रहे हैं...</div>
+      <!-- Messages Area -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-bubble ai">
+          🌾 <strong>नमस्ते रमेश जी! मैं आपका AgriGo कृषि AI साथी हूँ।</strong><br><br>
+          आप किसी भी फसल (गेहूं, धान, सरसों, मक्का, टमाटर, कपास, सोयाबीन, मिर्च आदि) की <strong>बुवाई, खाद, सिंचाई, रोग, कीट, दवा का नाम व सटीक मात्रा</strong> और <strong>मंडी भाव</strong> के बारे में खुलकर पूछ सकते हैं। आप नीचे 📷 बटन से <strong>पत्ती या पौधे की फोटो</strong> भेजकर भी रोग की तुरंत जांच करा सकते हैं।
+          <div class="evidence-tag">📚 स्रोत: ICAR, TNAU, FAO AGROVOC, भारत सरकार Agromet मौसम केंद्र</div>
+        </div>
+      </div>
+
+      <!-- Quick Question Pills -->
+      <div class="quick-pills">
+        <button class="pill-btn" onclick="sendQuickPrompt('मेरी जमीन और मौसम के लिए कौन सी फसल सबसे अच्छी रहेगी?')">🌱 कौन सी फसल बोएं?</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('टमाटर के पत्तों पर पीले धब्बे और मरोड़ रोग दिख रहा है, क्या दवा डालें?')">🍅 टमाटर रोग निदान</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('गेहूं में पहला पानी कब दें और प्रति एकड़ कितना यूरिया डालें?')">🌾 गेहूं सिंचाई व खाद</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('सरसों में माहू (चेपा कीट) का जैविक व रासायनिक नियंत्रण बताएं')">🟡 सरसों कीट नियंत्रण</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('क्या आज मेरी फसल में कीटनाशक छिड़काव करना सुरक्षित है?')">💧 आज छिड़काव मौसम?</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('5 एकड़ में धान और गेहूं की अपेक्षित पैदावार कितनी होगी?')">📈 पैदावार अनुमान</button>
+        <button class="pill-btn" onclick="sendQuickPrompt('आज गेहूं, धान और सरसों का ताजा मंडी भाव क्या है?')">💰 ताजा मंडी भाव</button>
+        <a href="weather.html" class="pill-btn" style="text-decoration:none; background:#E1F5FE; border-color:#81D4FA; color:#0277BD;">🌤️ Agromet 7-दिवसीय मौसम</a>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="chat-input-bar">
+        <button class="btn btn-outline" id="btn-voice-mic" style="border-radius:var(--r-full); padding:10px 14px;" title="बोलकर पूछें" onclick="toggleVoiceRecognition()">🎤</button>
+        <label class="btn btn-outline" style="border-radius:var(--r-full); padding:10px 14px; cursor:pointer;" title="पत्ती या फसल की फोटो अपलोड करें">
+          📷
+          <input type="file" id="leaf-photo-input" accept="image/*" style="display:none;" onchange="handleLeafPhotoUpload(this)">
+        </label>
+        <input type="text" id="chat-input" class="form-input" placeholder="अपनी फसल की समस्या, रोग या प्रश्न यहाँ लिखें..." style="flex:1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
+        <button class="btn btn-primary" id="btn-send-chat" style="padding:10px 18px;" onclick="sendChatMessage()">भेजें ➔</button>
+      </div>
+    </section>
+
+    <!-- ══ ALIGNED SECONDARY FEATURES BELOW FARMER AI SECTION ══ -->
+    <div class="farmer-features-header">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h2 style="font-size:18px; font-weight:800; color:var(--primary-dark, #0F3D25); margin:0; display:flex; align-items:center; gap:8px;">
+            🚜 कृषि डैशबोर्ड व सहायक सेवाएँ
+          </h2>
+          <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0;">उपग्रह खेत दृश्य, लाइव मंडी भाव, मौसम व छिड़काव, फसल चक्र, अनुस्मारक एवं AI पैदावार कैलकुलेटर</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="weather.html" class="btn btn-outline" style="padding:5px 12px; font-size:12px;">🌤️ मौसम</a>
+          <a href="mandi.html" class="btn btn-harvest" style="padding:5px 12px; font-size:12px;">💰 मंडी</a>
+          <a href="reminders.html" class="btn btn-secondary" style="padding:5px 12px; font-size:12px;">⏰ अनुस्मारक</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="farmer-features-grid">
+
+      <!-- 1. Satellite Farm Imagery -->
+      <div class="card card-feature card-satellite" style="padding: 15px; border-top: 3.5px solid #2E7D32;">
+        <div class="sidebar-head">
+          🛰️ उपग्रह खेत दृश्य <span class="badge badge-green" style="font-size:10px; margin-left:auto;">Esri Satellite</span>
+        </div>
+        <div id="satellite-map" style="width: 100%; height: 190px; border-radius: 8px; border: 1.5px solid var(--border); overflow: hidden; background: #1C2018;"></div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+          <span id="sat-coords" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">📍 उपग्रह निर्देशांक लोड हो रहे हैं...</span>
+          <span style="font-weight: 700; color: #2E7D32; white-space:nowrap;">16x Zoom</span>
+        </div>
+      </div>
+
+      <!-- 2. Mandi Mini Widget -->
+      <div class="card card-feature card-mandi" style="padding: 15px;">
+        <div class="sidebar-head">💰 आज के मंडी भाव <span class="badge badge-gold" style="font-size:10px; margin-left:auto;">Agmarknet</span></div>
+        <div style="display:flex; flex-direction:column; gap:7px; min-height:140px;" id="farmer-mandi-mini">
+          <div style="text-align:center; padding:15px; font-size:12px; color:var(--text-muted);">दैनिक मंडी भाव लोड हो रहे हैं...</div>
+        </div>
+        <a href="mandi.html" class="btn btn-harvest" style="width:100%; margin-top:auto; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+          💰 आय कैलकुलेटर खोलें ➔
+        </a>
+      </div>
+
+      <!-- 3. Weather Card -->
+      <div class="card card-feature card-zaid" style="padding: 15px;">
+        <div class="sidebar-head">🌤️ मौसम व छिड़काव <span class="badge badge-blue" style="font-size:10px; margin-left:auto;">Open-Meteo</span></div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.8; min-height:140px;" id="weather-details">
+          तापमान: <strong id="w-temp">डेटा लोड हो रहा है...</strong><br>
+          बारिश संभावना: <strong id="w-rain">—</strong><br>
+          छिड़काव: <span id="w-spray" class="badge badge-green">जाँच हो रही है...</span>
+        </div>
+        <a href="weather.html" class="btn btn-secondary" style="width:100%; margin-top:auto; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+          🌤️ Agromet मौसम केंद्र ➔
+        </a>
+      </div>
+
+      <!-- 4. Active Crops Timeline -->
+      <div class="card card-feature card-kharif" style="padding: 15px;">
+        <div class="sidebar-head">🌾 सक्रिय फसलें <span class="badge badge-green" style="font-size:10px; margin-left:auto;" id="active-crops-count">0 फसलें</span></div>
+        <div id="crops-timeline-list" style="display:flex; flex-direction:column; gap:9px; font-size:13px; min-height:140px;">
+          <div style="text-align:center; padding:15px; color:var(--text-muted); font-size:12px;">फसलें लोड हो रही हैं...</div>
+        </div>
+      </div>
+
+      <!-- 5. Smart Reminders -->
+      <div class="card card-feature card-rabi" style="padding: 15px;">
+        <div class="sidebar-head">⏰ कृषि अनुस्मारक</div>
+        <div id="reminders-list" style="display:flex; flex-direction:column; gap:8px; font-size:12.5px; min-height:110px;">
+          <div style="text-align:center; padding:15px; color:var(--text-muted); font-size:12px;">अनुस्मारक लोड हो रहे हैं...</div>
+        </div>
+        <div style="margin-top:auto;">
+          <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <input type="text" id="nl-reminder-input" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="उदा. कल यूरिया डालना...">
+            <button class="btn btn-primary" style="padding:6px 10px; font-size:12px;" onclick="handleCreateNaturalReminder()">+</button>
           </div>
-          <a href="reminders.html" class="btn btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
+          <a href="reminders.html" class="btn btn-secondary" style="width:100%; font-size:12px; padding:7px; text-align:center; text-decoration:none; display:block;">
             ⏰ अनुस्मारक डैशबोर्ड ➔
           </a>
-          <div style="margin-top:10px;">
-            <div style="display:flex; gap:5px;">
-              <input type="text" id="nl-reminder-input" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="उदा. कल यूरिया डालना...">
-              <button class="btn btn-primary" style="padding:6px 10px; font-size:12px;" onclick="handleCreateNaturalReminder()">+</button>
-            </div>
-          </div>
         </div>
+      </div>
 
-        <!-- AI Yield Calculator -->
-        <div class="card" style="padding: 15px;">
-          <div class="sidebar-head">📊 AI पैदावार कैलकुलेटर <span class="badge badge-green" style="font-size:10px; margin-left:auto;">ML</span></div>
-          <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px;">कृषि मंत्रालय के 4.5 लाख+ रिकॉर्ड्स पर प्रशिक्षित AI।</p>
-          <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
-            <select id="calc-state" class="form-input" style="padding:6px; font-size:12px;" onchange="handleStateChange()">
-              <option value="">-- राज्य चुनें (Select State) --</option>
+      <!-- 6. AI Yield Calculator -->
+      <div class="card card-feature" style="padding: 15px;">
+        <div class="sidebar-head">📊 AI पैदावार कैलकुलेटर <span class="badge badge-green" style="font-size:10px; margin-left:auto;">ML</span></div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">कृषि मंत्रालय के 4.5 लाख+ रिकॉर्ड्स पर प्रशिक्षित AI।</p>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+          <select id="calc-state" class="form-input" style="padding:6px; font-size:12px;" onchange="handleStateChange()">
+            <option value="">-- राज्य चुनें (Select State) --</option>
+          </select>
+          <select id="calc-district" class="form-input" style="padding:6px; font-size:12px;">
+            <option value="">-- जिला चुनें (Select District) --</option>
+          </select>
+          <div style="display:flex; gap:6px;">
+            <select id="calc-crop" class="form-input" style="padding:6px; font-size:12px; flex:1;">
+              <option value="Wheat">गेहूं</option><option value="Rice">धान</option>
+              <option value="Cotton">कपास</option><option value="Maize">मक्का</option>
+              <option value="Chickpea">चना</option><option value="Soybean">सोयाबीन</option>
             </select>
-            <select id="calc-district" class="form-input" style="padding:6px; font-size:12px;">
-              <option value="">-- जिला चुनें (Select District) --</option>
-            </select>
-            <div style="display:flex; gap:6px;">
-              <select id="calc-crop" class="form-input" style="padding:6px; font-size:12px; flex:1;">
-                <option value="Wheat">गेहूं</option><option value="Rice">धान</option>
-                <option value="Cotton">कपास</option><option value="Maize">मक्का</option>
-                <option value="Chickpea">चना</option><option value="Soybean">सोयाबीन</option>
-              </select>
-              <input type="number" id="calc-acres" class="form-input" value="2.5" min="0.1" step="0.5" style="width:72px; padding:6px; font-size:12px;">
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-primary" style="flex:1; padding:6px; font-size:11.5px;" onclick="handlePredictYieldUI()">📈 पैदावार</button>
-              <button class="btn btn-secondary" style="padding:6px 10px; font-size:11.5px;" onclick="handleRecommendCropUI()">🌱 श्रेष्ठ फसल</button>
-            </div>
+            <input type="number" id="calc-acres" class="form-input" value="2.5" min="0.1" step="0.5" style="width:72px; padding:6px; font-size:12px;">
           </div>
-          <div id="calc-result-box" style="display:none;"></div>
-        </div>
-
-      </aside>
-
-      <!-- ══ RIGHT CHAT AREA ══ -->
-      <section class="chat-box">
-        <!-- Chat Header -->
-        <div class="chat-header-bar">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:38px; height:38px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:2px solid rgba(255,255,255,0.3);">
-              🌾
-            </div>
-            <div>
-              <div style="font-weight:800; font-size:15px;">AgriGo AI कृषि मित्र</div>
-              <div style="font-size:11.5px; opacity:0.88;">🟢 सक्रिय | ICAR + TNAU + FAO | 455k+ रिकॉर्ड्स प्रशिक्षित</div>
-            </div>
-          </div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <span class="badge badge-outline-white" style="font-size:11px;">हिंदी / Multilingual</span>
-            <select id="chat-lang-select" class="form-select" style="width:auto; padding:4px 8px; font-size:11px; background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.2); color:#FFF; border-radius:var(--r-full);">
-              <option value="hi">हिंदी</option>
-              <option value="en">English</option>
-              <option value="ta">தமிழ்</option>
-              <option value="te">తెలుగు</option>
-              <option value="pa">ਪੰਜਾਬੀ</option>
-            </select>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-primary" style="flex:1; padding:6px; font-size:11.5px;" onclick="handlePredictYieldUI()">📈 पैदावार</button>
+            <button class="btn btn-secondary" style="padding:6px 10px; font-size:11.5px;" onclick="handleRecommendCropUI()">🌱 श्रेष्ठ फसल</button>
           </div>
         </div>
-
-        <!-- Messages -->
-        <div class="chat-messages" id="chat-messages">
-          <div class="chat-bubble ai">
-            🌾 <strong>नमस्ते रमेश जी! मैं आपका AgriGo कृषि AI साथी हूँ।</strong><br><br>
-            आप किसी भी फसल (गेहूं, धान, सरसों, मक्का, टमाटर, कपास, सोयाबीन आदि) की <strong>बुवाई, खाद, सिंचाई, रोग, कीट, उपज</strong> और <strong>मंडी भाव</strong> के बारे में पूछ सकते हैं। हमारे AI मॉडल कृषि मंत्रालय के 4.5 लाख+ रिकॉर्ड्स और ICAR के शोध पर आधारित हैं।
-            <div class="evidence-tag">📚 स्रोत: ICAR, TNAU, FAO AGROVOC, भारत सरकार कृषि मंत्रालय</div>
-          </div>
-        </div>
-
-        <!-- Quick Question Pills -->
-        <div class="quick-pills">
-          <button class="pill-btn" onclick="sendQuickPrompt('मेरी जमीन के लिए कौन सी फसल सबसे अच्छी रहेगी?')">🌱 कौन सी फसल बोएं?</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('5 एकड़ जमीन में गेहूं की पैदावार कितनी होगी?')">📈 पैदावार अनुमान</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('सरसों की संपूर्ण खेती विधि बताएं — बुवाई से कटाई तक')">🟡 सरसों की खेती</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('क्या आज सिंचाई करनी चाहिए? मौसम कैसा है?')">💧 आज सिंचाई?</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('टमाटर के पत्तों पर पीले धब्बे पड़ रहे हैं, क्या करूं?')">🍅 टमाटर रोग</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('गेहूं और सरसों का ताजा मंडी भाव क्या है?')">💰 मंडी भाव</button>
-          <button class="pill-btn" onclick="sendQuickPrompt('धान की खेती में अब क्या काम करना चाहिए?')">🍚 धान खेती</button>
-          <a href="weather.html" class="pill-btn" style="text-decoration:none; background:#E1F5FE; border-color:#81D4FA;">🌤️ Agromet मौसम</a>
-        </div>
-
-        <!-- Input Bar -->
-        <div class="chat-input-bar">
-          <button class="btn btn-outline" id="btn-voice-mic" style="border-radius:var(--r-full); padding:10px 12px;" title="बोलकर पूछें" onclick="toggleVoiceRecognition()">🎤</button>
-          <label class="btn btn-outline" style="border-radius:var(--r-full); padding:10px 12px; cursor:pointer;" title="पत्ती की फोटो">
-            📷
-            <input type="file" id="leaf-photo-input" accept="image/*" style="display:none;" onchange="handleLeafPhotoUpload(this)">
-          </label>
-          <input type="text" id="chat-input" class="form-input" placeholder="अपनी फसल की समस्या या प्रश्न यहाँ लिखें..." style="flex:1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
-          <button class="btn btn-primary" id="btn-send-chat" onclick="sendChatMessage()">भेजें ➔</button>
-        </div>
-      </section>
+        <div id="calc-result-box" style="display:none; margin-top:8px;"></div>
+      </div>
 
     </div>
+
   </main>
+
+  <!-- ══ EDIT FARMER PROFILE MODAL ══ -->
+  <div id="edit-profile-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); z-index:9999; overflow-y:auto; padding:20px 14px;">
+    <div style="max-width:680px; margin:30px auto; background:#FFFFFF; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.25); border:1.5px solid var(--border); overflow:hidden;">
+      <!-- Modal Header -->
+      <div style="background:linear-gradient(135deg, #1C3D12 0%, #2E5D1E 100%); color:#FFF; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:24px;">👨‍🌾</span>
+          <div>
+            <h3 style="margin:0; font-size:17px; font-weight:800;">किसान प्रोफ़ाइल एवं कृषि विवरण संपादित करें</h3>
+            <p style="margin:2px 0 0 0; font-size:12px; opacity:0.88;">अपनी व्यक्तिगत जानकारी, भूमि रकबा एवं फसल विवरण अपडेट करें</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeEditProfileModal()" style="background:rgba(255,255,255,0.2); border:none; color:#FFF; font-size:20px; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="edit-profile-form" onsubmit="handleEditProfileSubmit(event)" style="padding:24px;">
+        <div id="profile-edit-alert" style="display:none; padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:13px; font-weight:600;"></div>
+
+        <!-- Personal Details -->
+        <div style="font-size:13px; font-weight:800; color:var(--primary); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:4px; display:flex; align-items:center; gap:6px;">
+          <span>👤</span> व्यक्तिगत विवरण (Personal Details)
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">किसान का पूरा नाम <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="edit-name" class="form-input" required minlength="2" placeholder="पूरा नाम">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">10-अंकों का मोबाइल नंबर <span style="color:var(--danger)">*</span> (केवल संख्या)</label>
+            <input 
+              type="tel" 
+              id="edit-phone" 
+              class="form-input" 
+              required 
+              maxlength="10" 
+              inputmode="numeric" 
+              pattern="[0-9]*" 
+              placeholder="9876543210"
+              oninput="this.value = this.value.replace(/\D/g, '').slice(0, 10);"
+              onkeypress="return (event.charCode >= 48 && event.charCode <= 57);"
+            >
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label" style="font-size:12.5px; font-weight:700;">नया पासवर्ड (New Password) <span style="font-weight:400; color:var(--text-muted);">(यदि बदलना चाहें, अन्यथा खाली छोड़ें)</span></label>
+          <input type="password" id="edit-password" class="form-input" placeholder="नया पासवर्ड (कम से कम 6 अक्षर)" minlength="6">
+        </div>
+
+        <!-- Location Details -->
+        <div style="font-size:13px; font-weight:800; color:var(--primary); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:4px; display:flex; align-items:center; gap:6px;">
+          <span>📍</span> स्थान विवरण (Location Details)
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">राज्य (State) <span style="color:var(--danger)">*</span></label>
+            <select id="edit-state" class="form-select" required></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">जिला (District) <span style="color:var(--danger)">*</span></label>
+            <select id="edit-district" class="form-select" required></select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label" style="font-size:12.5px; font-weight:700;">तहसील / गांव का नाम</label>
+          <input type="text" id="edit-village" class="form-input" placeholder="उदा. रामपुर, तहसील सदर">
+        </div>
+
+        <!-- Farm & Agricultural Details -->
+        <div style="font-size:13px; font-weight:800; color:var(--primary); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:4px; display:flex; align-items:center; gap:6px;">
+          <span>🚜</span> खेत एवं फसल विवरण (Farm & Crop Details)
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">खेत का कुल क्षेत्रफल (एकड़ में) <span style="color:var(--danger)">*</span></label>
+            <input type="number" id="edit-farm-area" class="form-input" required step="0.1" min="0.1" max="1000" placeholder="उदा. 3.5">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">वर्तमान मुख्य फसल <span style="color:var(--danger)">*</span></label>
+            <select id="edit-primary-crop" class="form-select" required>
+              <option value="गेहूं (Wheat)">गेहूं (Wheat)</option>
+              <option value="धान / चावल (Paddy/Rice)">धान / चावल (Paddy/Rice)</option>
+              <option value="कपास (Cotton)">कपास (Cotton)</option>
+              <option value="सरसों (Mustard)">सरसों (Mustard)</option>
+              <option value="मक्का (Maize)">मक्का (Maize)</option>
+              <option value="गन्ना (Sugarcane)">गन्ना (Sugarcane)</option>
+              <option value="चना (Gram/Chickpea)">चना (Gram/Chickpea)</option>
+              <option value="सोयाबीन (Soybean)">सोयाबीन (Soybean)</option>
+              <option value="टमाटर (Tomato)">टमाटर (Tomato)</option>
+              <option value="आलू (Potato)">आलू (Potato)</option>
+              <option value="प्याज (Onion)">प्याज (Onion)</option>
+              <option value="मिर्च (Chilli)">मिर्च (Chilli)</option>
+              <option value="अन्य सब्जी/फल">अन्य सब्जी / फल</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">मिट्टी का प्रकार (Soil Type)</label>
+            <select id="edit-soil-type" class="form-select">
+              <option value="जलोढ़ मिट्टी (Alluvial Soil)">जलोढ़ मिट्टी (Alluvial Soil)</option>
+              <option value="काली मिट्टी (Black Soil / Regur)">काली मिट्टी (Black Soil / Regur)</option>
+              <option value="दोमट मिट्टी (Loamy Soil)">दोमट मिट्टी (Loamy Soil)</option>
+              <option value="लाल व पीली मिट्टी (Red & Yellow Soil)">लाल व पीली मिट्टी (Red Soil)</option>
+              <option value="बलुई / रेतीली मिट्टी (Sandy Soil)">बलुई / रेतीली मिट्टी (Sandy Soil)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:12.5px; font-weight:700;">सिंचाई का मुख्य साधन</label>
+            <select id="edit-irrigation-type" class="form-select">
+              <option value="ट्यूबवेल / सबमर्सिबल (Borewell)">ट्यूबवेल / सबमर्सिबल (Borewell)</option>
+              <option value="सरकारी / निजी नहर (Canal)">सरकारी / निजी नहर (Canal)</option>
+              <option value="ड्रिप / स्प्रिंकलर (Drip/Micro)">ड्रिप / स्प्रिंकलर (Micro Irrigation)</option>
+              <option value="तालाब / नदी (Pond/River)">तालाब / नदी (Surface Water)</option>
+              <option value="पूर्णतः वर्षा-आधारित (Rainfed)">पूर्णतः वर्षा-आधारित (Rainfed)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:16px;">
+          <button type="button" onclick="closeEditProfileModal()" class="btn btn-outline" style="padding:10px 20px;">रद्द करें</button>
+          <button type="submit" id="btn-save-profile" class="btn btn-primary" style="padding:10px 24px; font-weight:800;">💾 विवरण सुरक्षित करें</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>

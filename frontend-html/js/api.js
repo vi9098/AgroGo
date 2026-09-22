@@ -47,8 +47,10 @@ const AgriAPI = (() => {
       ...(options.headers || {})
     };
 
+    const isAIOperation = endpoint.includes("/chat/") || endpoint.includes("/ml/") || endpoint.includes("/agriculture/") || endpoint.includes("/farmer/reminders/natural");
+    const timeoutMs = options.timeout || (isAIOperation ? 90000 : 30000);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 8000);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     const fetchOptions = {
       ...options,
@@ -74,7 +76,10 @@ const AgriAPI = (() => {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {
-        console.warn(`[AgriAPI Timeout] ${endpoint} exceeded 8s threshold`);
+        console.warn(`[AgriAPI Timeout] ${endpoint} exceeded timeout threshold (${timeoutMs}ms)`);
+        const timeoutErr = new Error("अनुरोध समय समाप्त (Request timed out, please try again)");
+        timeoutErr.name = "TimeoutError";
+        throw timeoutErr;
       } else {
         console.error(`[AgriAPI Error] ${endpoint}:`, err);
       }
@@ -116,6 +121,18 @@ const AgriAPI = (() => {
     farmerDirectLogin: (identifier, password) => request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ identifier, password, role: "farmer" })
+    }),
+
+    quickMobileLogin: (phone) => request("/api/auth/quick-login", {
+      method: "POST",
+      body: JSON.stringify({ phone })
+    }),
+
+    getFarmerProfile: () => request("/api/v1/farmer/profile"),
+
+    updateFarmerProfile: (profileData) => request("/api/v1/farmer/profile", {
+      method: "PUT",
+      body: JSON.stringify(profileData)
     }),
 
     adminLogin: (email, password) => request("/api/auth/login", {
@@ -191,6 +208,7 @@ const AgriAPI = (() => {
     askAgriculturalAI: (question, language = "hi", cropContext = null, farmerId = null) => {
       return request("/chat/ask", {
         method: "POST",
+        timeout: 90000,
         body: JSON.stringify({
           question,
           language,
@@ -205,6 +223,10 @@ const AgriAPI = (() => {
       formData.append("file", file);
       const url = `${API_V1}/chat/image`;
       const res = await fetch(url, { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error((errData && errData.detail) || "चित्र विश्लेषण में त्रुटि (Image analysis failed)");
+      }
       return await res.json();
     },
 

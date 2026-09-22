@@ -282,7 +282,7 @@ async def analyze_crop_image(file: UploadFile = File(...), crop_hint: Optional[s
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    analysis = await VisionProviderAdapter.analyze_crop_image(file.filename, crop_hint)
+    analysis = await VisionProviderAdapter.analyze_crop_image(image_path=file_path, filename=file.filename, crop_hint=crop_hint)
     return {"status": "OK", "filename": file.filename, "analysis": analysis}
 
 # ----------------- AI Crop Recommendation & Yield Prediction APIs -----------------

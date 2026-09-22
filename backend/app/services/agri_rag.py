@@ -71,7 +71,38 @@ class AgriRAGService:
         # 7. Retrieve Authoritative Evidence Chunks
         evidence_chunks = AgriKnowledgeService.retrieve_evidence(matched_crop or crop_context)
 
-        # 8. Construct 6-Part Structured Response
+        # 8. Attempt Live Dynamic AI Generation via Gemini / OpenAI
+        from app.config import settings
+        if settings.GEMINI_API_KEY or settings.OPENAI_API_KEY:
+            try:
+                from app.adapters.llm.gemini_llm import GeminiLLMAdapter
+                adapter = GeminiLLMAdapter()
+                weather_ctx = f"Local Weather: {weather.get('temperature_c', 28)}°C, Rain Probability: {weather.get('rain_prob_today_pct', 10)}%, Spray Window Safe: {weather.get('spray_window_safe', True)}"
+                crop_ctx_str = f"Farmer Crop: {matched_crop or (active_crop_cycle.get('crop_name') if active_crop_cycle else 'General Agriculture')}"
+                if active_crop_cycle:
+                    crop_ctx_str += f", Stage: {active_crop_cycle.get('current_stage', 'Growth')}, Area: {active_crop_cycle.get('area_acres', 2.5)} acres"
+
+                context_payload = [{"title": c.get("title", "ICAR Scientific Knowledge"), "content": c.get("text", "")} for c in evidence_chunks]
+                context_payload.append({"title": "Live Agromet Weather", "content": weather_ctx})
+                context_payload.append({"title": "Farmer Farm Profile", "content": crop_ctx_str})
+
+                ai_res = await adapter.generate_response(question, context_payload, language=language)
+                if ai_res and ai_res.get("content"):
+                    return {
+                        "response": ai_res["content"],
+                        "provider": ai_res.get("provider", "Google Gemini 3.6 Flash (AgriGo Dynamic AI)"),
+                        "evidence": ai_res.get("evidence_used", ["ICAR Guidelines", "Agromet Weather"]),
+                        "weather_context": {
+                            "temp": f"{weather.get('temperature_c')}°C",
+                            "rain_prob": f"{weather.get('rain_prob_today_pct')}%",
+                            "spray_safe": weather.get("spray_window_safe")
+                        },
+                        "agrovoc_concept": matched_crop
+                    }
+            except Exception as e:
+                logger.warning(f"[Live LLM Query Failed] {e}. Falling back to ICAR agronomy templates.")
+
+        # 9. Deterministic RAG Fallback Templates (When Offline)
         if matched_prob:
             response_text = cls._build_disease_structured_response(matched_prob, matched_crop, weather)
             evidence_sources = [matched_prob.get("source", "ICAR Official Advisory")]

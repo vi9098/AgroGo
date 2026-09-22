@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     
     # Providers
-    PRIMARY_LLM_PROVIDER: str = "openai"
-    SECONDARY_LLM_PROVIDER: str = "gemini"
+    PRIMARY_LLM_PROVIDER: str = "gemini"
+    SECONDARY_LLM_PROVIDER: str = "openai"
     OPENAI_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
     
@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     SUPABASE_KEY: Optional[str] = None
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(".env", "backend/.env", "../.env"),
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 settings = Settings()
