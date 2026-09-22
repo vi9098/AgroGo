@@ -278,6 +278,18 @@ def execute_db(query: str, params: tuple = ()) -> int:
 
     return last_id
 
+def execute_local_db(query: str, params: tuple = ()) -> int:
+    """Executes query strictly against local SQLite cache without cloud dual-write (for internal seeding)."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()
+        last_id = cursor.lastrowid
+    finally:
+        conn.close()
+    return last_id
+
 def query_db(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
     # 1. Attempt live query directly from Supabase PostgreSQL
     try:
@@ -605,7 +617,7 @@ def seed_sql_defaults():
 
         # Seed Admin User safely with INSERT OR IGNORE
         admin_pass = hash_password("Admin@AgriGo2026")
-        execute_db("""
+        execute_local_db("""
             INSERT OR IGNORE INTO admin_users (id, email, password_hash, full_name, role, is_2fa_enabled, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, ("admin-1", "admin@agrigo.com", admin_pass, "AgriGo Commander", "admin", 0, now))
@@ -620,13 +632,13 @@ def seed_sql_defaults():
         ]
         for fid, phone, name, state, dist, vill in sample_farmers:
             consent = json.dumps({"farm_memory": True, "ai_improvement": True, "photo_learning": True})
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO users (id, phone, name, password_hash, preferred_language, state, district, village, consent_json, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (fid, phone, name, demo_pass, "hi", state, dist, vill, consent, now))
 
         # Seed Farms & Crops
-        execute_db("""
+        execute_local_db("""
             INSERT OR IGNORE INTO farms (id, farmer_id, name, total_area_acres, soil_type, irrigation_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, ("farm-1", "farmer-1001", "Ramesh Organic Farm", 4.5, "Sandy Loam", "Drip Irrigation", now))
@@ -637,7 +649,7 @@ def seed_sql_defaults():
             ("crop-3", "farm-1", "farmer-1001", "Mustard", "Pusa Bold", "Pod Filling", "Good", "2023-11-20", 1.0),
         ]
         for cid, fmid, fmerid, cname, var, stage, health, sdate, area in sample_crops:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO crops (id, farm_id, farmer_id, crop_name, variety, stage, health_status, sowing_date, area_acres, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (cid, fmid, fmerid, cname, var, stage, health, sdate, area, now))
@@ -649,7 +661,7 @@ def seed_sql_defaults():
             ("rem-3", "farmer-1001", "Wheat Crown Root Fertilizer Top-Dress", "Apply 25kg Urea per acre post-irrigation.", "Sep 25, 2026", 0),
         ]
         for rid, fid, title, desc, due, done in sample_reminders:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO reminders (id, farmer_id, title, description, due_date, is_completed, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (rid, fid, title, desc, due, done, now))
@@ -664,7 +676,7 @@ def seed_sql_defaults():
              "Sucking pests cluster on flower stalks and pods. Spray 2% Neem oil or Beauveria bassiana 5g/L. If ETL exceeded (25 aphids/plant), spray Dimethoate 30 EC @ 1 ml/L.", "National Research Centre on Plant Biotechnology", 1),
         ]
         for kid, title, cat, crop, content, src, ver in sample_kb:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO knowledge_docs (id, title, category, crop, content, source, verified, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (kid, title, cat, crop, content, src, ver, now))
@@ -691,7 +703,7 @@ def seed_sql_defaults():
              1, 1, 0, 1, 1, now, "Supplementary"),
         ]
         for sid, sname, surl, sorg, scountry, slang, stype, slic, slic_url, sterms, col, reuse, train, attr, rob, ver_at, stat in sample_sources:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO knowledge_sources (id, name, url, organization, country, languages_json, source_type,
                                               license_name, license_url, terms_url, allows_automated_collection,
                                               allows_text_reuse, allows_model_training, requires_attribution,
@@ -715,7 +727,7 @@ def seed_sql_defaults():
              "Mustard", "pest", "North India", "en", "ICAR - Directorate of Rapeseed-Mustard Research", "https://drmr.icar.gov.in", "Open Gov Data", 0.94),
         ]
         for chk_id, doc_id, ctext, ccrop, ctopic, creg, clang, csrc, csur_url, clis, conf in sample_chunks:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO knowledge_chunks (id, document_id, text, crop, topic, region, language, source, source_url, license, confidence, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (chk_id, doc_id, ctext, ccrop, ctopic, creg, clang, csrc, csur_url, clis, conf, now))
@@ -723,11 +735,11 @@ def seed_sql_defaults():
         # Seed Sample Active Crop Cycles
         ten_days_ago = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=10)).strftime("%Y-%m-%d")
         twenty_days_ago = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=20)).strftime("%Y-%m-%d")
-        execute_db("""
+        execute_local_db("""
             INSERT OR IGNORE INTO crop_cycles (id, field_id, farmer_id, crop_name, variety, sowing_date, expected_harvest_date, area_acres, irrigation_method, soil_type, current_stage, health_status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, ("cycle-1", "field-1", "farmer-1001", "Wheat", "PBW 550", twenty_days_ago, "2026-04-10", 2.5, "Sprinkler", "Sandy Loam", "Early Tillering / CRI", "Good", now))
-        execute_db("""
+        execute_local_db("""
             INSERT OR IGNORE INTO crop_cycles (id, field_id, farmer_id, crop_name, variety, sowing_date, expected_harvest_date, area_acres, irrigation_method, soil_type, current_stage, health_status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, ("cycle-2", "field-2", "farmer-1001", "Tomato", "Himsona", ten_days_ago, "2026-05-15", 1.5, "Drip", "Clay Loam", "Vegetative Growth", "Monitoring", now))
@@ -741,7 +753,7 @@ def seed_sql_defaults():
             ("mkt-5", "Potato", "Jyoti", "Agra Mandi", "Agra", "Uttar Pradesh", 1200.0, 1650.0, 1450.0, now),
         ]
         for mid, comm, var, mname, dist, st, minp, maxp, modp, u_at in sample_mkt:
-            execute_db("""
+            execute_local_db("""
                 INSERT OR IGNORE INTO market_data (id, commodity, variety, market_name, district, state, min_price, max_price, modal_price, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (mid, comm, var, mname, dist, st, minp, maxp, modp, u_at))

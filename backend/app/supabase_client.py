@@ -68,10 +68,17 @@ class SupabaseClient:
             return False
         try:
             r = self.session.get(f"{self.url}/rest/v1/", headers=self._headers, timeout=4.0)
-            self._is_available = (r.status_code == 200)
-            return self._is_available
+            if r.status_code == 200:
+                self._is_available = True
+                return True
+            if r.status_code in (401, 403):
+                self._is_available = False
+                logger.info(f"[Supabase] Credentials not registered for {self.url} (HTTP {r.status_code}). Operating in local SQLite mode.")
+                return False
+            self._is_available = False
+            return False
         except Exception as e:
-            logger.warning(f"[Supabase Health Check] Connection failed: {e}")
+            logger.debug(f"[Supabase Health Check] Connection bypassed: {e}")
             self._is_available = False
             return False
 
@@ -118,7 +125,7 @@ class SupabaseClient:
                 return r.json() if isinstance(r.json(), list) else []
             if r.status_code in (401, 403):
                 self._is_available = False
-                logger.warning(f"[Supabase Select] {table} returned HTTP {r.status_code} ({r.text[:120]}). Marking Supabase as unavailable; falling back to SQLite.")
+                logger.info(f"[Supabase] {table} authentication rejected (HTTP {r.status_code}). Marked offline; continuing with SQLite.")
                 return None
             logger.warning(f"[Supabase Select] {table} returned HTTP {r.status_code}: {r.text[:200]}")
             return None
@@ -163,7 +170,7 @@ class SupabaseClient:
                 return r.json() if isinstance(r.json(), list) else [data]
             if r.status_code in (401, 403):
                 self._is_available = False
-                logger.warning(f"[Supabase Insert] HTTP {r.status_code} auth failure: marking Supabase as unavailable.")
+                logger.info(f"[Supabase] {table} insert authentication rejected (HTTP {r.status_code}). Marked offline; continuing with SQLite.")
                 return []
             logger.warning(f"[Supabase Insert] {table} returned HTTP {r.status_code}: {r.text[:200]}")
             return []
@@ -204,7 +211,7 @@ class SupabaseClient:
                     return [data]
             if r.status_code in (401, 403):
                 self._is_available = False
-                logger.warning(f"[Supabase Update] HTTP {r.status_code} auth failure: marking Supabase as unavailable.")
+                logger.info(f"[Supabase] {table} update authentication rejected (HTTP {r.status_code}). Marked offline; continuing with SQLite.")
                 return []
             logger.warning(f"[Supabase Update] {table} returned HTTP {r.status_code}: {r.text[:200]}")
             return []
