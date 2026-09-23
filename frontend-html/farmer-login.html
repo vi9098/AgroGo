@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-  <title>AgriGo — किसान लॉगिन पोर्टल (Farmer Login)</title>
+  <title>AgriGo — किसान स्वागत एवं लॉगिन पोर्टल (Farmer Login)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
     :root {
-      --farmer-primary: #1A5C38;
-      --farmer-dark: #0F3D25;
-      --farmer-light: #E8F5E9;
-      --farmer-gold: #C98B00;
+      --kisan-green-primary: #15803D;
+      --kisan-green-dark: #0F5132;
+      --kisan-green-light: #F0FDF4;
+      --kisan-gold: #D97706;
+      --kisan-gold-light: #FEF3C7;
+      --kisan-sun: #F59E0B;
+      --kisan-emerald: #10B981;
     }
 
     *, *::before, *::after {
@@ -21,14 +24,10 @@
     }
 
     body {
-      background-color: #F1F6EE;
-      background-image:
-        linear-gradient(180deg, rgba(241, 246, 238, 0.92) 0%, rgba(232, 245, 233, 0.95) 100%),
-        url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1920&q=80');
-      background-size: cover;
-      background-position: center top;
+      background: radial-gradient(circle at 50% 0%, #DCFCE7 0%, #F0FDF4 40%, #FEFCE8 100%);
       background-attachment: fixed;
-      color: #132210;
+      color: #143521;
+      font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -38,184 +37,244 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Hero Banner for Farmer Portal */
-    .farmer-login-hero {
-      background: linear-gradient(135deg, #0B2B19 0%, #15462A 50%, #1E5E38 100%);
-      color: #FFF;
-      padding: 28px 18px 22px;
+    /* Positive Warm Top Hero */
+    .positive-hero {
+      background: linear-gradient(135deg, #14532D 0%, #166534 50%, #15803D 100%);
+      color: #FFFFFF;
+      padding: 32px 20px 28px;
       text-align: center;
       position: relative;
-      box-shadow: 0 4px 20px rgba(11, 43, 25, 0.2);
+      box-shadow: 0 10px 30px rgba(20, 83, 45, 0.2);
+      border-bottom: 3px solid #86EFAC;
     }
 
-    .kisan-pill {
+    .positive-hero::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #FDE047, #4ADE80, #38BDF8, #FDE047);
+    }
+
+    .pos-greeting-pill {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.28);
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
       color: #FFF;
-      padding: 5px 16px;
+      padding: 6px 18px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      animation: pulseGlow 3s ease-in-out infinite alternate;
     }
 
-    .farmer-hero-title {
-      font-size: 24px;
-      font-weight: 900;
-      margin: 0 0 6px 0;
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 12px rgba(254, 240, 138, 0.3); }
+      100% { box-shadow: 0 0 22px rgba(254, 240, 138, 0.6); }
+    }
+
+    .pos-hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
       color: #FFFFFF;
       letter-spacing: -0.3px;
+      line-height: 1.25;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    .farmer-hero-sub {
-      font-size: 13.5px;
-      color: #D8F3DC;
-      max-width: 540px;
+    .pos-hero-sub {
+      font-size: 14px;
+      color: #DCFCE7;
+      max-width: 520px;
       margin: 0 auto;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
-    /* Mobile-First Main Login Container */
-    .farmer-login-wrap {
+    /* Main Container */
+    .login-main-container {
       flex: 1;
       width: 100%;
-      max-width: 480px;
-      margin: 24px auto 48px auto;
-      padding: 0 16px;
+      max-width: 460px;
+      margin: 26px auto 44px auto;
+      padding: 0 18px;
     }
 
-    .farmer-login-card {
+    /* Uplifting Card */
+    .kisan-clean-card {
       background: #FFFFFF;
-      border: 1.5px solid rgba(46, 125, 50, 0.22);
-      border-top: 5px solid #2E7D32;
-      border-radius: 20px;
-      box-shadow: 0 12px 36px rgba(15, 61, 37, 0.12);
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(22, 101, 52, 0.1), 0 4px 12px rgba(0,0,0,0.04);
+      border: 1.5px solid #BBF7D0;
       padding: 28px 24px;
       position: relative;
+      overflow: hidden;
     }
 
-    @media (max-width: 480px) {
-      .farmer-login-card {
-        padding: 22px 18px;
-        border-radius: 16px;
-      }
-      .farmer-hero-title {
-        font-size: 21px;
-      }
+    .kisan-clean-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #15803D, #22C55E, #EAB308);
     }
 
-    /* Auth Switch Tabs */
-    .auth-tab-bar {
+    /* Positive Welcome Banner inside card */
+    .card-welcome-head {
       display: flex;
-      background: #EAF3E8;
-      border-radius: 12px;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      background: #F0FDF4;
+      border: 1px solid #DCFCE7;
+      border-radius: 16px;
+      padding: 12px 16px;
+    }
+
+    .card-welcome-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #22C55E 0%, #15803D 100%);
+      color: #FFF;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .card-welcome-text h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #14532D;
+      margin: 0;
+    }
+
+    .card-welcome-text p {
+      font-size: 12px;
+      color: #4B7A58;
+      margin: 2px 0 0 0;
+      font-weight: 600;
+    }
+
+    /* Simple Mode Tabs */
+    .mode-tab-group {
+      display: flex;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 14px;
       padding: 4px;
       gap: 4px;
-      margin-bottom: 22px;
-      border: 1px solid rgba(46, 125, 50, 0.18);
+      margin-bottom: 20px;
     }
 
-    .auth-tab-btn {
+    .mode-tab-btn {
       flex: 1;
       border: none;
       background: transparent;
-      padding: 11px 10px;
+      padding: 10px 8px;
       font-size: 13.5px;
       font-weight: 700;
       font-family: inherit;
-      color: #2D5036;
-      border-radius: 9px;
+      color: #166534;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      min-height: 44px;
+      min-height: 42px;
     }
 
-    .auth-tab-btn.active {
-      background: #1A5C38;
+    .mode-tab-btn.active {
+      background: #15803D;
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(26, 92, 56, 0.25);
+      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
     }
 
-    /* Mobile Form Input Elements */
-    .field-group {
+    /* Form Fields */
+    .pos-field-group {
       margin-bottom: 18px;
     }
 
-    .field-label {
+    .pos-field-label {
       display: block;
       font-size: 13.5px;
       font-weight: 700;
-      color: #1A3E26;
-      margin-bottom: 7px;
+      color: #166534;
+      margin-bottom: 8px;
     }
 
-    .field-input-wrap {
+    .pos-input-wrapper {
       position: relative;
       display: flex;
       align-items: center;
       width: 100%;
     }
 
-    .phone-prefix-addon {
+    .pos-prefix {
       position: absolute;
-      left: 12px;
+      left: 14px;
       font-size: 15px;
       font-weight: 800;
-      color: #1A5C38;
+      color: #15803D;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       pointer-events: none;
       z-index: 2;
     }
 
-    .mobile-input {
+    .pos-input {
       width: 100%;
-      height: 50px;
-      font-size: 16px; /* Prevents auto-zoom on iOS */
+      height: 52px;
+      font-size: 16px;
       font-family: inherit;
-      padding: 12px 14px;
-      background: #FAFDF9;
-      border: 1.5px solid #BCD3BE;
-      border-radius: 10px;
-      color: #132210;
-      transition: all 0.2s;
+      padding: 12px 16px;
+      background: #F9FCF9;
+      border: 1.5px solid #86EFAC;
+      border-radius: 14px;
+      color: #143521;
+      transition: all 0.2s ease;
       outline: none;
       -webkit-appearance: none;
     }
 
-    .mobile-input.phone-input {
-      padding-left: 72px;
-      font-size: 17px;
+    .pos-input.phone-input {
+      padding-left: 78px;
+      font-size: 18px;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
     }
 
-    .mobile-input:focus {
-      border-color: #1A5C38;
+    .pos-input:focus {
+      border-color: #16A34A;
       background: #FFFFFF;
-      box-shadow: 0 0 0 3.5px rgba(26, 92, 56, 0.16);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
     }
 
-    /* Password reveal toggle button */
-    .toggle-pass-btn {
+    .pos-pass-toggle {
       position: absolute;
       right: 8px;
       background: none;
       border: none;
       cursor: pointer;
       font-size: 18px;
-      padding: 8px 10px;
-      color: #55725E;
+      padding: 8px 12px;
+      color: #64748B;
       min-width: 44px;
       min-height: 44px;
       display: flex;
@@ -223,262 +282,321 @@
       justify-content: center;
     }
 
-    /* OTP Big Digit Input */
-    .otp-code-input {
-      text-align: center;
-      letter-spacing: 12px;
-      font-size: 26px;
-      font-weight: 900;
-      color: #0F3D25;
-      background: #F4FAF2;
-      border: 2px dashed #81C784;
+    /* Fast Test Demo Bar */
+    .test-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    .otp-code-input:focus {
-      border-style: solid;
-      border-color: #2E7D32;
-      background: #FFFFFF;
+    .test-chip-btn {
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #15803D;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    /* Primary Action Buttons */
-    .btn-farmer-submit {
+    .test-chip-btn:hover {
+      background: #DCFCE7;
+      border-color: #4ADE80;
+      transform: translateY(-1px);
+    }
+
+    /* Big Positive Action Button */
+    .btn-positive-primary {
       width: 100%;
-      min-height: 50px;
-      background: linear-gradient(135deg, #1E7E34 0%, #155724 100%);
+      min-height: 52px;
+      background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
       color: #FFFFFF;
       border: none;
-      border-radius: 10px;
-      font-size: 16px;
+      border-radius: 14px;
+      font-size: 16.5px;
       font-weight: 800;
       font-family: inherit;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 14px rgba(30, 126, 52, 0.35);
-      margin-top: 10px;
+      gap: 10px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+      margin-top: 12px;
     }
 
-    .btn-farmer-submit:hover:not(:disabled) {
-      background: linear-gradient(135deg, #28A745 0%, #1E7E34 100%);
-      transform: translateY(-1.5px);
-      box-shadow: 0 6px 18px rgba(30, 126, 52, 0.45);
+    .btn-positive-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(22, 163, 74, 0.45);
     }
 
-    .btn-farmer-submit:active:not(:disabled) {
+    .btn-positive-primary:active:not(:disabled) {
       transform: translateY(1px);
     }
 
-    .btn-farmer-submit:disabled {
+    .btn-positive-primary:disabled {
       opacity: 0.65;
       cursor: not-allowed;
       transform: none;
     }
 
-    .btn-farmer-outline {
+    /* Secondary Action Button */
+    .btn-positive-outline {
+      width: 100%;
+      min-height: 46px;
       background: #FFFFFF;
-      color: #1A5C38;
-      border: 1.5px solid #1A5C38;
-      box-shadow: none;
+      color: #15803D;
+      border: 1.5px solid #86EFAC;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-top: 12px;
     }
 
-    .btn-farmer-outline:hover:not(:disabled) {
-      background: #E8F5E9;
-      color: #0F3D25;
-      transform: none;
+    .btn-positive-outline:hover {
+      background: #F0FDF4;
+      border-color: #16A34A;
+      color: #0F5132;
     }
 
-    /* Notification and Alert Badges */
-    .status-alert {
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.45;
+    /* Alerts */
+    .pos-alert {
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.5;
       margin-bottom: 16px;
       display: none;
+      animation: fadeIn 0.25s ease-out;
     }
 
-    .status-alert.error {
-      background: #FFEBEE;
-      border: 1.5px solid #EF9A9A;
-      color: #B71C1C;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .status-alert.success {
-      background: #E8F5E9;
-      border: 1.5px solid #A5D6A7;
-      color: #1B5E20;
+    .pos-alert.success {
+      background: #ECFDF5;
+      border: 1.5px solid #6EE7B7;
+      color: #065F46;
+      font-weight: 600;
     }
 
-    .status-alert.info {
-      background: #E3F2FD;
-      border: 1.5px solid #90CAF9;
-      color: #0D47A1;
+    .pos-alert.error {
+      background: #FEF2F2;
+      border: 1.5px solid #FCA5A5;
+      color: #991B1B;
+      font-weight: 600;
     }
 
-    /* Quick Fill Test Demo Bar */
-    .demo-login-chip {
+    /* Positivity Quote Box */
+    .positivity-box {
+      margin-top: 20px;
+      background: #FEFCE8;
+      border: 1px dashed #FDE047;
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align: center;
+      font-size: 12.5px;
+      color: #854D0E;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    /* Footer Trust Area */
+    .card-bottom-trust {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #E2E8F0;
+      text-align: center;
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    .trust-badges {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .trust-tag {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: #E8F5E9;
-      border: 1px dashed #81C784;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #1B5E20;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .demo-login-chip:hover {
-      background: #C8E6C9;
-    }
-
-    /* Footer Links within Card */
-    .card-footer-links {
-      margin-top: 22px;
-      padding-top: 18px;
-      border-top: 1px solid #E0EADE;
-      text-align: center;
+      gap: 4px;
+      font-size: 11.5px;
+      color: #166534;
+      font-weight: 700;
+      background: #F0FDF4;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid #BBF7D0;
     }
   </style>
 </head>
 <body data-page="farmer">
 
-  <!-- Universal Header (injected by header.js) -->
+  <!-- Universal Header -->
   <div id="site-header-mount"></div>
 
-  <!-- Hero Banner -->
-  <section class="farmer-login-hero">
-    <div class="kisan-pill">
+  <!-- Uplifting Hero Section -->
+  <section class="positive-hero">
+    <div class="pos-greeting-pill">
       <span>🌾</span>
-      <span>भारत का अपना कृषि AI मंच • ICAR सत्यापित</span>
+      <span>समृद्ध किसान • खुशहाल भारत</span>
+      <span>☀️</span>
     </div>
-    <h1 class="farmer-hero-title">
-      किसान बंधु लॉगिन पोर्टल
+    <h1 class="pos-hero-title">
+      नमस्ते किसान भाई, आपका स्वागत है!
     </h1>
-    <p class="farmer-hero-sub">
-      अपने पंजीकृत मोबाइल नंबर से SMS OTP या पासवर्ड द्वारा सुरक्षित प्रवेश करें और अपनी फसलों की AI सलाह पाएं।
+    <p class="pos-hero-sub">
+      अपनी फसलों की सेहत, आज के मंडी भाव, और समय पर सटीक AI सलाह पाने के लिए आसानी से प्रवेश करें।
     </p>
   </section>
 
   <!-- Main Login Card Area -->
-  <main class="farmer-login-wrap">
-    <div class="farmer-login-card">
+  <main class="login-main-container">
+    <div class="kisan-clean-card">
 
-      <!-- Header Icon & Title -->
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
-        <div style="width: 44px; height: 44px; background: #E8F5E9; border: 1.5px solid #A5D6A7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
-          🌾
-        </div>
-        <div>
-          <h2 style="font-size: 18px; font-weight: 800; color: #0F3D25; margin: 0;">
-            किसान पहचान सत्यापन
-          </h2>
-          <p style="font-size: 12px; color: #52735C; margin: 2px 0 0 0;">
-            मोबाइल नंबर एवं पासवर्ड द्वारा त्वरित एवं सुरक्षित प्रवेश
-          </p>
+      <!-- Card Top Badge -->
+      <div class="card-welcome-head">
+        <div class="card-welcome-icon">🌱</div>
+        <div class="card-welcome-text">
+          <h2>सरल एवं सुरक्षित किसान प्रवेश</h2>
+          <p>बस मोबाइल नंबर दर्ज करें और खेत की जानकारी पाएं</p>
         </div>
       </div>
 
-      <!-- Alerts -->
-      <div id="login-alert-success" class="status-alert success"></div>
-      <div id="login-alert-error"   class="status-alert error"></div>
+      <!-- Mode Switch Tabs -->
+      <div class="mode-tab-group" role="tablist">
+        <button type="button" id="tab-quick" class="mode-tab-btn active" onclick="switchLoginMode('quick')" role="tab">
+          <span>⚡</span> <span>1-क्लिक प्रवेश (Quick)</span>
+        </button>
+        <button type="button" id="tab-pass" class="mode-tab-btn" onclick="switchLoginMode('pass')" role="tab">
+          <span>🔑</span> <span>पासवर्ड से (Password)</span>
+        </button>
+      </div>
 
-      <!-- Farmer Authentication Form (Direct Mobile Login - Zero OTP Wait) -->
-      <form id="farmer-login-form" onsubmit="handleFarmerPasswordAuth(event)" style="margin-top: 14px;">
-        <!-- Phone Number Input (Strictly Integer Only) -->
-        <div class="field-group">
-          <label for="farmer-phone-input" class="field-label">10-अंकों का मोबाइल नंबर (Mobile Number)</label>
-          <div class="field-input-wrap">
-            <span class="phone-prefix-addon">🇮🇳 +91</span>
+      <!-- Alerts -->
+      <div id="login-alert-success" class="pos-alert success"></div>
+      <div id="login-alert-error"   class="pos-alert error"></div>
+
+      <!-- Unified Simple Form -->
+      <form id="farmer-auth-form" onsubmit="handleFormSubmission(event)">
+        <!-- Phone Input (Always Visible) -->
+        <div class="pos-field-group">
+          <label for="farmer-phone-input" class="pos-field-label">
+            10-अंकों का मोबाइल नंबर (Mobile Number)
+          </label>
+          <div class="pos-input-wrapper">
+            <span class="pos-prefix">🇮🇳 +91</span>
             <input 
               type="tel" 
               id="farmer-phone-input" 
-              class="mobile-input phone-input" 
+              class="pos-input phone-input" 
               placeholder="9876543210" 
               maxlength="10" 
               inputmode="numeric" 
               pattern="[0-9]*" 
               autocomplete="tel"
               required
-              oninput="handlePhoneInputChange(this)"
+              oninput="handlePhoneInputFilter(this)"
               onkeypress="return (event.charCode >= 48 && event.charCode <= 57)"
             >
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            <span style="font-size: 11.5px; color: #6A8573;">केवल 10 अंकों का संख्यात्मक नंबर</span>
-            <!-- Quick Test Helper -->
-            <button type="button" class="demo-login-chip" onclick="fillTestFarmerPhone('9876543210')" title="परीक्षण हेतु त्वरित दर्ज करें">
-              ⚡ रमेश सिंह (9876543210)
+          
+          <!-- Test demo accounts for quick one-click trial -->
+          <div class="test-chips-row">
+            <span style="font-size: 11px; color: #4B7A58; align-self: center;">त्वरित परीक्षण:</span>
+            <button type="button" class="test-chip-btn" onclick="fillTestFarmer('9876543210', '123456')">
+              🌱 रमेश पटेल
+            </button>
+            <button type="button" class="test-chip-btn" onclick="fillTestFarmer('9876543211', '123456')">
+              🌾 सुरेश कुमार
             </button>
           </div>
         </div>
 
-        <!-- Password Input -->
-        <div class="field-group">
-          <div style="display:flex; justify-content:space-between; align-items:baseline;">
-            <label for="farmer-login-pass" class="field-label">पासवर्ड (Password)</label>
-            <button type="button" onclick="openForgotPassModal()" style="background:none; border:none; color:#1A5C38; font-size:12px; font-weight:700; cursor:pointer; text-decoration:underline; padding:0;">
+        <!-- Password Field (Visible only in Password Mode) -->
+        <div class="pos-field-group" id="pass-field-wrap" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <label for="farmer-login-pass" class="pos-field-label">खाता पासवर्ड (Password)</label>
+            <button type="button" onclick="openForgotPassModal()" style="background: none; border: none; color: #15803D; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">
               🔑 पासवर्ड भूल गए?
             </button>
           </div>
-          <div class="field-input-wrap">
+          <div class="pos-input-wrapper">
             <input 
               type="password" 
               id="farmer-login-pass" 
-              class="mobile-input" 
+              class="pos-input" 
               placeholder="अपना पासवर्ड दर्ज करें" 
               autocomplete="current-password"
             >
-            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('farmer-login-pass', this)" title="पासवर्ड दिखाएं">
+            <button type="button" class="pos-pass-toggle" onclick="togglePasswordVisibility('farmer-login-pass', this)" title="पासवर्ड देखें">
               👁️
             </button>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" id="btn-pass-submit" class="btn-farmer-submit">
-          <span>🌾</span> <span>पासवर्ड से प्रवेश करें ➔</span>
-        </button>
-
-        <!-- Divider -->
-        <div style="display:flex; align-items:center; margin:16px 0; gap:10px;">
-          <div style="flex:1; height:1px; background:#D8E6DC;"></div>
-          <span style="font-size:12px; font-weight:700; color:#52735C;">अथवा (OR)</span>
-          <div style="flex:1; height:1px; background:#D8E6DC;"></div>
-        </div>
-
-        <!-- Instant Quick Mobile Login (Zero Password, Zero OTP) -->
-        <button type="button" id="btn-quick-login" class="btn-farmer-submit" style="background:#1B5E20; color:#FFF;" onclick="handleQuickMobileLogin()">
-          <span>⚡</span> <span>बिना पासवर्ड मोबाइल से त्वरित प्रवेश (Quick Login) ➔</span>
+        <!-- Primary Action Button -->
+        <button type="submit" id="btn-main-submit" class="btn-positive-primary">
+          <span id="btn-main-icon">🌾</span> 
+          <span id="btn-main-text">खेत में प्रवेश करें ➔</span>
         </button>
       </form>
 
-      <!-- Footer Action Links -->
-      <div class="card-footer-links">
-        <div style="font-size: 13.5px; color: #43624D; margin-bottom: 10px;">
-          क्या आप नए किसान हैं?
-        </div>
-        <a href="register.html" class="btn-farmer-submit btn-farmer-outline" style="text-decoration:none; margin-bottom: 12px;">
-          <span>🌱</span> <span>नया किसान पंजीकरण करें (Register Free) ➔</span>
-        </a>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px;">
-          <a href="index.html" style="color: #1A5C38; text-decoration: none; font-weight: 700;">
-            🏠 मुख्य पृष्ठ (Home)
-          </a>
-          <a href="admin-login.html" style="color: #4338CA; text-decoration: none; font-weight: 700;">
-            🛡️ एडमिन पोर्टल ➔
-          </a>
-        </div>
+      <!-- Positive Inspiration Box -->
+      <div class="positivity-box">
+        ✨ <strong>किसान सूत्र:</strong> सही समय पर सही सलाह, दोगुनी पैदावार का पक्का आधार। हर कदम पर AgriGo AI आपके साथ है!
       </div>
 
-      <!-- Security Trust Badge -->
-      <div style="margin-top: 18px; background: #F1F6EE; border-radius: 8px; padding: 10px 12px; text-align: center; font-size: 11.5px; color: #52735C; line-height: 1.45;">
-        🔒 सुरक्षित सर्वर सत्र • भारतीय कृषि अनुसंधान परिषद (ICAR) डेटाबेस से सीधे जुड़ा
+      <!-- New Farmer Callout -->
+      <div style="margin-top: 20px; text-align: center;">
+        <span style="font-size: 13px; color: #334155; font-weight: 600;">क्या आप पहली बार पधारे हैं?</span>
+        <a href="register.html" class="btn-positive-outline">
+          <span>🌱</span> <span>1 मिनट में नया किसान खाता बनाएं (मुफ्त) ➔</span>
+        </a>
+      </div>
+
+      <!-- Quick Nav Links -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 12px; padding: 0 4px;">
+        <a href="index.html" style="color: #15803D; text-decoration: none; font-weight: 700;">
+          🏠 मुख्य पृष्ठ (Home)
+        </a>
+        <a href="admin-login.html" style="color: #4338CA; text-decoration: none; font-weight: 700;">
+          🛡️ अधिकारी / एडमिन लॉगिन ➔
+        </a>
+      </div>
+
+      <!-- Trust Badges Footer -->
+      <div class="card-bottom-trust">
+        <div class="trust-badges">
+          <span class="trust-tag">🔒 100% सुरक्षित</span>
+          <span class="trust-tag">⚡ शून्य ओटीपी रुकावट</span>
+          <span class="trust-tag">🇮🇳 ICAR कृषि ज्ञान</span>
+        </div>
+        <div>
+          📞 किसान कॉल सेंटर निःशुल्क हेल्पलाइन: <strong style="color: #15803D;">1800-180-1551</strong>
+        </div>
       </div>
 
     </div>
@@ -486,99 +604,99 @@
 
   <!-- Forgot Password Recovery Modal (Security Question Based) -->
   <div id="forgot-pass-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px);">
-    <div style="background:#FFFFFF; border-radius:20px; border:2px solid #2E7D32; box-shadow:0 16px 40px rgba(0,0,0,0.3); max-width:460px; width:100%; padding:24px; position:relative; max-height:90vh; overflow-y:auto;">
+    <div style="background:#FFFFFF; border-radius:24px; border:2px solid #22C55E; box-shadow:0 20px 50px rgba(0,0,0,0.3); max-width:440px; width:100%; padding:26px; position:relative; max-height:90vh; overflow-y:auto;">
       <!-- Close button -->
-      <button type="button" onclick="closeForgotPassModal()" style="position:absolute; top:16px; right:16px; background:#F1F5F0; border:none; border-radius:50%; width:34px; height:34px; font-size:18px; cursor:pointer; color:#55725E; display:flex; align-items:center; justify-content:center;" title="बंद करें">✕</button>
+      <button type="button" onclick="closeForgotPassModal()" style="position:absolute; top:16px; right:16px; background:#F0FDF4; border:none; border-radius:50%; width:34px; height:34px; font-size:18px; cursor:pointer; color:#15803D; display:flex; align-items:center; justify-content:center;" title="बंद करें">✕</button>
 
       <!-- Modal Header -->
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
-        <div style="width:42px; height:42px; background:#E8F5E9; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;">🔐</div>
+        <div style="width:44px; height:44px; background:#DCFCE7; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🔐</div>
         <div>
-          <h3 style="font-size:18px; font-weight:800; color:#0F3D25; margin:0;">पासवर्ड पुनर्प्राप्ति</h3>
-          <p style="font-size:12px; color:#52735C; margin:2px 0 0 0;">पंजीकृत सुरक्षा प्रश्न द्वारा नया पासवर्ड सेट करें</p>
+          <h3 style="font-size:18px; font-weight:800; color:#14532D; margin:0;">पासवर्ड पुनर्प्राप्ति</h3>
+          <p style="font-size:12px; color:#4B7A58; margin:2px 0 0 0;">सुरक्षा प्रश्न द्वारा नया पासवर्ड सेट करें</p>
         </div>
       </div>
 
       <!-- Alerts inside modal -->
-      <div id="fp-alert-error" class="status-alert error" style="display:none; margin-bottom:14px;"></div>
-      <div id="fp-alert-success" class="status-alert success" style="display:none; margin-bottom:14px;"></div>
+      <div id="fp-alert-error" class="pos-alert error" style="display:none; margin-bottom:14px;"></div>
+      <div id="fp-alert-success" class="pos-alert success" style="display:none; margin-bottom:14px;"></div>
 
-      <!-- STEP 1: Phone input to retrieve question -->
+      <!-- STEP 1: Phone input -->
       <div id="fp-step-1">
-        <div class="field-group">
-          <label class="field-label">पंजीकृत मोबाइल नंबर (Registered Phone)</label>
-          <div class="field-input-wrap">
-            <span class="phone-prefix-addon">🇮🇳 +91</span>
+        <div class="pos-field-group">
+          <label class="pos-field-label">पंजीकृत मोबाइल नंबर (Registered Phone)</label>
+          <div class="pos-input-wrapper">
+            <span class="pos-prefix">🇮🇳 +91</span>
             <input 
               type="tel" 
               id="fp-phone-input" 
-              class="mobile-input phone-input" 
+              class="pos-input phone-input" 
               placeholder="9876543210" 
               maxlength="10" 
               inputmode="numeric" 
               pattern="[0-9]*"
-              oninput="handlePhoneInputChange(this)"
+              oninput="handlePhoneInputFilter(this)"
               onkeypress="return (event.charCode >= 48 && event.charCode <= 57)"
             >
           </div>
-          <span style="font-size:11.5px; color:#6A8573; display:block; margin-top:5px;">जिस नंबर से आपका AgriGo खाता पंजीकृत है</span>
+          <span style="font-size:11.5px; color:#64748B; display:block; margin-top:5px;">जिस नंबर से आपका खाता है</span>
         </div>
-        <button type="button" id="fp-btn-fetch" class="btn-farmer-submit" onclick="handleFetchSecurityQuestion()" style="margin-top:14px;">
+        <button type="button" id="fp-btn-fetch" class="btn-positive-primary" onclick="handleFetchSecurityQuestion()" style="margin-top:14px;">
           <span>🔍</span> <span>सुरक्षा प्रश्न प्राप्त करें ➔</span>
         </button>
       </div>
 
       <!-- STEP 2: Answer question and set new password -->
       <div id="fp-step-2" style="display:none;">
-        <div style="background:#F4FAF2; border:1.5px dashed #81C784; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
-          <div style="font-size:11.5px; font-weight:700; color:#2E7D32; text-transform:uppercase; letter-spacing:0.5px;">आपका चुना हुआ सुरक्षा प्रश्न:</div>
-          <div id="fp-question-display" style="font-size:14.5px; font-weight:800; color:#0F3D25; margin-top:4px;"></div>
+        <div style="background:#F0FDF4; border:1.5px dashed #86EFAC; border-radius:14px; padding:12px 14px; margin-bottom:16px;">
+          <div style="font-size:11.5px; font-weight:700; color:#15803D; text-transform:uppercase;">आपका सुरक्षा प्रश्न:</div>
+          <div id="fp-question-display" style="font-size:14.5px; font-weight:800; color:#14532D; margin-top:4px;"></div>
         </div>
 
-        <div class="field-group">
-          <label class="field-label">गोपनीय उत्तर (Your Secret Answer)</label>
+        <div class="pos-field-group">
+          <label class="pos-field-label">गोपनीय उत्तर (Your Secret Answer)</label>
           <input 
             type="text" 
             id="fp-answer-input" 
-            class="mobile-input" 
+            class="pos-input" 
             placeholder="पंजीकरण के समय दिया गया उत्तर" 
             autocomplete="off"
           >
         </div>
 
-        <div class="field-group">
-          <label class="field-label">नया पासवर्ड (New Password)</label>
-          <div class="field-input-wrap">
+        <div class="pos-field-group">
+          <label class="pos-field-label">नया पासवर्ड (New Password)</label>
+          <div class="pos-input-wrapper">
             <input 
               type="password" 
               id="fp-new-pass" 
-              class="mobile-input" 
-              placeholder="कम से कम 6 अक्षर दर्ज करें" 
+              class="pos-input" 
+              placeholder="कम से कम 6 अक्षर" 
               autocomplete="new-password"
             >
-            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('fp-new-pass', this)">👁️</button>
+            <button type="button" class="pos-pass-toggle" onclick="togglePasswordVisibility('fp-new-pass', this)">👁️</button>
           </div>
         </div>
 
-        <div class="field-group">
-          <label class="field-label">नया पासवर्ड पुनः दर्ज करें (Confirm Password)</label>
-          <div class="field-input-wrap">
+        <div class="pos-field-group">
+          <label class="pos-field-label">नया पासवर्ड दोबारा लिखें (Confirm Password)</label>
+          <div class="pos-input-wrapper">
             <input 
               type="password" 
               id="fp-confirm-pass" 
-              class="mobile-input" 
+              class="pos-input" 
               placeholder="नया पासवर्ड दोबारा लिखें" 
               autocomplete="new-password"
             >
-            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('fp-confirm-pass', this)">👁️</button>
+            <button type="button" class="pos-pass-toggle" onclick="togglePasswordVisibility('fp-confirm-pass', this)">👁️</button>
           </div>
         </div>
 
-        <button type="button" id="fp-btn-submit" class="btn-farmer-submit" onclick="handleResetPasswordSubmit()" style="margin-top:14px;">
+        <button type="button" id="fp-btn-submit" class="btn-positive-primary" onclick="handleResetPasswordSubmit()" style="margin-top:14px;">
           <span>✓</span> <span>नया पासवर्ड सुरक्षित करें ➔</span>
         </button>
 
-        <button type="button" class="btn-farmer-submit btn-farmer-outline" onclick="backToStep1()" style="margin-top:10px;">
+        <button type="button" class="btn-positive-outline" onclick="backToStep1()" style="margin-top:10px;">
           <span>⬅️</span> <span>नंबर बदलें (Back)</span>
         </button>
       </div>
@@ -586,9 +704,9 @@
     </div>
   </div>
 
-  <!-- Universal Footer Strip -->
-  <footer style="text-align: center; padding: 18px 16px; color: #52735C; font-size: 12px; border-top: 1px solid rgba(46, 125, 50, 0.15); background: #EAF2E8;">
-    AgriGo AI • भारत का संप्रभु कृषि AI मंच • 455,359+ सरकारी कृषि रिकॉर्ड्स • 2026
+  <!-- Universal Footer -->
+  <footer style="text-align: center; padding: 18px 16px; color: #166534; font-size: 12px; border-top: 1px solid rgba(34, 197, 94, 0.2); background: #DCFCE7;">
+    AgriGo AI • जय जवान, जय किसान • भारत का संप्रभु कृषि AI मंच • 2026
   </footer>
 
   <script src="js/api.js"></script>
@@ -596,14 +714,14 @@
   <script src="js/header.js"></script>
   <script>
     // State Tracking
-    let activeOtpLogId = null;
-    let resendTimerInterval = null;
+    let currentMode = 'quick'; // 'quick' | 'pass'
+    let activeFpPhone = "";
 
-    // Check if farmer is already authenticated, unless explicit logout query
+    // Auto-check existing session
     document.addEventListener("DOMContentLoaded", async () => {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("logged_out")) {
-        showAlert("success", "✅ आप सफलतापूर्वक लॉगआउट हो चुके हैं। (Logged out successfully)");
+        showPosAlert("success", "✅ आप सफलतापूर्वक लॉगआउट हो चुके हैं। पुनः पधारें!");
         return;
       }
 
@@ -611,14 +729,55 @@
         if (window.AgriAPI && window.AgriAPI.getMe) {
           const me = await window.AgriAPI.getMe();
           if (me && me.authenticated && me.user) {
-            // Already logged in! Redirect to farmer dashboard
             window.location.replace("farmer.html");
           }
         }
       } catch (_) {}
     });
 
-    // Toggle password visibility
+    // Switch between Quick Mode and Password Mode
+    function switchLoginMode(mode) {
+      currentMode = mode;
+      const tabQuick = document.getElementById("tab-quick");
+      const tabPass = document.getElementById("tab-pass");
+      const passWrap = document.getElementById("pass-field-wrap");
+      const btnText = document.getElementById("btn-main-text");
+      const btnIcon = document.getElementById("btn-main-icon");
+
+      clearPosAlerts();
+
+      if (mode === 'quick') {
+        tabQuick.classList.add("active");
+        tabPass.classList.remove("active");
+        passWrap.style.display = "none";
+        btnText.textContent = "1-क्लिक में खेत में प्रवेश करें ➔";
+        btnIcon.textContent = "⚡";
+      } else {
+        tabPass.classList.add("active");
+        tabQuick.classList.remove("active");
+        passWrap.style.display = "block";
+        btnText.textContent = "पासवर्ड से प्रवेश करें ➔";
+        btnIcon.textContent = "🌾";
+        const passInput = document.getElementById("farmer-login-pass");
+        if (passInput) setTimeout(() => passInput.focus(), 100);
+      }
+    }
+
+    // Filter non-numeric characters strictly
+    function handlePhoneInputFilter(input) {
+      input.value = input.value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    // Quick fill helper for testing
+    function fillTestFarmer(phone, pass) {
+      const pInput = document.getElementById("farmer-phone-input");
+      const passInput = document.getElementById("farmer-login-pass");
+      if (pInput) pInput.value = phone;
+      if (passInput) passInput.value = pass;
+      showPosAlert("success", `⚡ डेमो किसान लोड किया गया (${phone})! अब नीचे बटन दबाएं।`);
+    }
+
+    // Toggle password eye
     function togglePasswordVisibility(inputId, btn) {
       const input = document.getElementById(inputId);
       if (!input) return;
@@ -631,25 +790,11 @@
       }
     }
 
-    // Helper: Fill test phone for fast demo
-    function fillTestFarmerPhone(phone) {
-      const input = document.getElementById("farmer-phone-input");
-      if (input) {
-        input.value = phone;
-        input.focus();
-      }
-    }
-
-    // Filter non-numeric characters on phone input (Strict integer-only)
-    function handlePhoneInputChange(input) {
-      input.value = input.value.replace(/\D/g, "").slice(0, 10);
-    }
-
-    // Show Alert helper
-    function showAlert(type, message) {
+    // Alert helpers
+    function showPosAlert(type, message) {
       const succ = document.getElementById("login-alert-success");
       const err  = document.getElementById("login-alert-error");
-      clearAlerts();
+      clearPosAlerts();
 
       if (type === "success" && succ) {
         succ.textContent = message;
@@ -660,90 +805,60 @@
       }
     }
 
-    function clearAlerts() {
+    function clearPosAlerts() {
       const succ = document.getElementById("login-alert-success");
       const err  = document.getElementById("login-alert-error");
       if (succ) succ.style.display = "none";
       if (err)  err.style.display  = "none";
     }
 
-    // -------------------------------------------------------------
-    // Quick Mobile Login (Zero Password, Zero OTP)
-    // -------------------------------------------------------------
-    async function handleQuickMobileLogin() {
-      clearAlerts();
-      const phoneInput = document.getElementById("farmer-phone-input");
-      const phone = phoneInput ? phoneInput.value.replace(/\D/g, "").slice(0, 10) : "";
-
-      if (!phone || phone.length !== 10) {
-        showAlert("error", "कृपया 10-अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें (उदा. 9876543210)। केवल संख्या मान्य है।");
-        if (phoneInput) phoneInput.focus();
-        return;
-      }
-
-      const btn = document.getElementById("btn-quick-login");
-      btn.disabled = true;
-      btn.innerHTML = "<span>⏳</span> <span>प्रवेश हो रहा है...</span>";
-
-      try {
-        const res = await AgriAPI.quickMobileLogin(phone);
-        showAlert("success", (res.message || "स्वागत है!") + " किसान पोर्टल में प्रवेश कर रहे हैं...");
-        setTimeout(() => {
-          window.location.href = "farmer.html";
-        }, 300);
-      } catch (err) {
-        showAlert("error", err.message || "लॉगिन विफल। कृपया नंबर जांचें अथवा नया पंजीकरण करें।");
-        btn.disabled = false;
-        btn.innerHTML = "<span>⚡</span> <span>बिना पासवर्ड मोबाइल से त्वरित प्रवेश (Quick Login) ➔</span>";
-      }
-    }
-
-    // -------------------------------------------------------------
-    // Password login flow
-    // -------------------------------------------------------------
-    async function handleFarmerPasswordAuth(e) {
+    // Form Submission Router
+    async function handleFormSubmission(e) {
       e.preventDefault();
-      clearAlerts();
+      clearPosAlerts();
 
       const phoneInput = document.getElementById("farmer-phone-input");
       const passInput = document.getElementById("farmer-login-pass");
-      const submitBtn = document.getElementById("btn-pass-submit");
+      const btn = document.getElementById("btn-main-submit");
+      const btnText = document.getElementById("btn-main-text");
 
       const phone = phoneInput ? phoneInput.value.replace(/\D/g, "").slice(0, 10) : "";
       const pass = passInput ? passInput.value.trim() : "";
 
       if (!phone || phone.length !== 10) {
-        showAlert("error", "कृपया 10-अंकों का मान्य मोबाइल नंबर दर्ज करें।");
+        showPosAlert("error", "कृपया 10-अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें (उदा. 9876543210)।");
         if (phoneInput) phoneInput.focus();
         return;
       }
 
-      if (!pass) {
-        // If password is omitted, automatically perform quick mobile login
-        return handleQuickMobileLogin();
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = "<span>⏳</span> <span>सत्यापित हो रहा है...</span>";
+      btn.disabled = true;
+      const prevText = btnText.textContent;
+      btnText.textContent = "प्रवेश हो रहा है... कृपया प्रतीक्षा करें 🌱";
 
       try {
-        await AgriAPI.farmerDirectLogin(phone, pass);
-        showAlert("success", "लॉगिन सफल! किसान पोर्टल में प्रवेश कर रहे हैं...");
+        let res;
+        // If in password mode and password provided, use password authentication
+        if (currentMode === 'pass' && pass) {
+          res = await AgriAPI.farmerDirectLogin(phone, pass);
+        } else {
+          // Otherwise perform positive frictionless quick login
+          res = await AgriAPI.quickMobileLogin(phone);
+        }
+
+        showPosAlert("success", (res.message || "स्वागत है किसान भाई!") + " आपके खेत का डैशबोर्ड खुल रहा है...");
         setTimeout(() => {
           window.location.href = "farmer.html";
-        }, 300);
+        }, 350);
       } catch (err) {
-        showAlert("error", "लॉगिन विफल: " + (err.message || "कृपया मोबाइल नंबर और पासवर्ड की जांच करें।"));
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = "<span>🌾</span> <span>पासवर्ड से प्रवेश करें ➔</span>";
+        btn.disabled = false;
+        btnText.textContent = prevText;
+        showPosAlert("error", err.message || "लॉगिन विफल रहा। कृपया नंबर की जांच करें अथवा 1-क्लिक प्रवेश चुनें।");
       }
     }
 
     // -------------------------------------------------------------
-    // Forgot Password Flow (Security Question)
+    // Forgot Password Flow
     // -------------------------------------------------------------
-    let activeFpPhone = "";
-
     function openForgotPassModal() {
       const modal = document.getElementById("forgot-pass-modal");
       if (modal) {
@@ -837,13 +952,13 @@
         return;
       }
       if (newPass !== confirmPass) {
-        showFpAlert("error", "दोनों पासवर्ड मेल नहीं खा रहे हैं। कृपया पुनः जांचें।");
+        showFpAlert("error", "दोनों पासवर्ड मेल नहीं खा रहे हैं।");
         return;
       }
 
       const btn = document.getElementById("fp-btn-submit");
       btn.disabled = true;
-      btn.innerHTML = "<span>⏳</span> <span>पासवर्ड बदला जा रहा है...</span>";
+      btn.innerHTML = "<span>⏳</span> <span>नया पासवर्ड सुरक्षित हो रहा है...</span>";
 
       try {
         const res = await AgriAPI.resetPasswordWithSecurity(activeFpPhone, answer, newPass);
@@ -852,12 +967,8 @@
           closeForgotPassModal();
           const mainPhone = document.getElementById("farmer-phone-input");
           if (mainPhone) mainPhone.value = activeFpPhone;
-          const mainPass = document.getElementById("farmer-login-pass");
-          if (mainPass) {
-            mainPass.value = "";
-            mainPass.focus();
-          }
-          showAlert("success", "✅ नया पासवर्ड सेट हो गया! अब कृपया अपने नए पासवर्ड से लॉगिन करें।");
+          switchLoginMode('pass');
+          showPosAlert("success", "✅ नया पासवर्ड सेट हो गया! अब कृपया प्रवेश करें।");
         }, 1500);
       } catch (e) {
         showFpAlert("error", e.message || "पासवर्ड रीसेट विफल रहा। कृपया उत्तर जांचें।");

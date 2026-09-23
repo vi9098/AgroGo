@@ -148,7 +148,13 @@ async def login(req: LoginRequest, request: Request, response: Response):
 
     # 2. Check farmer account if not matched as admin
     if not user:
-        farmer_row = query_one("SELECT * FROM users WHERE phone = ? OR id = ?", (clean_id, clean_id))
+        clean_digits = re.sub(r"\D", "", clean_id)
+        last10 = clean_digits[-10:] if len(clean_digits) >= 10 else clean_id
+        with_prefix = f"+91{last10}"
+        farmer_row = query_one(
+            "SELECT * FROM users WHERE phone = ? OR phone = ? OR phone = ? OR id = ? LIMIT 1",
+            (clean_id, last10, with_prefix, clean_id)
+        )
         if farmer_row:
             farmer_dict = dict(farmer_row)
             # Check password
@@ -215,6 +221,98 @@ async def login(req: LoginRequest, request: Request, response: Response):
     return {
         "success": True,
         "message": f"Welcome, {user['name']}!",
+        "user": user
+    }
+
+@router.post("/api/auth/quick-login")
+@router.post("/api/v1/auth/quick-login")
+async def quick_login(req: QuickLoginRequest, request: Request, response: Response):
+    raw_phone = req.phone.strip()
+    digits = re.sub(r"\D", "", raw_phone)
+    if len(digits) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail="कृपया 10-अंकों का मान्य मोबाइल नंबर दर्ज करें (Please enter a valid 10-digit mobile number)."
+        )
+    last10 = digits[-10:]
+    with_prefix = f"+91{last10}"
+
+    client_ip = request.client.host if request.client else ""
+    user_agent = request.headers.get("user-agent", "")
+    old_session_id = request.cookies.get(COOKIE_NAME)
+
+    # Check if farmer account exists
+    farmer_row = query_one(
+        "SELECT * FROM users WHERE phone = ? OR phone = ? OR phone = ? LIMIT 1",
+        (last10, with_prefix, raw_phone)
+    )
+
+    if not farmer_row:
+        # Seamlessly auto-register the farmer so they can start immediately
+        new_id = f"farmer-{uuid.uuid4().hex[:8]}"
+        now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        consent = json.dumps({"farm_memory": True, "ai_improvement": True, "photo_learning": True})
+        farmer_name = f"किसान मित्र ({last10[-4:]})"
+        execute_db("""
+            INSERT INTO users (id, phone, name, password_hash, preferred_language, state, district, village, consent_json, status, role, created_at)
+            VALUES (?, ?, ?, ?, 'hi', 'Uttar Pradesh', 'Varanasi', 'Rampur', ?, 'active', 'farmer', ?)
+        """, (new_id, last10, farmer_name, hash_password("123456"), consent, now_str))
+
+        # Create farm
+        farm_id = f"farm-{uuid.uuid4().hex[:8]}"
+        execute_db("""
+            INSERT INTO farms (id, farmer_id, name, total_area_acres, soil_type, irrigation_type, created_at)
+            VALUES (?, ?, ?, 2.5, 'Alluvial Loam', 'Borewell / Canal', ?)
+        """, (farm_id, new_id, f"{farmer_name} का खेत", now_str))
+
+        # Default crop
+        crop_id = f"crop-{uuid.uuid4().hex[:8]}"
+        execute_db("""
+            INSERT INTO crops (id, farm_id, farmer_id, crop_name, stage, health_status, area_acres, created_at)
+            VALUES (?, ?, ?, 'गेहूं (Wheat)', 'Vegetative', 'Good', 2.5, ?)
+        """, (crop_id, farm_id, new_id, now_str))
+
+        farmer_row = query_one("SELECT * FROM users WHERE id = ?", (new_id,))
+
+    farmer_dict = dict(farmer_row)
+    if farmer_dict.get("status") == "suspended":
+        raise HTTPException(
+            status_code=403,
+            detail="Your farmer account has been suspended by an administrator. Please contact support."
+        )
+
+    user = {
+        "id": farmer_dict["id"],
+        "phone": farmer_dict["phone"],
+        "name": farmer_dict["name"],
+        "state": farmer_dict.get("state", "Uttar Pradesh"),
+        "district": farmer_dict.get("district", "Varanasi"),
+        "village": farmer_dict.get("village", "Rampur"),
+        "preferred_language": farmer_dict.get("preferred_language", "hi"),
+        "role": "farmer",
+        "status": farmer_dict.get("status", "active")
+    }
+
+    session_data = SessionService.rotate_session(
+        old_session_id=old_session_id,
+        user_id=user["id"],
+        role="farmer",
+        ip_address=client_ip,
+        user_agent=user_agent
+    )
+    _set_session_cookie(response, session_data["session_id"], session_data["max_age"])
+
+    await AuditService.log_event(
+        actor_id=user["id"],
+        actor_type="farmer",
+        action="QUICK_LOGIN_SUCCESS",
+        resource_type="session",
+        resource_id=session_data["session_id"][:8]
+    )
+
+    return {
+        "success": True,
+        "message": f"नमस्ते {user['name']} जी! खेत में आपका स्वागत है। 🌱",
         "user": user
     }
 
