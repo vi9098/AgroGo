@@ -112,21 +112,40 @@ class ReminderEngine:
         now = datetime.datetime.utcnow()
         today_str = now.strftime("%Y-%m-%d")
 
-        # Crop recognition map (Bilingual Hindi & English)
+        # Crop recognition map (Bilingual Hindi & English) - 30+ ICAR Crops
         crop_patterns = [
             ("wheat", ["wheat", "गेहूं", "गेहु", "gehu", "gehun"], "गेहूं (Wheat)"),
-            ("mustard", ["mustard", "सरसों", "सरसो", "sarson", "rai", "राई"], "सरसों (Mustard)"),
+            ("mustard", ["mustard", "सरसों", "सरसो", "sarson", "rai", "राई", "तोरिया"], "सरसों (Mustard)"),
             ("paddy", ["rice", "paddy", "धान", "चावल", "dhan", "chawal"], "धान (Paddy / Rice)"),
-            ("tomato", ["tomato", "टमाटर", "tamatar"], "टमाटर (Tomato)"),
-            ("potato", ["potato", "आलू", "aalu", "aloo"], "आलू (Potato)"),
-            ("maize", ["maize", "corn", "मक्का", "मकई", "makka"], "मक्का (Maize)"),
+            ("gram", ["gram", "chickpea", "चना", "chana", "छोले"], "चना (Gram / Chickpea)"),
             ("cotton", ["cotton", "कपास", "रुई", "kapas"], "कपास (Cotton)"),
-            ("gram", ["gram", "chickpea", "चना", "chana"], "चना (Gram / Chickpea)"),
-            ("sugarcane", ["sugarcane", "गन्ना", "ganna"], "गन्ना (Sugarcane)"),
-            ("onion", ["onion", "प्याज", "pyaj", "kanda"], "प्याज (Onion)"),
-            ("chilli", ["chilli", "chili", "मिर्च", "mirch"], "मिर्च (Chilli)"),
+            ("maize", ["maize", "corn", "मक्का", "मकई", "makka"], "मक्का (Maize)"),
             ("soybean", ["soybean", "सोयाबीन", "soya"], "सोयाबीन (Soybean)"),
-            ("pea", ["pea", "मटर", "matar"], "मटर (Green Pea)")
+            ("potato", ["potato", "आलू", "aalu", "aloo"], "आलू (Potato)"),
+            ("tomato", ["tomato", "टमाटर", "tamatar"], "टमाटर (Tomato)"),
+            ("sugarcane", ["sugarcane", "गन्ना", "ganna"], "गन्ना (Sugarcane)"),
+            ("onion", ["onion", "प्याज", "pyaj", "kanda", "कांदा"], "प्याज (Onion)"),
+            ("garlic", ["garlic", "लहसुन", "lahsun"], "लहसुन (Garlic)"),
+            ("chilli", ["chilli", "chili", "मिर्च", "mirch"], "मिर्च (Chilli)"),
+            ("moong", ["moong", "mung", "मूंग", "green gram"], "मूंग (Green Gram / Moong)"),
+            ("urad", ["urad", "उड़द", "black gram", "माह"], "उड़द (Black Gram / Urad)"),
+            ("groundnut", ["groundnut", "peanut", "मूंगफली", "mungfali"], "मूंगफली (Groundnut)"),
+            ("bajra", ["bajra", "pearl millet", "बाजरा"], "बाजरा (Pearl Millet)"),
+            ("jowar", ["jowar", "sorghum", "ज्वार"], "ज्वार (Sorghum / Jowar)"),
+            ("arhar", ["arhar", "tur", "tuar", "अरहर", "तुअर", "pigeon pea"], "अरहर (Pigeon Pea / Arhar)"),
+            ("pea", ["pea", "मटर", "matar", "green pea"], "मटर (Green Pea)"),
+            ("masoor", ["masoor", "lentil", "मसूर"], "मसूर (Lentil / Masoor)"),
+            ("sunflower", ["sunflower", "सूरजमुखी", "surajmukhi"], "सूरजमुखी (Sunflower)"),
+            ("brinjal", ["brinjal", "eggplant", "बैंगन", "baingan"], "बैंगन (Brinjal)"),
+            ("cauliflower", ["cauliflower", "फूलगोभी", "phoolgobhi"], "फूलगोभी (Cauliflower)"),
+            ("cabbage", ["cabbage", "पत्तागोभी", "bandhgobi", "patagobi"], "पत्तागोभी (Cabbage)"),
+            ("okra", ["okra", "bhindi", "भिंडी", "ladyfinger", "lady finger"], "भिंडी (Okra)"),
+            ("ginger", ["ginger", "अदरक", "adrak"], "अदरक (Ginger)"),
+            ("turmeric", ["turmeric", "हल्दी", "haldi"], "हल्दी (Turmeric)"),
+            ("cumin", ["cumin", "jeera", "जीरा"], "जीरा (Cumin / Jeera)"),
+            ("coriander", ["coriander", "dhaniya", "धनिया"], "धनिया (Coriander)"),
+            ("barley", ["barley", "जौ", "jau"], "जौ (Barley)"),
+            ("watermelon", ["watermelon", "तरबूज", "tarbooj", "tarbuj"], "तरबूज (Watermelon)")
         ]
 
         # 1. Detect if this is a SOWING / CROP planting intent
@@ -294,22 +313,23 @@ class ReminderEngine:
         )
         provider_used = "ICAR / TNAU Scientific Package of Practices"
 
-        # 3. Fast Non-blocking DeepSeek / Gemini AI Enrichment (Strict 2.5s Timeout)
+        # 3. Dynamic AI Schedule Generation via OpenAI (as requested: do not use DeepSeek for reminder)
         from app.config import settings
-        if settings.DEEPSEEK_API_KEY:
+        openai_key = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY", "")
+        if openai_key:
             try:
-                from app.adapters.llm.deepseek_llm import DeepSeekLLMAdapter
-                deepseek_adapter = DeepSeekLLMAdapter()
-                # Run with strict 2.5 second timeout so user NEVER experiences long loading times!
+                from app.adapters.llm.openai_llm import OpenAILLMAdapter
+                openai_adapter = OpenAILLMAdapter()
+                # Run with 4.5 second timeout so user NEVER experiences long loading times!
                 ai_data = await asyncio.wait_for(
-                    deepseek_adapter.generate_crop_schedule(crop_clean, sowing_date_str, acreage),
-                    timeout=2.5
+                    openai_adapter.generate_crop_schedule(crop_clean, sowing_date_str, acreage),
+                    timeout=4.5
                 )
                 if ai_data and ai_data.get("irrigation_tasks"):
                     schedule_data = ai_data
-                    provider_used = "DeepSeek AI (deepseek-chat)"
+                    provider_used = "OpenAI (gpt-4o-mini)"
             except (asyncio.TimeoutError, Exception) as e:
-                logger.debug(f"[ReminderEngine] Fast DeepSeek bypass ({e}), using instant ICAR package.")
+                logger.debug(f"[ReminderEngine] Fast OpenAI bypass ({e}), using instant 30-crop ICAR package.")
 
         # 4. Persist all generated tasks into database
         if clear_previous:
@@ -668,7 +688,557 @@ class ReminderEngine:
                  "ब्रिक्स मीटर से 18-20% मिठास जांचकर जड़ से कटाई")
             ]
 
-        # 10. WHEAT (गेहूं) - Standard Cereal
+        # 10. ONION (प्याज / कांदा)
+        elif "प्याज" in crop_name or "onion" in crop_lower or "कांदा" in crop_name or "pyaj" in crop_lower:
+            days_intervals = [
+                ("01", "रोपाई व बेसल पोषण (Transplanting & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(40 * acreage)} kg, बेंटोनाइट सल्फर: {int(15 * acreage)} kg",
+                 "रोपाई उपरांत तुरंत हल्की सिंचाई।",
+                 "थीरम या कार्बेन्डाजिम से पौध जड़ उपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative & Weeding)", 25,
+                 f"यूरिया: {int(30 * acreage)} kg (प्रथम टॉप ड्रेसिंग)",
+                 "7-8 दिन के अंतराल पर हल्की सिंचाई। " + weather_alert,
+                 "हाथ से निराई-गुड़ाई व खरपतवार नियंत्रण"),
+                ("03", "गांठ निर्माण (Bulb Initiation)", 50,
+                 f"19:19:19 घुलनशील खाद @ 5g/L + यूरिया: {int(25 * acreage)} kg",
+                 "नियमित सिंचाई (मिट्टी में नमी 65-70% रखें)।",
+                 "थ्रिप्स (Thrips) कीट नियंत्रण: नीले चिपचिपे कार्ड 6/एकड़ + नीम तेल 5ml/L"),
+                ("04", "गांठ का विकास व आकार (Bulb Development)", 75,
+                 "0:0:50 पोटाश स्प्रे (1.5kg/एकड़) कंद का आकार व रंग चमकाने हेतु",
+                 "हल्की सिंचाई (अधिक जलभराव से कंद सड़ते हैं)।",
+                 "बैंगनी धब्बा रोग (Purple Blotch) जांचें; मैंकोजेब @ 2.5g/L स्प्रे"),
+                ("05", "परिपक्वता व खुदाई (Maturity & Harvest)", 105,
+                 "खाद समाप्त",
+                 "खुदाई से 15 दिन पूर्व पानी पूरी तरह बंद करें।",
+                 "50% पौधों की गर्दन झुकने (Neck Fall) पर खुदाई व छाया में सुखाना")
+            ]
+
+        # 11. GARLIC (लहसुन)
+        elif "लहसुन" in crop_name or "garlic" in crop_lower or "lahsun" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व बेसल पोषण (Cloves Planting)", 0,
+                 f"DAP: {int(60 * acreage)} kg, MOP: {int(35 * acreage)} kg, बेंटोनाइट सल्फर: {int(20 * acreage)} kg (तीखेपन हेतु अनिवार्य)",
+                 "बुवाई के तुरंत बाद पहली हल्की सिंचाई।",
+                 "कार्बेन्डाजिम (2g/kg) से कलियों का उपचार"),
+                ("02", "अंकुरण व पहली सिंचाई (Sprouting & Growth)", 30,
+                 f"यूरिया: {int(35 * acreage)} kg (प्रथम टॉप ड्रेसिंग)",
+                 "8-10 दिन के अंतराल पर सिंचाई। " + weather_alert,
+                 "हाथ से पहली निराई-गुड़ाई कर खरपतवार निकालें"),
+                ("03", "कंद निर्माण (Bulb Formation)", 60,
+                 "19:19:19 @ 5g/L + सूक्ष्म पोषक तत्व (जिंक + बोरॉन 1g/L)",
+                 "कंद निर्माण के समय नियमित नमी बनाए रखें।",
+                 "थ्रिप्स व पत्ती झुलसा रोकथाम (नीम तेल 5ml/L)"),
+                ("04", "गांठ का आकार बढ़ना (Bulb Bulking)", 90,
+                 "0:0:50 पोटाश स्प्रे @ 10g/L गांठों का वजन बढ़ाने हेतु",
+                 "अंतिम हल्की सिंचाई।",
+                 "स्टेंफिलियम ब्लाइट निगरानी व कॉपर फफूंदनाशी स्प्रे"),
+                ("05", "परिपक्वता व खुदाई (Harvesting)", 125,
+                 "खाद समाप्त",
+                 "खुदाई से 12 दिन पूर्व पानी बंद करें।",
+                 "पौधों की 70% पत्तियां पीली सूखने पर कंदों की खुदाई")
+            ]
+
+        # 12. CHILLI (मिर्च)
+        elif "मिर्च" in crop_name or "chilli" in crop_lower or "chili" in crop_lower or "mirch" in crop_lower:
+            days_intervals = [
+                ("01", "रोपाई व बेसल पोषण (Transplanting & Basal)", 0,
+                 f"DAP: {int(45 * acreage)} kg, MOP: {int(30 * acreage)} kg, नीम खली: {int(80 * acreage)} kg",
+                 "रोपाई के बाद तुरंत हल्की सिंचाई।",
+                 "ट्राइकोडर्मा वीरिडे से पौध जड़ शोधन"),
+                ("02", "वानस्पतिक बढ़वार (Branching & Vegetative)", 25,
+                 f"यूरिया: {int(25 * acreage)} kg + 19:19:19 स्प्रे @ 5g/L",
+                 "5-7 दिन के अंतराल पर हल्की सिंचाई। " + weather_alert,
+                 "मरोड़िया रोग (Leaf Curl Virus) वाहक थ्रिप्स व सफेद मक्खी नियंत्रण: नीले-पीले कार्ड 8/एकड़"),
+                ("03", "फूल आने की अवस्था (Flowering Stage)", 50,
+                 "13:0:45 + बोरॉन 1g/L स्प्रे (फूल व कलियों को झड़ने से रोकने हेतु)",
+                 "फूल खिलते समय खेत में समान नमी रखें।",
+                 "फल छेदक (Fruit Borer) निगरानी: फेरोमोन ट्रैप 5 प्रति एकड़"),
+                ("04", "फल विकास व पहली तुड़ाई (Fruiting & Picking)", 75,
+                 "0:0:50 स्प्रे (1kg/एकड़) + कैल्शियम नाइट्रेट फल चमक व लंबाई हेतु",
+                 "नियमित सिंचाई (अनियमित पानी से फल सड़ते हैं)।",
+                 "एन्थ्रेक्नोज (फल सड़न) बचाव: एजोक्सीस्ट्रोबिन या कॉपर कवकनाशी"),
+                ("05", "तुड़ाई व रख-रखाव (Continuous Harvest)", 100,
+                 f"यूरिया: {int(15 * acreage)} kg हर 20 दिन बाद तुड़ाई चक्र बढ़ाने हेतु",
+                 "तुड़ाई उपरांत हल्की सिंचाई।",
+                 "हरी मिर्च की नियमित तुड़ाई अथवा पकी लाल मिर्च सुखाना")
+            ]
+
+        # 13. GREEN GRAM / MOONG (मूंग) - Legume Pulse
+        elif "मूंग" in crop_name or "moong" in crop_lower or "mung" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, SSP: {int(50 * acreage)} kg, MOP: {int(15 * acreage)} kg",
+                 "पलेवा कर सही ओट में बुवाई करें।",
+                 "राइजोबियम कल्चर व पीएसबी से बीज शोधन कर उकठा रोग से बचाव"),
+                ("02", "शाखाएं निकलना (Branching Stage)", 20,
+                 "19:19:19 स्प्रे @ 5g/L (दलहन में यूरिया टॉप-ड्रेसिंग न डालें)",
+                 "अत्यधिक आवश्यकता होने पर ही हल्की सिंचाई। " + weather_alert,
+                 "हाथ से पहली निराई-गुड़ाई"),
+                ("03", "फूल आने की अवस्था (Flowering Stage)", 35,
+                 "0:52:34 घुलनशील स्प्रे @ 10g/L + बोरॉन 1g/L",
+                 "फूल आते समय सिंचाई पूरी तरह रोकें।",
+                 "पीला मोजेक वायरस (YMV) वाहक सफेद मक्खी पर नीम तेल 5ml/L छिड़काव"),
+                ("04", "फली विकास (Pod Formation)", 50,
+                 "0:0:50 पोटाश स्प्रे (1kg/एकड़) फलियों में दाना भरने हेतु",
+                 "हल्की सिंचाई (यदि पत्तियां मुरझा रही हों)।",
+                 "फली छेदक इल्ली (Pod Borer) नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 65,
+                 "खाद समाप्त",
+                 "कटाई से पूर्व खेत सुखाएं।",
+                 "80% फलियां काली/भूरी पड़ने पर कटाई व गहाई")
+            ]
+
+        # 14. BLACK GRAM / URAD (उड़द) - Legume Pulse
+        elif "उड़द" in crop_name or "urad" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, SSP: {int(50 * acreage)} kg, MOP: {int(15 * acreage)} kg",
+                 "पलेवा कर सही ओट में बुवाई।",
+                 "राइजोबियम व ट्राइकोडर्मा से बीजोपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 20,
+                 "19:19:19 घुलनशील पोषण @ 5g/L",
+                 "वर्षा न होने पर 20-25 दिन पर पहली हल्की सिंचाई। " + weather_alert,
+                 "खरपतवार नियंत्रण (इमाजेथापायर अवशेष जांच)"),
+                ("03", "फूल अवस्था (Flowering Stage)", 38,
+                 "0:52:34 @ 10g/L स्प्रे",
+                 "फूल खिलते समय जलभराव या सूखा न होने दें।",
+                 "सफेद मक्खी व बालदार सूंडी पर नीम तेल स्प्रे"),
+                ("04", "फली में दाना भराव (Pod Filling)", 55,
+                 "0:0:50 पोटाश स्प्रे (1kg/एकड़)",
+                 "दाना भरते समय हल्की नमी रखें।",
+                 "पत्ती धब्बा व सर्कोस्पोरा रोग रोकथाम"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 75,
+                 "खाद समाप्त",
+                 "कटाई पूर्व खेत सुखाएं।",
+                 "फलियां काली सूखने पर सुबह के समय कटाई")
+            ]
+
+        # 15. GROUNDNUT / PEANUT (मूंगफली) - Oilseed Legume
+        elif "मूंगफली" in crop_name or "groundnut" in crop_lower or "peanut" in crop_lower or "mungfali" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार खाद (Sowing & Basal)", 0,
+                 f"DAP: {int(30 * acreage)} kg, SSP: {int(120 * acreage)} kg (सल्फर व फास्फोरस हेतु), MOP: {int(25 * acreage)} kg",
+                 "पलेवा उपरांत भुरभुरी मिट्टी में बुवाई।",
+                 "राइजोबियम व थीरम से गिरी शोधन"),
+                ("02", "शाखाएं व निराई (Vegetative & Weeding)", 25,
+                 f"जिप्सम: {int(100 * acreage)} kg (सुइयां बनने व कैल्शियम आपूर्ति हेतु अनिवार्य)",
+                 "10-12 दिन में हल्की सिंचाई। " + weather_alert,
+                 "पहली व अंतिम निराई (सुइयां निकलने के बाद गुड़ाई न करें)"),
+                ("03", "सुइयां बनना (Pegging Stage)", 45,
+                 "0:52:34 स्प्रे @ 10g/L",
+                 "सुइयां (Pegs) जमीन में धंसते समय अत्यंत क्रांतिक सिंचाई।",
+                 "सफेद लट (White Grub) व कॉलर रॉट सुरक्षा"),
+                ("04", "फली में दाना भराव (Pod Development)", 75,
+                 "0:0:50 स्प्रे दाना वजन व तेल वृद्धि हेतु",
+                 "फलियों में दाना भरते समय हल्की सिंचाई।",
+                 "टिक्का रोग (Tikka Leaf Spot) रोकथाम: हेक्साकोनाजोल स्प्रे"),
+                ("05", "परिपक्वता व खुदाई (Harvesting)", 110,
+                 "खाद समाप्त",
+                 "खुदाई से 7 दिन पूर्व हल्की सिंचाई ताकि फलियां टूटे बिना आसानी से उखड़ें।",
+                 "फलियों के अंदरूनी छिलके का रंग भूरा होने पर खुदाई")
+            ]
+
+        # 16. PEARL MILLET / BAJRA (बाजरा) - Nutri-Cereal
+        elif "बाजरा" in crop_name or "bajra" in crop_lower or "pearl millet" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, MOP: {int(15 * acreage)} kg, जिंक सल्फेट: {int(5 * acreage)} kg",
+                 "पलेवा कर सही ओट में बुवाई।",
+                 "एजोस्पाइरिलम व थीरम से बीजोपचार"),
+                ("02", "कल्ले फूटना (Tillering Stage)", 20,
+                 f"यूरिया: {int(35 * acreage)} kg (प्रथम टॉप ड्रेसिंग)",
+                 "कल्ले फूटते समय पहली सिंचाई। " + weather_alert,
+                 "खरपतवार नियंत्रण (एट्राजिन बुवाई के 48 घंटे में)"),
+                ("03", "सिट्टा निकलना (Panicle Emergence)", 42,
+                 f"यूरिया: {int(25 * acreage)} kg (द्वितीय टॉप ड्रेसिंग)",
+                 "सिट्टा निकलते समय क्रांतिक सिंचाई।",
+                 "डाउनी मिल्ड्यू (हरित बाली रोग) निगरानी"),
+                ("04", "दाना भराव (Grain Filling)", 62,
+                 "0:52:34 घुलनशील स्प्रे (1kg/एकड़)",
+                 "दाना भरते समय आवश्यकतानुसार हल्की सिंचाई।",
+                 "अरगट (Ergot) व स्मट रोग रोकथाम"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 85,
+                 "खाद समाप्त",
+                 "कटाई से पूर्व खेत सुखाएं।",
+                 "सिट्टे का दाना सख्त होने पर बालियों की कटाई")
+            ]
+
+        # 17. SORGHUM / JOWAR (ज्वार)
+        elif "ज्वार" in crop_name or "jowar" in crop_lower or "sorghum" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व बेसल पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, MOP: {int(15 * acreage)} kg, जिंक: {int(5 * acreage)} kg",
+                 "पलेवा कर बुवाई करें।",
+                 "इमिडाक्लोप्रिड या कार्बोफ्यूरान से बीज उपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 25,
+                 f"यूरिया: {int(35 * acreage)} kg (प्रथम टॉप ड्रेसिंग)",
+                 "पहली सिंचाई 25-30 दिन पर। " + weather_alert,
+                 "तना मक्खी (Shoot Fly) नियंत्रण"),
+                ("03", "बाली व फूल निकलना (Flowering & Heading)", 50,
+                 f"यूरिया: {int(25 * acreage)} kg (द्वितीय टॉप ड्रेसिंग)",
+                 "फूल व बाली बनते समय क्रांतिक सिंचाई।",
+                 "तना छेदक (Stem Borer) निगरानी"),
+                ("04", "दूधिया व दाना भराव (Grain Filling)", 72,
+                 "0:52:34 स्प्रे (1kg/एकड़)",
+                 "दाना दूधिया अवस्था में हल्की सिंचाई।",
+                 "माहू (Aphid) कीट नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 95,
+                 "खाद समाप्त",
+                 "कटाई पूर्व खेत सुखाएं।",
+                 "दाने के आधार पर काला बिंदु (Black layer) दिखने पर कटाई")
+            ]
+
+        # 18. PIGEON PEA / ARHAR / TUR (अरहर / तुअर)
+        elif "अरहर" in crop_name or "तुअर" in crop_name or "arhar" in crop_lower or "tur" in crop_lower or "pigeon pea" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(40 * acreage)} kg, SSP: {int(60 * acreage)} kg, जिंक सल्फेट: {int(10 * acreage)} kg",
+                 "मेढ़ों पर बुवाई करें ताकि जलभराव न हो।",
+                 "राइजोबियम + ट्राइकोडर्मा बीजोपचार"),
+                ("02", "शाखाएं व निराई (Branching & Weeding)", 35,
+                 "19:19:19 स्प्रे @ 5g/L",
+                 "सूखा पड़ने पर ही हल्की सिंचाई। " + weather_alert,
+                 "फाइटोफ्थोरा तना झुलसा सुरक्षा"),
+                ("03", "कैनोपी विकास (Vegetative Growth)", 75,
+                 "0:52:34 घुलनशील स्प्रे @ 10g/L",
+                 "वानस्पतिक बढ़वार पर आवश्यक नमी।",
+                 "उकठा (Wilt) रोग निगरानी"),
+                ("04", "फूल व फली बनना (Flowering & Pod Initiation)", 120,
+                 "0:52:34 + बोरॉन 1g/L स्प्रे",
+                 "फूल व फली बनते समय सिंचाई।",
+                 "फली छेदक (Helicoverpa) फेरोमोन ट्रैप 6/एकड़ + इमामेक्टिन स्प्रे"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 160,
+                 "0:0:50 पोटाश स्प्रे",
+                 "कटाई से 20 दिन पूर्व पानी बंद।",
+                 "85% फलियां भूरी सूखने पर कटाई")
+            ]
+
+        # 19. PEA (मटर)
+        elif "मटर" in crop_name or "pea" in crop_lower or "matar" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(40 * acreage)} kg, MOP: {int(20 * acreage)} kg",
+                 "पलेवा उपरांत सही ओट में बुवाई।",
+                 "राइजोबियम व थीरम बीजोपचार"),
+                ("02", "कल्ले व बढ़वार (Vegetative Stage)", 25,
+                 "19:19:19 स्प्रे @ 5g/L",
+                 "शाखा निकलते समय पहली हल्की सिंचाई। " + weather_alert,
+                 "सफेद चूर्ण फफूंद (Powdery Mildew) जांच"),
+                ("03", "फूल आने की अवस्था (Flowering Stage)", 45,
+                 "0:52:34 @ 10g/L + बोरॉन 1g/L",
+                 "फूल खिलते समय सिंचाई न करें।",
+                 "फली छेदक निगरानी"),
+                ("04", "फली विकास (Pod Filling)", 65,
+                 "0:0:50 पोटाश स्प्रे दाना मिठास व वजन हेतु",
+                 "दाना भराव पर हल्की सिंचाई।",
+                 "हरी फलियों की पहली तुड़ाई"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 85,
+                 "खाद समाप्त",
+                 "कटाई पूर्व खेत सुखाएं।",
+                 "पूर्ण परिपक्वता पर अंतिम कटाई")
+            ]
+
+        # 20. LENTIL / MASOOR (मसूर)
+        elif "मसूर" in crop_name or "lentil" in crop_lower or "masoor" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, MOP: {int(15 * acreage)} kg, सल्फर: {int(10 * acreage)} kg",
+                 "सही ओट में बुवाई करें।",
+                 "राइजोबियम कल्चर से बीज शोधन"),
+                ("02", "शाखा बढ़वार (Branching Stage)", 30,
+                 "19:19:19 स्प्रे @ 5g/L",
+                 "वर्षा न होने पर 30-35 दिन पर पहली हल्की सिंचाई। " + weather_alert,
+                 "गेरुआ (Rust) व उकठा रोकथाम"),
+                ("03", "फूल अवस्था (Flowering Stage)", 55,
+                 "0:52:34 घुलनशील स्प्रे",
+                 "फूल आते समय जलभराव से बचें।",
+                 "माहू कीट निगरानी"),
+                ("04", "फली दाना भराव (Pod Development)", 75,
+                 "0:0:50 पोटाश स्प्रे (1kg/एकड़)",
+                 "फली में दाना भरते समय हल्की नमी।",
+                 "फली छेदक इल्ली नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 105,
+                 "खाद समाप्त",
+                 "कटाई पूर्व खेत सुखाएं।",
+                 "पौधे सुनहरे-भूरे सूखने पर कटाई")
+            ]
+
+        # 21. SUNFLOWER (सूरजमुखी)
+        elif "सूरजमुखी" in crop_name or "sunflower" in crop_lower or "surajmukhi" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(40 * acreage)} kg, MOP: {int(25 * acreage)} kg, बेंटोनाइट सल्फर: {int(15 * acreage)} kg",
+                 "उचित दूरी पर कतारों में बुवाई।",
+                 "थीरम या बाविस्टिन से बीजोपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 25,
+                 f"यूरिया: {int(30 * acreage)} kg (टॉप ड्रेसिंग)",
+                 "पहली मुख्य सिंचाई। " + weather_alert,
+                 "विरलीकरण (एक स्थान पर एक मजबूत पौधा रखें)"),
+                ("03", "मुंडी/कली बनना (Head Formation / Bud Stage)", 45,
+                 f"यूरिया: {int(20 * acreage)} kg",
+                 "अत्यंत क्रांतिक सिंचाई (पानी की कमी न हो)।",
+                 "पत्ती धब्बा रोग जांच"),
+                ("04", "फूल व बीज भराव (Flowering & Seed Filling)", 70,
+                 "बोरॉन 1.5g/L स्प्रे (खोखले दाने रोकने व बीज भराव हेतु)",
+                 "फूल खिलते समय सुबह कीटनाशक न छिड़कें (मधुमक्खी परागण सुरक्षा)।",
+                 "हेड रॉट फफूंद नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 95,
+                 "खाद समाप्त",
+                 "कटाई पूर्व खेत सुखाएं।",
+                 "मुंडी का पिछला भाग नींबू जैसा पीला होने पर कटाई")
+            ]
+
+        # 22. BRINJAL / EGGPLANT (बैंगन)
+        elif "बैंगन" in crop_name or "brinjal" in crop_lower or "eggplant" in crop_lower or "baingan" in crop_lower:
+            days_intervals = [
+                ("01", "रोपाई व बेसल पोषण (Transplanting & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(35 * acreage)} kg, नीम खली: {int(80 * acreage)} kg",
+                 "रोपाई बाद तुरंत सिंचाई।",
+                 "ट्राइकोडर्मा से जड़ उपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Branching)", 22,
+                 f"यूरिया: {int(25 * acreage)} kg + 19:19:19 @ 5g/L",
+                 "5-6 दिन पर सिंचाई। " + weather_alert,
+                 "तना व फल छेदक (Shoot Borer) फेरोमोन ट्रैप 8/एकड़ लगाएं"),
+                ("03", "फूल आने की अवस्था (Flowering Stage)", 45,
+                 "13:0:45 + बोरॉन 1g/L स्प्रे",
+                 "फूल अवस्था में नियमित नमी।",
+                 "मुरझाई टहनियों को काटकर नष्ट करें"),
+                ("04", "फल विकास व तुड़ाई (Fruiting & Picking)", 68,
+                 "0:0:50 स्प्रे फल की चमक व मोटाई हेतु",
+                 "नियमित सिंचाई।",
+                 "फल छेदक सुरक्षा: नीम तेल 5ml/L छिड़काव"),
+                ("05", "लगातार तुड़ाई चक्र (Continuous Harvesting)", 95,
+                 f"यूरिया: {int(15 * acreage)} kg हर 20 दिन पर तुड़ाई चक्र बढ़ाने हेतु",
+                 "तुड़ाई के उपरांत हल्की सिंचाई।",
+                 "प्रत्येक 4-5 दिन में फलों की तुड़ाई")
+            ]
+
+        # 23. CAULIFLOWER (फूलगोभी)
+        elif "फूलगोभी" in crop_name or "cauliflower" in crop_lower or "phoolgobhi" in crop_lower:
+            days_intervals = [
+                ("01", "रोपाई व बेसल पोषण (Transplanting & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(30 * acreage)} kg, बोरॉन: {int(5 * acreage)} kg (भूरापन रोकने हेतु)",
+                 "रोपाई बाद हल्की सिंचाई।",
+                 "बाविस्टिन घोल में जड़ शोधन"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 20,
+                 f"यूरिया: {int(30 * acreage)} kg + मोलिब्डेनम 1g/L स्प्रे (ह्विपटेल रोग बचाव)",
+                 "5-7 दिन पर हल्की सिंचाई। " + weather_alert,
+                 "हीरक पतंगा (DBM) फेरोमोन ट्रैप लगाएं"),
+                ("03", "फूल बनना (Curd Initiation)", 40,
+                 f"यूरिया: {int(30 * acreage)} kg",
+                 "क्रांतिक सिंचाई (नमी 70% रखें)।",
+                 "इल्ली नियंत्रण"),
+                ("04", "फूल का आकार बढ़ना (Curd Enlargement)", 58,
+                 "0:0:50 स्प्रे फूल ठोस बनाने हेतु",
+                 "सफेद फूल रखने हेतु पत्तियां बांधें (ब्लांचिंग)।",
+                 "अल्टरनेरिया पत्ती धब्बा जांच"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 72,
+                 "खाद समाप्त",
+                 "कटाई से 2 दिन पूर्व पानी न दें।",
+                 "फूल गठे हुए और ठोस रहने पर सुबह के समय कटाई")
+            ]
+
+        # 24. CABBAGE (पत्तागोभी)
+        elif "पत्तागोभी" in crop_name or "cabbage" in crop_lower or "patagobi" in crop_lower or "bandhgobi" in crop_lower:
+            days_intervals = [
+                ("01", "रोपाई व बेसल पोषण (Transplanting & Basal)", 0,
+                 f"DAP: {int(45 * acreage)} kg, MOP: {int(30 * acreage)} kg",
+                 "रोपाई उपरांत हल्की सिंचाई।",
+                 "जड़ विगलन रोकथाम हेतु फफूंदनाशी उपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 20,
+                 f"यूरिया: {int(30 * acreage)} kg",
+                 "6-7 दिन पर सिंचाई। " + weather_alert,
+                 "तंबाकू इल्ली व DBM निगरानी"),
+                ("03", "बंधाई चरण (Head Formation / Cupping)", 42,
+                 f"यूरिया: {int(30 * acreage)} kg",
+                 "लगातार समान नमी (अनियमित पानी से बंधा फटता है)।",
+                 "सफेद तितली व कीट नियंत्रण"),
+                ("04", "बंधा ठोस होना (Head Firmness)", 60,
+                 "0:0:50 स्प्रे पत्तागोभी को सख्त व वजनी बनाने हेतु",
+                 "हल्की नियमित सिंचाई।",
+                 "काली सड़न (Black Rot) बचाव: स्ट्रेप्टोसाइक्लिन 1g/10L"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 75,
+                 "खाद समाप्त",
+                 "कटाई से पूर्व खेत सुखाएं।",
+                 "गठे हुए ठोस बंधा की कटाई")
+            ]
+
+        # 25. OKRA / BHINDI (भिंडी)
+        elif "भिंडी" in crop_name or "okra" in crop_lower or "bhindi" in crop_lower or "ladyfinger" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(40 * acreage)} kg, MOP: {int(20 * acreage)} kg",
+                 "पलेवा कर सही ओट में बुवाई।",
+                 "इमिडाक्लोप्रिड से बीज शोधन"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 20,
+                 f"यूरिया: {int(25 * acreage)} kg",
+                 "4-5 दिन में हल्की सिंचाई। " + weather_alert,
+                 "पीला शिरा मोजेक (YVMV) वाहक सफेद मक्खी नियंत्रण: पीले कार्ड 8/एकड़ + नीम तेल"),
+                ("03", "फूल व पहली तुड़ाई (Flowering & First Picking)", 38,
+                 "19:19:19 @ 5g/L + बोरॉन 1g/L",
+                 "फूल व पहली फलियों की तुड़ाई पर नियमित नमी।",
+                 "तना व फल छेदक निगरानी"),
+                ("04", "फल बढ़वार व तुड़ाई (Fruiting Phase)", 52,
+                 f"यूरिया: {int(20 * acreage)} kg",
+                 "प्रत्येक 2 दिन में कोमल फलियों की तुड़ाई के बाद तुरंत पानी दें।",
+                 "चूसक कीट नियंत्रण"),
+                ("05", "अंतिम तुड़ाई व अवशेष (Maturity Phase)", 75,
+                 "0:0:50 स्प्रे",
+                 "तुड़ाई उपरांत खेत सुखाएं।",
+                 "अंतिम तुड़ाई चक्र व फसल अवशेष सफाई")
+            ]
+
+        # 26. GINGER (अदरक)
+        elif "अदरक" in crop_name or "ginger" in crop_lower or "adrak" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Planting & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(40 * acreage)} kg, सड़ी गोबर खाद 5 टन",
+                 "ऊंची क्यारी (Raised bed) में बुवाई बाद तुरंत सिंचाई।",
+                 "ट्राइकोडर्मा से कंद उपचार"),
+                ("02", "अंकुरण व मल्चिंग (Sprouting & Mulching)", 40,
+                 f"यूरिया: {int(25 * acreage)} kg",
+                 "पहली हरी पत्तियों की मल्चिंग व मिट्टी चढ़ाना। " + weather_alert,
+                 "प्रकंद सड़न (Rhizome Rot) सुरक्षा"),
+                ("03", "प्रकंद फैलाव (Rhizome Multiplication)", 90,
+                 f"यूरिया: {int(30 * acreage)} kg, MOP: {int(25 * acreage)} kg",
+                 "कंदों के तीव्र फैलाव पर नियमित हल्की सिंचाई।",
+                 "तना छेदक रोकथाम"),
+                ("04", "कंद का आकार बढ़ना (Rhizome Bulking)", 150,
+                 "0:0:50 स्प्रे (2kg/एकड़) कंद का वजन व मोटाई बढ़ाने हेतु",
+                 "नमी स्तर लगातार बनाए रखें।",
+                 "पत्ती धब्बा रोग नियंत्रण"),
+                ("05", "परिपक्वता व खुदाई (Harvesting)", 240,
+                 "खाद समाप्त",
+                 "खुदाई से 20 दिन पूर्व पानी बंद।",
+                 "पत्तियां पीली सूखकर गिरने पर कंद खुदाई")
+            ]
+
+        # 27. TURMERIC (हल्दी)
+        elif "हल्दी" in crop_name or "turmeric" in crop_lower or "haldi" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Planting & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(40 * acreage)} kg, नीम खली: {int(100 * acreage)} kg",
+                 "मेढ़ों पर बुवाई उपरांत भरपूर सिंचाई।",
+                 "मैंकोजेब घोल में कंद उपचार"),
+                ("02", "कल्ले व मल्चिंग (Tillering & Mulching)", 45,
+                 f"यूरिया: {int(30 * acreage)} kg",
+                 "हरी पत्तियों से मल्चिंग व निराई। " + weather_alert,
+                 "प्रकंद विगलन से सुरक्षा"),
+                ("03", "प्रकंद निर्माण (Rhizome Development)", 100,
+                 f"यूरिया: {int(35 * acreage)} kg, MOP: {int(25 * acreage)} kg + मिट्टी चढ़ाना",
+                 "10-12 दिन में नियमित सिंचाई।",
+                 "पत्ती लपेटक कीट नियंत्रण"),
+                ("04", "कुरकुमिन वृद्धि (Curcumin Enrichment)", 180,
+                 "0:0:50 स्प्रे कुरकुमिन प्रतिशत व वजन बढ़ाने हेतु",
+                 "नियमित सिंचाई।",
+                 "पत्ती धब्बा कवकनाशी स्प्रे"),
+                ("05", "परिपक्वता व खुदाई (Harvesting)", 260,
+                 "खाद समाप्त",
+                 "कटाई से 25 दिन पूर्व सिंचाई बंद।",
+                 "पौधे पूरी तरह सूखकर गिरने पर खुदाई")
+            ]
+
+        # 28. CUMIN / JEERA (जीरा) - Rabi Cash Spice
+        elif "जीरा" in crop_name or "cumin" in crop_lower or "jeera" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(30 * acreage)} kg, MOP: {int(15 * acreage)} kg",
+                 "हल्की भुरभुरी मिट्टी में सही ओट में बुवाई।",
+                 "कार्बेन्डाजिम (2g/kg) से बीजोपचार"),
+                ("02", "पहली सिंचाई व अंकुरण (First Irrigation)", 25,
+                 "19:19:19 स्प्रे @ 4g/L",
+                 "पहली अत्यंत हल्की नालीदार सिंचाई (खेत में पानी खड़ा न रहे)। " + weather_alert,
+                 "छाछिया व उकठा रोग पूर्व-रोकथाम"),
+                ("03", "वानस्पतिक बढ़वार (Vegetative Stage)", 45,
+                 "घुलनशील सल्फर 2g/L स्प्रे",
+                 "वानस्पतिक बढ़वार पर हल्की सिंचाई।",
+                 "झुलसा (Blight) व छाछिया (Powdery Mildew) का कवकनाशी स्प्रे"),
+                ("04", "दाना भराव (Seed Development)", 70,
+                 "0:52:34 स्प्रे दाना चमक हेतु",
+                 "दाना भरते समय सिंचाई पूरी तरह रोकें (सिंचाई से झुलसा फैलने का भारी खतरा होता है)।",
+                 "माहू कीट नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 95,
+                 "खाद समाप्त",
+                 "खेत पूरी तरह सूखा रखें।",
+                 "छत्रक (Umbels) भूरे पड़ने पर सुबह के समय कटाई ताकि दाने न झड़ें")
+            ]
+
+        # 29. CORIANDER / DHANIYA (धनिया)
+        elif "धनिया" in crop_name or "coriander" in crop_lower or "dhaniya" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(35 * acreage)} kg, MOP: {int(15 * acreage)} kg",
+                 "बीजों को दो भागों में दलकर थीरम से उपचारित कर बुवाई।",
+                 "थीरम या कार्बेन्डाजिम बीजोपचार"),
+                ("02", "वानस्पतिक बढ़वार (Vegetative Stage)", 25,
+                 f"यूरिया: {int(25 * acreage)} kg (यदि हरी पत्ती लेनी हो)",
+                 "पहली हल्की सिंचाई व विरलीकरण। " + weather_alert,
+                 "हाथ से पहली निराई-गुड़ाई"),
+                ("03", "फूल आने की अवस्था (Flowering Stage)", 50,
+                 "19:19:19 स्प्रे @ 5g/L",
+                 "फूल आते समय छाछिया (Powdery Mildew) नियंत्रण हेतु घुलनशील गंधक (2g/L)।",
+                 "माहू कीट निगरानी"),
+                ("04", "दाना विकास (Grain Development)", 75,
+                 "0:52:34 स्प्रे दाना सुगंध व वजन हेतु",
+                 "दाना भराव के समय हल्की सिंचाई।",
+                 "पत्ती धब्बा रोग जांच"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 100,
+                 "खाद समाप्त",
+                 "कटाई से पूर्व खेत सुखाएं।",
+                 "बीज जैतून हरे से हल्के भूरे होने पर सुबह कटाई व सुखाना")
+            ]
+
+        # 30. BARLEY / JAU (जौ)
+        elif "जौ" in crop_name or "barley" in crop_lower or "jau" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(40 * acreage)} kg, MOP: {int(20 * acreage)} kg, जिंक सल्फेट: {int(5 * acreage)} kg",
+                 "पलेवा कर सही ओट में बुवाई।",
+                 "वीटावैक्स से बीज शोधन"),
+                ("02", "कल्ले फूटना (Tillering Stage)", 25,
+                 f"यूरिया: {int(35 * acreage)} kg (प्रथम टॉप ड्रेसिंग)",
+                 "कल्ले फूटते समय पहली सिंचाई। " + weather_alert,
+                 "चौड़ी पत्ती खरपतवार नियंत्रण"),
+                ("03", "गांठ बनना (Jointing Stage)", 50,
+                 f"यूरिया: {int(25 * acreage)} kg (द्वितीय टॉप ड्रेसिंग)",
+                 "गांठ बनते समय दूसरी सिंचाई।",
+                 "धारीदार गेरुआ (Stripe Rust) जांच"),
+                ("04", "बाली व दाना भराव (Heading & Milking)", 75,
+                 "0:52:34 स्प्रे दाना वजन हेतु",
+                 "दाना भरते समय हल्की सिंचाई।",
+                 "माहो कीट नियंत्रण"),
+                ("05", "परिपक्वता व कटाई (Harvesting)", 110,
+                 "खाद समाप्त",
+                 "कटाई से 12 दिन पूर्व पानी बंद।",
+                 "फसल सुनहरी होने पर कंबाइन से कटाई")
+            ]
+
+        # 31. WATERMELON / TARBOOZ (तरबूज)
+        elif "तरबूज" in crop_name or "watermelon" in crop_lower or "tarbooj" in crop_lower:
+            days_intervals = [
+                ("01", "बुवाई व आधार पोषण (Sowing & Basal)", 0,
+                 f"DAP: {int(50 * acreage)} kg, MOP: {int(40 * acreage)} kg, सड़ी गोबर खाद",
+                 "नाली/ड्रिप विधि में बुवाई बाद तुरंत सिंचाई।",
+                 "ट्राइकोडर्मा बीज शोधन"),
+                ("02", "वानस्पतिक बढ़वार (Vine Growth)", 22,
+                 "19:19:19 घुलनशील खाद ड्रिप/स्प्रे @ 5g/L",
+                 "4-5 दिन में हल्की सिंचाई। " + weather_alert,
+                 "लाल कद्दू भृंग (Red Pumpkin Beetle) नियंत्रण"),
+                ("03", "फूल व फल लगना (Flowering & Fruit Setting)", 45,
+                 "13:0:45 + बोरॉन 1g/L (फूल व फल टिकने हेतु)",
+                 "फूल खिलते समय मधुमक्खी संरक्षण (सुबह कीटनाशक न डालें)।",
+                 "फल मक्खी (Fruit Fly) ट्रैप 6/एकड़ा लगाएं"),
+                ("04", "फल विकास व मिठास (Fruit Sizing & Sugar Accumulation)", 65,
+                 "0:0:50 पोटाश स्प्रे (2kg/एकड़) मिठास (TSS/Brix) व वजन बढ़ाने हेतु",
+                 "नियमित समान नमी (अनियमित पानी से तरबूज फटता है)।",
+                 "डाउनी मिल्ड्यू फफूंद रोकथाम"),
+                ("05", "परिपक्वता व तुड़ाई (Harvesting)", 85,
+                 "खाद समाप्त",
+                 "तुड़ाई से 5 दिन पूर्व पानी बंद (ताकि फल फटे नहीं व मिठास बढ़े)।",
+                 "फल के निचले हिस्से का रंग मलाईदार पीला होने व तंतु सूखने पर तुड़ाई")
+            ]
+
+        # 32. WHEAT (गेहूं) - Standard Cereal Fallback
         else:
             dap_kg = int(55 * acreage)
             mop_kg = int(25 * acreage)

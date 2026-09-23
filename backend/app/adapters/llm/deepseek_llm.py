@@ -4,21 +4,83 @@ import json
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+from app.adapters.llm.base import BaseLLMAdapter
 from app.config import settings
 
 logger = logging.getLogger("agrigo.deepseek")
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
-class DeepSeekLLMAdapter:
+class DeepSeekLLMAdapter(BaseLLMAdapter):
     """
-    DeepSeek Agricultural AI Intelligence Adapter
-    Generates precision crop phenology, acreage-scaled nutrient dosage,
-    and stage-based irrigation and IPM pesticide schedules.
+    DeepSeek Agricultural AI Intelligence Adapter (deepseek-chat)
+    Specialized for answering farmer queries, pest/disease diagnosis recommendations,
+    and conversational agronomic advisory following ICAR & TNAU standards.
     """
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or getattr(settings, "DEEPSEEK_API_KEY", None) or os.getenv("DEEPSEEK_API_KEY", "")
+
+    async def generate_response(
+        self,
+        prompt: str,
+        context: List[Dict[str, str]],
+        language: str = "hi"
+    ) -> Dict[str, Any]:
+        """
+        Uses DeepSeek AI (deepseek-chat) to answer farmer questions with verified agronomic evidence.
+        """
+        if not self.api_key:
+            raise ValueError("DEEPSEEK_API_KEY is not configured")
+
+        evidence_text = "\n".join([f"- {c.get('title', 'Evidence')}: {c.get('content', '')}" for c in context]) if context else "General ICAR agronomical standards."
+        lang_name = "Hindi (हिंदी)" if language == "hi" else ("English" if language == "en" else language)
+
+        system_instruction = (
+            f"You are AgriGo Farmer AI (किसान मित्र AI), an elite Indian Agricultural Scientist and Agronomist. "
+            f"Always reply in {lang_name}. Use respectful, warm, and highly practical language (address the farmer as 'किसान भाई' or 'आप').\n"
+            f"Mandatory Guidelines:\n"
+            f"1. Directly answer the farmer's question with actionable, scientific agronomic solutions (ICAR, TNAU, and FAO standards).\n"
+            f"2. Provide concrete numbers: exact fertilizer doses (Urea, DAP, MOP, micronutrients per acre or per pump) or seed rates.\n"
+            f"3. Prioritize Integrated Pest Management (IPM), biological remedies (Neem oil 1500 PPM, Trichoderma, pheromone traps) before chemical pesticides.\n"
+            f"4. If recommending chemicals, provide exact CIBRC/ICAR approved safe dosages (ml/L or g/L) and safety withholding intervals.\n"
+            f"5. Keep the advice structured, crisp (bullet points), and easy to read on mobile."
+        )
+
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "system", "content": f"Verified Agricultural Context & Local Weather:\n{evidence_text}"},
+            {"role": "user", "content": prompt}
+        ]
+
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            res = await client.post(
+                DEEPSEEK_API_URL,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": messages,
+                    "temperature": 0.3,
+                    "max_tokens": 800
+                }
+            )
+
+            if res.status_code == 200:
+                raw_data = res.json()
+                content = raw_data["choices"][0]["message"]["content"]
+                return {
+                    "content": content,
+                    "provider": "DeepSeek AI (deepseek-chat)",
+                    "model": "deepseek-chat",
+                    "evidence_used": [c.get("title", "ICAR Guidelines") for c in context] if context else ["ICAR / TNAU / FAO Agricultural Knowledge Base"]
+                }
+            else:
+                err_msg = f"HTTP {res.status_code}: {res.text[:200]}"
+                logger.warning(f"[DeepSeek Farmer AI] API request failed: {err_msg}")
+                raise RuntimeError(err_msg)
 
     async def generate_crop_schedule(
         self,
@@ -28,7 +90,7 @@ class DeepSeekLLMAdapter:
         language: str = "hi"
     ) -> Dict[str, Any]:
         """
-        Uses DeepSeek Chat API to calculate full lifecycle farming timeline with exact acreage dosages.
+        Legacy fallback crop schedule generator using DeepSeek Chat API.
         """
         if not self.api_key:
             raise ValueError("DEEPSEEK_API_KEY is not configured")
@@ -41,35 +103,11 @@ class DeepSeekLLMAdapter:
             f"- Farm Land Area: {acreage} Acres (एकड़)\n\n"
             f"TASK:\n"
             f"Generate a rigorous, complete agricultural production schedule with precise calendar dates, "
-            f"phenological stages, irrigation timing, acreage-scaled fertilizer doses (DAP, Urea, MOP in kg), "
-            f"and preventative IPM pesticide / fungicide sprays.\n\n"
-            f"STRICT RULES:\n"
-            f"1. Multiply all per-acre fertilizer requirements by EXACTLY {acreage} acres to output total kilograms needed.\n"
-            f"2. Base irrigation intervals on official ICAR/TNAU water requirements from the sowing date.\n"
-            f"3. Prioritize organic IPM (Neem oil, sticky traps, Trichoderma) and include safe CIBRC/ICAR chemical dosages.\n"
-            f"4. Output language: Hindi (हिंदी) with English technical terms in parentheses.\n"
-            f"5. Return ONLY a single strictly valid JSON object matching this schema:\n"
-            f"{{\n"
-            f'  "crop_name": "{crop_name}",\n'
-            f'  "sowing_date": "{sowing_date_str}",\n'
-            f'  "acreage": {acreage},\n'
-            f'  "stages": [\n'
-            f'    {{"stage_number": "01", "stage_name": "बुवाई व अंकुरण (Sowing & Germination)", "days_from_sowing": 0, "target_date": "YYYY-MM-DD", "description": "..."}},\n'
-            f'    {{"stage_number": "02", "stage_name": "...", "days_from_sowing": 21, "target_date": "YYYY-MM-DD", "description": "..."}}\n'
-            f'  ],\n'
-            f'  "irrigation_tasks": [\n'
-            f'    {{"title": "...", "due_date": "YYYY-MM-DD", "stage": "...", "description": "...", "priority": "high"}}\n'
-            f'  ],\n'
-            f'  "fertilizer_tasks": [\n'
-            f'    {{"title": "...", "due_date": "YYYY-MM-DD", "stage": "...", "dosage_kg": "...", "description": "...", "priority": "high"}}\n'
-            f'  ],\n'
-            f'  "pesticide_tasks": [\n'
-            f'    {{"title": "...", "due_date": "YYYY-MM-DD", "stage": "...", "preventative_spray": "...", "dosage": "...", "description": "...", "priority": "normal"}}\n'
-            f'  ]\n'
-            f"}}"
+            f"phenological stages (01 to 05), irrigation timing, acreage-scaled fertilizer doses (DAP, Urea, MOP in kg), "
+            f"and preventative IPM pesticide / fungicide sprays in Hindi."
         )
 
-        async with httpx.AsyncClient(timeout=45.0) as client:
+        async with httpx.AsyncClient(timeout=35.0) as client:
             res = await client.post(
                 DEEPSEEK_API_URL,
                 headers={

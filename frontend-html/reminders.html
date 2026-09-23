@@ -677,33 +677,68 @@
               <span>🌾 फसल का नाम (Crop Name)</span>
             </label>
             <select id="schedule-crop-name" class="pos-select" required onchange="handleCropSelectChange(this)">
-              <option value="" disabled selected>-- फसल चुनें (Select Crop) --</option>
-              <option value="गेहूं (Wheat)">🌾 गेहूं (Wheat)</option>
-              <option value="धान (Paddy / Rice)">🌾 धान (Paddy / Rice)</option>
-              <option value="सरसों (Mustard)">🌼 सरसों (Mustard)</option>
-              <option value="मक्का (Maize)">🌽 मक्का (Maize)</option>
-              <option value="टमाटर (Tomato)">🍅 टमाटर (Tomato)</option>
-              <option value="कपास (Cotton)">☁️ कपास (Cotton)</option>
-              <option value="आलू (Potato)">🥔 आलू (Potato)</option>
-              <option value="चना (Gram / Chickpea)">🫘 चना (Gram / Chickpea)</option>
-              <option value="गन्ना (Sugarcane)">🎋 गन्ना (Sugarcane)</option>
-              <option value="सोयाबीन (Soybean)">🌱 सोयाबीन (Soybean)</option>
-              <option value="मिर्च (Chilli)">🌶️ मिर्च (Chilli)</option>
-              <option value="प्याज (Onion)">🧅 प्याज (Onion)</option>
-              <option value="बाजरा (Pearl Millet)">🌾 बाजरा (Pearl Millet)</option>
-              <option value="मटर (Green Pea)">🟢 मटर (Green Pea)</option>
+              <option value="" disabled selected>-- 30+ वैज्ञानिक फसलों में से चुनें (Select Crop) --</option>
+              <optgroup label="🌾 अनाज व मोटे अनाज (Cereals & Millets)">
+                <option value="गेहूं (Wheat)">🌾 गेहूं (Wheat)</option>
+                <option value="धान (Paddy / Rice)">🌾 धान (Paddy / Rice)</option>
+                <option value="मक्का (Maize)">🌽 मक्का (Maize)</option>
+                <option value="बाजरा (Pearl Millet)">🌾 बाजरा (Pearl Millet)</option>
+                <option value="ज्वार (Sorghum / Jowar)">🌾 ज्वार (Sorghum / Jowar)</option>
+                <option value="जौ (Barley)">🌾 जौ (Barley)</option>
+              </optgroup>
+              <optgroup label="🫘 दलहनी फसलें (Pulses & Legumes)">
+                <option value="चना (Gram / Chickpea)">🫘 चना (Gram / Chickpea)</option>
+                <option value="अरहर (Pigeon Pea / Arhar)">🫘 अरहर / तुअर (Arhar)</option>
+                <option value="मूंग (Green Gram / Moong)">🟢 मूंग (Moong)</option>
+                <option value="उड़द (Black Gram / Urad)">⚫ उड़द (Urad)</option>
+                <option value="मटर (Green Pea)">🟢 मटर (Green Pea)</option>
+                <option value="मसूर (Lentil / Masoor)">🫘 मसूर (Lentil)</option>
+              </optgroup>
+              <optgroup label="🌻 तिलहनी फसलें (Oilseeds)">
+                <option value="सरसों (Mustard)">🌼 सरसों (Mustard)</option>
+                <option value="सोयाबीन (Soybean)">🌱 सोयाबीन (Soybean)</option>
+                <option value="मूंगफली (Groundnut)">🥜 मूंगफली (Groundnut)</option>
+                <option value="सूरजमुखी (Sunflower)">🌻 सूरजमुखी (Sunflower)</option>
+              </optgroup>
+              <optgroup label="🎋 नकदी व रेशेदार फसलें (Cash & Fiber)">
+                <option value="कपास (Cotton)">☁️ कपास (Cotton)</option>
+                <option value="गन्ना (Sugarcane)">🎋 गन्ना (Sugarcane)</option>
+              </optgroup>
+              <optgroup label="🥔 सब्जियां (Vegetables)">
+                <option value="आलू (Potato)">🥔 आलू (Potato)</option>
+                <option value="टमाटर (Tomato)">🍅 टमाटर (Tomato)</option>
+                <option value="प्याज (Onion)">🧅 प्याज (Onion)</option>
+                <option value="लहसुन (Garlic)">🧄 लहसुन (Garlic)</option>
+                <option value="मिर्च (Chilli)">🌶️ मिर्च (Chilli)</option>
+                <option value="बैंगन (Brinjal)">🍆 बैंगन (Brinjal)</option>
+                <option value="फूलगोभी (Cauliflower)">🥦 फूलगोभी (Cauliflower)</option>
+                <option value="पत्तागोभी (Cabbage)">🥬 पत्तागोभी (Cabbage)</option>
+                <option value="भिंडी (Okra)">🥬 भिंडी (Okra)</option>
+              </optgroup>
+              <optgroup label="🌿 मसाले (Spices & Condiments)">
+                <option value="अदरक (Ginger)">🫚 अदरक (Ginger)</option>
+                <option value="हल्दी (Turmeric)">🟡 हल्दी (Turmeric)</option>
+                <option value="जीरा (Cumin / Jeera)">🟤 जीरा (Cumin / Jeera)</option>
+                <option value="धनिया (Coriander)">🌿 धनिया (Coriander)</option>
+              </optgroup>
+              <optgroup label="🍉 फल (Fruits)">
+                <option value="तरबूज (Watermelon)">🍉 तरबूज (Watermelon)</option>
+              </optgroup>
               <option value="__custom__">✏️ अन्य फसल (Type Custom)...</option>
             </select>
             <!-- Custom input if needed -->
-            <input type="text" id="schedule-custom-crop" class="pos-input" placeholder="फसल का नाम लिखें (उदा. बैंगन, सूरजमुखी)" style="display:none; margin-top:6px;">
+            <input type="text" id="schedule-custom-crop" class="pos-input" placeholder="फसल का नाम लिखें (उदा. पालक, मेथी)" style="display:none; margin-top:6px;">
 
             <!-- Quick Crop Chips -->
             <div class="pos-chips-wrap">
-              <span class="pos-chip" onclick="setQuickCrop('गेहूं (Wheat)')">🌾 गेहूं</span>
-              <span class="pos-chip" onclick="setQuickCrop('धान (Paddy / Rice)')">🌾 धान</span>
               <span class="pos-chip" onclick="setQuickCrop('सरसों (Mustard)')">🌼 सरसों</span>
+              <span class="pos-chip" onclick="setQuickCrop('गेहूं (Wheat)')">🌾 गेहूं</span>
+              <span class="pos-chip" onclick="setQuickCrop('चना (Gram / Chickpea)')">🫘 चना</span>
+              <span class="pos-chip" onclick="setQuickCrop('लहसुन (Garlic)')">🧄 लहसुन</span>
+              <span class="pos-chip" onclick="setQuickCrop('प्याज (Onion)')">🧅 प्याज</span>
+              <span class="pos-chip" onclick="setQuickCrop('मिर्च (Chilli)')">🌶️ मिर्च</span>
               <span class="pos-chip" onclick="setQuickCrop('टमाटर (Tomato)')">🍅 टमाटर</span>
-              <span class="pos-chip" onclick="setQuickCrop('मक्का (Maize)')">🌽 मक्का</span>
+              <span class="pos-chip" onclick="setQuickCrop('आलू (Potato)')">🥔 आलू</span>
             </div>
           </div>
 

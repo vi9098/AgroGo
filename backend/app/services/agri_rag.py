@@ -3,6 +3,8 @@ AgriGo Agricultural RAG & Multi-Modal Decision Engine
 Combines Farmer Farm Context + Live Weather + Verified Scientific Knowledge + AGROVOC Concepts.
 Strictly adheres to agricultural safety rules: No blind chemical prescriptions.
 """
+import os
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 from app.database import query_db, query_one
@@ -71,26 +73,52 @@ class AgriRAGService:
         # 7. Retrieve Authoritative Evidence Chunks
         evidence_chunks = AgriKnowledgeService.retrieve_evidence(matched_crop or crop_context)
 
-        # 8. Attempt Live Dynamic AI Generation via Gemini / OpenAI
+        # 8. Attempt Live Dynamic AI Generation (DeepSeek AI first for Farmer AI, then Gemini / OpenAI)
         from app.config import settings
+        weather_ctx = f"Local Weather: {weather.get('temperature_c', 28)}°C, Rain Probability: {weather.get('rain_prob_today_pct', 10)}%, Spray Window Safe: {weather.get('spray_window_safe', True)}"
+        crop_ctx_str = f"Farmer Crop: {matched_crop or (active_crop_cycle.get('crop_name') if active_crop_cycle else 'General Agriculture')}"
+        if active_crop_cycle:
+            crop_ctx_str += f", Stage: {active_crop_cycle.get('current_stage', 'Growth')}, Area: {active_crop_cycle.get('area_acres', 2.5)} acres"
+
+        context_payload = [{"title": c.get("title", "ICAR Scientific Knowledge"), "content": c.get("text", "")} for c in evidence_chunks]
+        context_payload.append({"title": "Live Agromet Weather", "content": weather_ctx})
+        context_payload.append({"title": "Farmer Farm Profile", "content": crop_ctx_str})
+
+        # 8.1 PRIMARY: DeepSeek AI for Farmer AI conversational advisory
+        deepseek_key = getattr(settings, "DEEPSEEK_API_KEY", None) or os.getenv("DEEPSEEK_API_KEY", "")
+        if deepseek_key:
+            try:
+                from app.adapters.llm.deepseek_llm import DeepSeekLLMAdapter
+                ds_adapter = DeepSeekLLMAdapter()
+                ds_res = await asyncio.wait_for(
+                    ds_adapter.generate_response(question, context_payload, language=language),
+                    timeout=20.0
+                )
+                if ds_res and ds_res.get("content"):
+                    return {
+                        "response": ds_res["content"],
+                        "provider": ds_res.get("provider", "DeepSeek AI (deepseek-chat)"),
+                        "evidence": ds_res.get("evidence_used", ["ICAR Guidelines", "Agromet Weather"]),
+                        "weather_context": {
+                            "temp": f"{weather.get('temperature_c')}°C",
+                            "rain_prob": f"{weather.get('rain_prob_today_pct')}%",
+                            "spray_safe": weather.get("spray_window_safe")
+                        },
+                        "agrovoc_concept": matched_crop
+                    }
+            except Exception as e:
+                logger.warning(f"[DeepSeek Farmer AI Failed] {e}. Falling back to secondary AI providers.")
+
+        # 8.2 SECONDARY: Google Gemini or OpenAI
         if settings.GEMINI_API_KEY or settings.OPENAI_API_KEY:
             try:
                 from app.adapters.llm.gemini_llm import GeminiLLMAdapter
                 adapter = GeminiLLMAdapter()
-                weather_ctx = f"Local Weather: {weather.get('temperature_c', 28)}°C, Rain Probability: {weather.get('rain_prob_today_pct', 10)}%, Spray Window Safe: {weather.get('spray_window_safe', True)}"
-                crop_ctx_str = f"Farmer Crop: {matched_crop or (active_crop_cycle.get('crop_name') if active_crop_cycle else 'General Agriculture')}"
-                if active_crop_cycle:
-                    crop_ctx_str += f", Stage: {active_crop_cycle.get('current_stage', 'Growth')}, Area: {active_crop_cycle.get('area_acres', 2.5)} acres"
-
-                context_payload = [{"title": c.get("title", "ICAR Scientific Knowledge"), "content": c.get("text", "")} for c in evidence_chunks]
-                context_payload.append({"title": "Live Agromet Weather", "content": weather_ctx})
-                context_payload.append({"title": "Farmer Farm Profile", "content": crop_ctx_str})
-
                 ai_res = await adapter.generate_response(question, context_payload, language=language)
                 if ai_res and ai_res.get("content"):
                     return {
                         "response": ai_res["content"],
-                        "provider": ai_res.get("provider", "Google Gemini 3.6 Flash (AgriGo Dynamic AI)"),
+                        "provider": ai_res.get("provider", "Google Gemini Flash (AgriGo AI)"),
                         "evidence": ai_res.get("evidence_used", ["ICAR Guidelines", "Agromet Weather"]),
                         "weather_context": {
                             "temp": f"{weather.get('temperature_c')}°C",
@@ -100,7 +128,25 @@ class AgriRAGService:
                         "agrovoc_concept": matched_crop
                     }
             except Exception as e:
-                logger.warning(f"[Live LLM Query Failed] {e}. Falling back to ICAR agronomy templates.")
+                logger.warning(f"[Live Gemini Query Failed] {e}. Trying OpenAI fallback.")
+                try:
+                    from app.adapters.llm.openai_llm import OpenAILLMAdapter
+                    oai = OpenAILLMAdapter()
+                    ai_res = await oai.generate_response(question, context_payload, language=language)
+                    if ai_res and ai_res.get("content"):
+                        return {
+                            "response": ai_res["content"],
+                            "provider": "OpenAI (gpt-4o-mini)",
+                            "evidence": ai_res.get("evidence_used", ["ICAR Guidelines"]),
+                            "weather_context": {
+                                "temp": f"{weather.get('temperature_c')}°C",
+                                "rain_prob": f"{weather.get('rain_prob_today_pct')}%",
+                                "spray_safe": weather.get("spray_window_safe")
+                            },
+                            "agrovoc_concept": matched_crop
+                        }
+                except Exception as oe:
+                    logger.warning(f"[Live OpenAI Query Failed] {oe}. Falling back to ICAR agronomy templates.")
 
         # 9. Deterministic RAG Fallback Templates (When Offline)
         if matched_prob:
