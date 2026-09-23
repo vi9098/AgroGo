@@ -501,16 +501,19 @@
     }
 
     /* Loading Modal / State */
-    .pos-loading-overlay {
-      display: none;
+    #pos-loading-overlay, #loading-overlay, .pos-loading-overlay {
+      display: none !important;
       position: fixed;
       inset: 0;
-      background: rgba(25, 26, 35, 0.75);
-      z-index: 9999;
+      background: rgba(25, 26, 35, 0.85);
+      z-index: 99999;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(5px);
+    }
+    #pos-loading-overlay.active, #loading-overlay.active, .pos-loading-overlay.active {
+      display: flex !important;
     }
 
     .pos-loading-box {
@@ -1141,14 +1144,14 @@
   </div>
 
   <!-- Loading Overlay for AI Generation -->
-  <div class="pos-loading-overlay" id="loading-overlay">
+  <div class="pos-loading-overlay" id="pos-loading-overlay" style="display: none !important;">
     <div class="pos-loading-box">
       <div class="pos-spinner"></div>
       <h3 style="font-size:22px; font-weight:900; color:var(--pos-dark); margin:0 0 10px 0;">
         ⚡ AI संपूर्ण कैलेंडर तैयार कर रहा है...
       </h3>
       <p style="font-size:14px; color:#4B5563; line-height:1.55; margin:0;" id="loading-status-text">
-        DeepSeek AI व ICAR शस्य-विज्ञान डेटाबेस से आपकी बुवाई तारीख और एकड़ के आधार पर सिंचाई, खाद और छिड़काव की गणना की जा रही है।
+        OpenAI व ICAR शस्य-विज्ञान डेटाबेस से आपकी बुवाई तारीख और एकड़ के आधार पर सिंचाई, खाद और छिड़काव की गणना की जा रही है।
       </p>
     </div>
   </div>

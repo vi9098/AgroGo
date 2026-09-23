@@ -10,10 +10,35 @@ let currentAcreage = 2.5;
 let currentCropName = "गेहूं (Wheat)";
 let allStagesExpanded = false;
 
+function hideLoadingOverlay() {
+  const overlay = document.getElementById("pos-loading-overlay") || document.getElementById("loading-overlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay.classList.remove("active");
+    overlay.classList.add("hidden");
+  }
+}
+
+function showLoadingOverlay(msg) {
+  const overlay = document.getElementById("pos-loading-overlay") || document.getElementById("loading-overlay");
+  const statusText = document.getElementById("loading-status-text");
+  if (statusText && msg) statusText.innerText = msg;
+  if (overlay) {
+    overlay.style.display = "flex";
+    overlay.classList.add("active");
+    overlay.classList.remove("hidden");
+  }
+}
+
 async function initRemindersPage() {
+  hideLoadingOverlay();
   initFormDefaults();
   await checkFarmerAuth();
+  hideLoadingOverlay();
 }
+
+// Immediate dismissal in case CSS was cached
+hideLoadingOverlay();
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initRemindersPage);
@@ -22,6 +47,7 @@ if (document.readyState === "loading") {
 }
 
 window.addEventListener("pageshow", async () => {
+  hideLoadingOverlay();
   await checkFarmerAuth();
 });
 
@@ -599,22 +625,15 @@ async function handleGenerateSchedule(e) {
   currentCropName = cropVal;
   currentAcreage = acreageVal;
 
-  // Show Loading Overlay
-  const overlay = document.getElementById("loading-overlay");
-  const statusText = document.getElementById("loading-status-text");
-  if (overlay) overlay.style.display = "flex";
-  if (statusText) {
-    statusText.innerText = `DeepSeek AI व ICAR द्वारा ${cropVal} (${acreageVal} एकड़) हेतु संपूर्ण समय-सारणी तैयार की जा रही है...`;
-  }
+  showLoadingOverlay(`OpenAI व ICAR द्वारा ${cropVal} (${acreageVal} एकड़) हेतु संपूर्ण समय-सारणी तैयार की जा रही है...`);
 
   try {
     const farmerId = currentFarmerUser ? currentFarmerUser.id : null;
     const res = await AgriAPI.generateCropSchedule(cropVal, sowingDateVal, acreageVal, farmerId);
     
-    // Hide loading
-    if (overlay) overlay.style.display = "none";
+    hideLoadingOverlay();
 
-    alert(`🎉 बधाई हो! ${cropVal} के लिए ${acreageVal} एकड़ की संपूर्ण समय-सारणी (${res?.schedule?.total_tasks_created || 18} कार्य) सफलतापूर्वक तैयार कर ली गई है!`);
+    alert(`🎉 बधाई हो! ${cropVal} के लिए ${acreageVal} एकड़ की संपूर्ण समय-सारणी (${res?.schedule?.total_tasks_created || 15} कार्य) सफलतापूर्वक तैयार कर ली गई है!`);
     await loadReminders();
 
     // Scroll smoothly to the summary section
@@ -623,9 +642,11 @@ async function handleGenerateSchedule(e) {
       summarySection.scrollIntoView({ behavior: "smooth" });
     }
   } catch (err) {
-    if (overlay) overlay.style.display = "none";
+    hideLoadingOverlay();
     alert("समय-सारणी तैयार करने में त्रुटि: " + (err.message || "कृपया पुनः प्रयास करें।"));
     console.error("Auto generate schedule error:", err);
+  } finally {
+    hideLoadingOverlay();
   }
 }
 
