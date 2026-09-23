@@ -30,6 +30,13 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+
+# databases
+backend/agrigo.db
+*.db
+*.sqlite
+*.sqlite3
 
 # vercel
 .vercel

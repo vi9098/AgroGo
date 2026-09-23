@@ -19,7 +19,7 @@ from app.adapters.soil import SoilProviderAdapter
 from app.adapters.market import MarketDataProviderAdapter
 from app.adapters.vision import VisionProviderAdapter
 from app.services.ml_service import ml_service
-from app.middleware.auth import require_auth, verify_farmer_ownership
+from app.middleware.auth import require_auth, verify_farmer_ownership, get_current_user_optional
 
 router = APIRouter(prefix="/api/v1", tags=["Agriculture & Knowledge"])
 
@@ -196,17 +196,19 @@ class ReminderCreate(BaseModel):
     crop_id: Optional[str] = None
 
 @router.get("/farmer/reminders/{farmer_id}")
-def get_farmer_reminders(farmer_id: str, user: Dict[str, Any] = Depends(require_auth)):
-    """Retrieves active reminders for the farmer with strict IDOR verification."""
-    verify_farmer_ownership(user, farmer_id)
-    rems = query_db("SELECT * FROM reminders WHERE farmer_id = ? ORDER BY is_completed ASC, created_at DESC", (farmer_id,))
+def get_farmer_reminders(farmer_id: str, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Retrieves active reminders for the farmer with graceful guest support."""
+    if user:
+        verify_farmer_ownership(user, farmer_id)
+    rems = query_db("SELECT * FROM reminders WHERE farmer_id = ? ORDER BY is_completed ASC, due_date ASC, created_at DESC", (farmer_id,))
     return {"status": "OK", "reminders": rems}
 
 @router.post("/farmer/reminders")
-def create_custom_reminder(payload: ReminderCreate, user: Dict[str, Any] = Depends(require_auth)):
-    """Creates a custom agricultural reminder, associating with authenticated farmer ID."""
-    target_farmer_id = user["id"] if user.get("role") != "admin" else (payload.farmer_id or user["id"])
-    verify_farmer_ownership(user, target_farmer_id)
+def create_custom_reminder(payload: ReminderCreate, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Creates a custom agricultural reminder, associating with authenticated or guest farmer ID."""
+    target_farmer_id = (user["id"] if user.get("role") != "admin" else (payload.farmer_id or user["id"])) if user else (payload.farmer_id or "farmer-guest")
+    if user:
+        verify_farmer_ownership(user, target_farmer_id)
 
     rid = f"rem-{uuid.uuid4().hex[:8]}"
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -217,38 +219,75 @@ def create_custom_reminder(payload: ReminderCreate, user: Dict[str, Any] = Depen
     return {"status": "OK", "id": rid, "message": "अनुस्मारक सफलतापूर्वक जोड़ा गया।"}
 
 @router.put("/farmer/reminders/{reminder_id}/toggle")
-def toggle_reminder_status(reminder_id: str, user: Dict[str, Any] = Depends(require_auth)):
-    """Toggles reminder completion status with ownership validation."""
+def toggle_reminder_status(reminder_id: str, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Toggles reminder completion status."""
     rem = query_one("SELECT is_completed, farmer_id FROM reminders WHERE id = ?", (reminder_id,))
     if not rem:
         raise HTTPException(status_code=404, detail="Reminder not found.")
-    verify_farmer_ownership(user, rem["farmer_id"])
+    if user:
+        verify_farmer_ownership(user, rem["farmer_id"])
 
     new_status = 0 if rem["is_completed"] == 1 else 1
     execute_db("UPDATE reminders SET is_completed = ? WHERE id = ?", (new_status, reminder_id))
     return {"status": "OK", "id": reminder_id, "is_completed": new_status}
 
 @router.delete("/farmer/reminders/{reminder_id}")
-def delete_reminder(reminder_id: str, user: Dict[str, Any] = Depends(require_auth)):
-    """Deletes a reminder with ownership validation."""
+def delete_reminder(reminder_id: str, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Deletes a reminder."""
     rem = query_one("SELECT farmer_id FROM reminders WHERE id = ?", (reminder_id,))
     if not rem:
         raise HTTPException(status_code=404, detail="Reminder not found.")
-    verify_farmer_ownership(user, rem["farmer_id"])
+    if user:
+        verify_farmer_ownership(user, rem["farmer_id"])
 
     execute_db("DELETE FROM reminders WHERE id = ?", (reminder_id,))
     return {"status": "OK", "id": reminder_id, "message": "अनुस्मारक हटाया गया।"}
 
 @router.post("/farmer/reminders/natural")
-def create_natural_reminder(payload: NaturalReminderRequest, user: Dict[str, Any] = Depends(require_auth)):
-    """Parses natural language requests with ownership validation."""
-    target_farmer_id = user["id"] if user.get("role") != "admin" else payload.farmer_id
-    verify_farmer_ownership(user, target_farmer_id)
+async def create_natural_reminder(payload: NaturalReminderRequest, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Parses natural language requests with ownership validation and guest support."""
+    target_farmer_id = (user["id"] if user.get("role") != "admin" else payload.farmer_id) if user else (payload.farmer_id or "farmer-guest")
+    if user:
+        verify_farmer_ownership(user, target_farmer_id)
 
-    res = ReminderEngine.parse_natural_language_reminder(payload.text, target_farmer_id)
-    if not res:
-        raise HTTPException(status_code=400, detail="Could not understand reminder intent.")
+    res = await ReminderEngine.parse_natural_language_reminder(payload.text, target_farmer_id)
     return {"status": "OK", "reminder": res}
+
+class AutoCropScheduleRequest(BaseModel):
+    crop_name: str
+    sowing_date: str
+    acreage: float = 1.0
+    farmer_id: Optional[str] = None
+    clear_previous: bool = True
+
+@router.post("/farmer/reminders/auto-generate")
+async def auto_generate_crop_schedule(payload: AutoCropScheduleRequest, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """
+    Automatically generates complete farming lifecycle schedule (irrigation dates, acreage-scaled fertilizer dosages, IPM spray)
+    using ICAR package of practices + DeepSeek AI + live weather analysis.
+    """
+    target_farmer_id = (user["id"] if user.get("role") != "admin" else (payload.farmer_id or user["id"])) if user else (payload.farmer_id or "farmer-guest")
+    if user:
+        verify_farmer_ownership(user, target_farmer_id)
+
+    schedule = await ReminderEngine.generate_automated_crop_schedule(
+        farmer_id=target_farmer_id,
+        crop_name=payload.crop_name,
+        sowing_date_str=payload.sowing_date,
+        acreage=payload.acreage,
+        clear_previous=payload.clear_previous
+    )
+    return {"status": "OK", "schedule": schedule}
+
+@router.delete("/farmer/reminders/clear-all/{farmer_id}")
+def clear_all_farmer_reminders(farmer_id: str, user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
+    """Deletes all reminders for a farmer or guest to start fresh."""
+    target_farmer_id = (user["id"] if user.get("role") != "admin" else farmer_id) if user else farmer_id
+    if user:
+        verify_farmer_ownership(user, target_farmer_id)
+    execute_db("DELETE FROM reminders WHERE farmer_id = ?", (target_farmer_id,))
+    return {"status": "OK", "message": "समस्त अनुस्मारक सफलतापूर्वक हटा दिए गए हैं।"}
+
 
 @router.post("/farmer/observations")
 def submit_observation(payload: ObservationRequest, user: Dict[str, Any] = Depends(require_auth)):

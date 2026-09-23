@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     SECONDARY_LLM_PROVIDER: str = "openai"
     OPENAI_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
+    DEEPSEEK_API_KEY: Optional[str] = None
+    
+    # Kindwise Crop Health & Insect ID APIs
+    KINDWISE_CROP_KEY: Optional[str] = None
+    KINDWISE_INSECT_KEY: Optional[str] = None
     
     PRIMARY_STT_PROVIDER: str = "google"
     GOOGLE_STT_KEY: Optional[str] = None

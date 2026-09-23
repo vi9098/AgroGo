@@ -107,6 +107,17 @@ const AgriAPI = (() => {
       body: JSON.stringify(data)
     }),
 
+    getSecurityQuestion: (phone) => request(`/api/auth/security-question?phone=${encodeURIComponent(phone)}`),
+
+    resetPasswordWithSecurity: (phone, securityAnswer, newPassword) => request("/api/auth/reset-password-security", {
+      method: "POST",
+      body: JSON.stringify({
+        phone: phone,
+        security_answer: securityAnswer,
+        new_password: newPassword
+      })
+    }),
+
     // Legacy OTP flow (sets server session cookie on verify)
     requestOTP: (phone) => request("/auth/otp/request", {
       method: "POST",
@@ -195,6 +206,10 @@ const AgriAPI = (() => {
       method: "DELETE"
     }),
 
+    clearAllReminders: (farmerId) => request(`/farmer/reminders/clear-all/${farmerId}`, {
+      method: "DELETE"
+    }),
+
     createCustomReminder: (data) => request("/farmer/reminders", {
       method: "POST",
       body: JSON.stringify(data)
@@ -204,6 +219,19 @@ const AgriAPI = (() => {
       method: "POST",
       body: JSON.stringify({ farmer_id: farmerId, text })
     }),
+
+    generateCropSchedule: (cropName, sowingDate, acreage, farmerId = null) => {
+      return request("/farmer/reminders/auto-generate", {
+        method: "POST",
+        timeout: 90000,
+        body: JSON.stringify({
+          crop_name: cropName,
+          sowing_date: sowingDate,
+          acreage: parseFloat(acreage) || 1.0,
+          farmer_id: farmerId
+        })
+      });
+    },
 
     askAgriculturalAI: (question, language = "hi", cropContext = null, farmerId = null) => {
       return request("/chat/ask", {
@@ -300,3 +328,8 @@ const AgriAPI = (() => {
     getAdminFarmers: () => request("/api/admin/users")
   };
 })();
+
+if (typeof window !== "undefined") {
+  window.AgriAPI = AgriAPI;
+}
+

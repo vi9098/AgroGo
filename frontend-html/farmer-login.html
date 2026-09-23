@@ -421,7 +421,9 @@
         <div class="field-group">
           <div style="display:flex; justify-content:space-between; align-items:baseline;">
             <label for="farmer-login-pass" class="field-label">पासवर्ड (Password)</label>
-            <span style="font-size:11.5px; color:#6A8573;">सुरक्षित लॉगिन</span>
+            <button type="button" onclick="openForgotPassModal()" style="background:none; border:none; color:#1A5C38; font-size:12px; font-weight:700; cursor:pointer; text-decoration:underline; padding:0;">
+              🔑 पासवर्ड भूल गए?
+            </button>
           </div>
           <div class="field-input-wrap">
             <input 
@@ -481,6 +483,108 @@
 
     </div>
   </main>
+
+  <!-- Forgot Password Recovery Modal (Security Question Based) -->
+  <div id="forgot-pass-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px);">
+    <div style="background:#FFFFFF; border-radius:20px; border:2px solid #2E7D32; box-shadow:0 16px 40px rgba(0,0,0,0.3); max-width:460px; width:100%; padding:24px; position:relative; max-height:90vh; overflow-y:auto;">
+      <!-- Close button -->
+      <button type="button" onclick="closeForgotPassModal()" style="position:absolute; top:16px; right:16px; background:#F1F5F0; border:none; border-radius:50%; width:34px; height:34px; font-size:18px; cursor:pointer; color:#55725E; display:flex; align-items:center; justify-content:center;" title="बंद करें">✕</button>
+
+      <!-- Modal Header -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <div style="width:42px; height:42px; background:#E8F5E9; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;">🔐</div>
+        <div>
+          <h3 style="font-size:18px; font-weight:800; color:#0F3D25; margin:0;">पासवर्ड पुनर्प्राप्ति</h3>
+          <p style="font-size:12px; color:#52735C; margin:2px 0 0 0;">पंजीकृत सुरक्षा प्रश्न द्वारा नया पासवर्ड सेट करें</p>
+        </div>
+      </div>
+
+      <!-- Alerts inside modal -->
+      <div id="fp-alert-error" class="status-alert error" style="display:none; margin-bottom:14px;"></div>
+      <div id="fp-alert-success" class="status-alert success" style="display:none; margin-bottom:14px;"></div>
+
+      <!-- STEP 1: Phone input to retrieve question -->
+      <div id="fp-step-1">
+        <div class="field-group">
+          <label class="field-label">पंजीकृत मोबाइल नंबर (Registered Phone)</label>
+          <div class="field-input-wrap">
+            <span class="phone-prefix-addon">🇮🇳 +91</span>
+            <input 
+              type="tel" 
+              id="fp-phone-input" 
+              class="mobile-input phone-input" 
+              placeholder="9876543210" 
+              maxlength="10" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              oninput="handlePhoneInputChange(this)"
+              onkeypress="return (event.charCode >= 48 && event.charCode <= 57)"
+            >
+          </div>
+          <span style="font-size:11.5px; color:#6A8573; display:block; margin-top:5px;">जिस नंबर से आपका AgriGo खाता पंजीकृत है</span>
+        </div>
+        <button type="button" id="fp-btn-fetch" class="btn-farmer-submit" onclick="handleFetchSecurityQuestion()" style="margin-top:14px;">
+          <span>🔍</span> <span>सुरक्षा प्रश्न प्राप्त करें ➔</span>
+        </button>
+      </div>
+
+      <!-- STEP 2: Answer question and set new password -->
+      <div id="fp-step-2" style="display:none;">
+        <div style="background:#F4FAF2; border:1.5px dashed #81C784; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+          <div style="font-size:11.5px; font-weight:700; color:#2E7D32; text-transform:uppercase; letter-spacing:0.5px;">आपका चुना हुआ सुरक्षा प्रश्न:</div>
+          <div id="fp-question-display" style="font-size:14.5px; font-weight:800; color:#0F3D25; margin-top:4px;"></div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">गोपनीय उत्तर (Your Secret Answer)</label>
+          <input 
+            type="text" 
+            id="fp-answer-input" 
+            class="mobile-input" 
+            placeholder="पंजीकरण के समय दिया गया उत्तर" 
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">नया पासवर्ड (New Password)</label>
+          <div class="field-input-wrap">
+            <input 
+              type="password" 
+              id="fp-new-pass" 
+              class="mobile-input" 
+              placeholder="कम से कम 6 अक्षर दर्ज करें" 
+              autocomplete="new-password"
+            >
+            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('fp-new-pass', this)">👁️</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">नया पासवर्ड पुनः दर्ज करें (Confirm Password)</label>
+          <div class="field-input-wrap">
+            <input 
+              type="password" 
+              id="fp-confirm-pass" 
+              class="mobile-input" 
+              placeholder="नया पासवर्ड दोबारा लिखें" 
+              autocomplete="new-password"
+            >
+            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('fp-confirm-pass', this)">👁️</button>
+          </div>
+        </div>
+
+        <button type="button" id="fp-btn-submit" class="btn-farmer-submit" onclick="handleResetPasswordSubmit()" style="margin-top:14px;">
+          <span>✓</span> <span>नया पासवर्ड सुरक्षित करें ➔</span>
+        </button>
+
+        <button type="button" class="btn-farmer-submit btn-farmer-outline" onclick="backToStep1()" style="margin-top:10px;">
+          <span>⬅️</span> <span>नंबर बदलें (Back)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Universal Footer Strip -->
   <footer style="text-align: center; padding: 18px 16px; color: #52735C; font-size: 12px; border-top: 1px solid rgba(46, 125, 50, 0.15); background: #EAF2E8;">
@@ -632,6 +736,134 @@
         showAlert("error", "लॉगिन विफल: " + (err.message || "कृपया मोबाइल नंबर और पासवर्ड की जांच करें।"));
         submitBtn.disabled = false;
         submitBtn.innerHTML = "<span>🌾</span> <span>पासवर्ड से प्रवेश करें ➔</span>";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Forgot Password Flow (Security Question)
+    // -------------------------------------------------------------
+    let activeFpPhone = "";
+
+    function openForgotPassModal() {
+      const modal = document.getElementById("forgot-pass-modal");
+      if (modal) {
+        modal.style.display = "flex";
+        const currentPhone = document.getElementById("farmer-phone-input")?.value || "";
+        if (currentPhone) {
+          const fpPhoneInput = document.getElementById("fp-phone-input");
+          if (fpPhoneInput) fpPhoneInput.value = currentPhone;
+        }
+        backToStep1();
+      }
+    }
+
+    function closeForgotPassModal() {
+      const modal = document.getElementById("forgot-pass-modal");
+      if (modal) modal.style.display = "none";
+      clearFpAlerts();
+    }
+
+    function backToStep1() {
+      const s1 = document.getElementById("fp-step-1");
+      const s2 = document.getElementById("fp-step-2");
+      if (s1) s1.style.display = "block";
+      if (s2) s2.style.display = "none";
+      clearFpAlerts();
+    }
+
+    function showFpAlert(type, message) {
+      const err = document.getElementById("fp-alert-error");
+      const succ = document.getElementById("fp-alert-success");
+      clearFpAlerts();
+      if (type === "error" && err) {
+        err.textContent = message;
+        err.style.display = "block";
+      } else if (type === "success" && succ) {
+        succ.textContent = message;
+        succ.style.display = "block";
+      }
+    }
+
+    function clearFpAlerts() {
+      const err = document.getElementById("fp-alert-error");
+      const succ = document.getElementById("fp-alert-success");
+      if (err) err.style.display = "none";
+      if (succ) succ.style.display = "none";
+    }
+
+    async function handleFetchSecurityQuestion() {
+      clearFpAlerts();
+      const phoneInput = document.getElementById("fp-phone-input");
+      const phone = phoneInput ? phoneInput.value.replace(/\D/g, "").slice(0, 10) : "";
+
+      if (!phone || phone.length !== 10) {
+        showFpAlert("error", "कृपया 10-अंकों का मान्य मोबाइल नंबर दर्ज करें।");
+        return;
+      }
+
+      const btn = document.getElementById("fp-btn-fetch");
+      btn.disabled = true;
+      btn.innerHTML = "<span>⏳</span> <span>सुरक्षा प्रश्न खोजा जा रहा है...</span>";
+
+      try {
+        const res = await AgriAPI.getSecurityQuestion(phone);
+        activeFpPhone = phone;
+        document.getElementById("fp-question-display").textContent = res.question;
+        document.getElementById("fp-step-1").style.display = "none";
+        document.getElementById("fp-step-2").style.display = "block";
+        document.getElementById("fp-answer-input").value = "";
+        document.getElementById("fp-new-pass").value = "";
+        document.getElementById("fp-confirm-pass").value = "";
+      } catch (e) {
+        showFpAlert("error", e.message || "सुरक्षा प्रश्न प्राप्त नहीं हो सका। कृपया जांचें कि नंबर सही है।");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "<span>🔍</span> <span>सुरक्षा प्रश्न प्राप्त करें ➔</span>";
+      }
+    }
+
+    async function handleResetPasswordSubmit() {
+      clearFpAlerts();
+      const answer = document.getElementById("fp-answer-input")?.value?.trim();
+      const newPass = document.getElementById("fp-new-pass")?.value;
+      const confirmPass = document.getElementById("fp-confirm-pass")?.value;
+
+      if (!answer) {
+        showFpAlert("error", "कृपया सुरक्षा प्रश्न का उत्तर दर्ज करें।");
+        return;
+      }
+      if (!newPass || newPass.length < 6) {
+        showFpAlert("error", "नया पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।");
+        return;
+      }
+      if (newPass !== confirmPass) {
+        showFpAlert("error", "दोनों पासवर्ड मेल नहीं खा रहे हैं। कृपया पुनः जांचें।");
+        return;
+      }
+
+      const btn = document.getElementById("fp-btn-submit");
+      btn.disabled = true;
+      btn.innerHTML = "<span>⏳</span> <span>पासवर्ड बदला जा रहा है...</span>";
+
+      try {
+        const res = await AgriAPI.resetPasswordWithSecurity(activeFpPhone, answer, newPass);
+        showFpAlert("success", res.message || "पासवर्ड सफलतापूर्वक बदल दिया गया!");
+        setTimeout(() => {
+          closeForgotPassModal();
+          const mainPhone = document.getElementById("farmer-phone-input");
+          if (mainPhone) mainPhone.value = activeFpPhone;
+          const mainPass = document.getElementById("farmer-login-pass");
+          if (mainPass) {
+            mainPass.value = "";
+            mainPass.focus();
+          }
+          showAlert("success", "✅ नया पासवर्ड सेट हो गया! अब कृपया अपने नए पासवर्ड से लॉगिन करें।");
+        }, 1500);
+      } catch (e) {
+        showFpAlert("error", e.message || "पासवर्ड रीसेट विफल रहा। कृपया उत्तर जांचें।");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "<span>✓</span> <span>नया पासवर्ड सुरक्षित करें ➔</span>";
       }
     }
   </script>

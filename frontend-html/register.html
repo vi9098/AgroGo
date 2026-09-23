@@ -119,6 +119,29 @@
           <input type="password" id="reg-password" class="form-input" required placeholder="••••••••" minlength="6">
         </div>
 
+        <!-- Security Questions (Password Recovery) -->
+        <div class="section-title">
+          <span>🔒</span> पासवर्ड सुरक्षा प्रश्न (Security Question for Password Reset)
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">सुरक्षा प्रश्न चुनें <span style="color:var(--danger)">*</span></label>
+            <select id="reg-sec-question" class="form-select" required>
+              <option value="">-- सुरक्षा प्रश्न चुनें --</option>
+              <option value="आपकी पहली स्कूल का नाम क्या है?">आपकी पहली स्कूल का नाम क्या है? (First School)</option>
+              <option value="आपका पैतृक गाँव या जन्मस्थान कौन सा है?">आपका पैतृक गाँव या जन्मस्थान कौन सा है? (Ancestral Village)</option>
+              <option value="आपका बचपन का पसंदीदा खेल या उपनाम क्या है?">आपका बचपन का पसंदीदा खेल या उपनाम क्या है? (Favorite Sport / Nickname)</option>
+              <option value="आपके पसंदीदा ट्रैक्टर या कृषि वाहन का मॉडल?">आपके पसंदीदा ट्रैक्टर या कृषि वाहन का मॉडल? (Tractor Model)</option>
+              <option value="आपकी माताजी का प्रथम नाम क्या है?">आपकी माताजी का प्रथम नाम क्या है? (Mother's First Name)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">आपका उत्तर (Secret Answer) <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="reg-sec-answer" class="form-input" required placeholder="अपना उत्तर लिखें (उदा. डीएवी या रामपुरा)">
+            <small style="color:var(--text-muted); font-size:11px;">पासवर्ड भूलने पर इसी उत्तर से नया पासवर्ड बनेगा।</small>
+          </div>
+        </div>
+
         <!-- Location Info with Cascading State & District -->
         <div class="section-title">
           <span>📍</span> स्थान विवरण (Select State & District)
@@ -252,11 +275,23 @@
       const soil_type = document.getElementById("reg-soil").value;
       const irrigation_type = document.getElementById("reg-irrigation").value;
 
+      const security_question = document.getElementById("reg-sec-question").value;
+      const security_answer = document.getElementById("reg-sec-answer").value.trim();
+
+      if (!security_question || !security_answer) {
+        alert("कृपया पासवर्ड सुरक्षा प्रश्न और उसका उत्तर अवश्य चुनें।");
+        btn.innerText = "🌾 पंजीकरण पूर्ण करें और पोर्टल में प्रवेश करें ➔";
+        btn.disabled = false;
+        return;
+      }
+
       try {
         const payload = {
           name,
           phone,
           password,
+          security_question,
+          security_answer,
           state,
           district,
           village,

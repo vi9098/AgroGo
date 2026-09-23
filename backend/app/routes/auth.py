@@ -58,7 +58,14 @@ class RegisterRequest(BaseModel):
     district: Optional[str] = "Varanasi"
     village: Optional[str] = "Rampur"
     preferred_language: Optional[str] = "hi"
+    security_question: Optional[str] = Field(None, description="Security question for recovery")
+    security_answer: Optional[str] = Field(None, description="Answer to security question")
     # Notice: Any role passed by frontend is ignored! Always registers as 'farmer'.
+
+class ResetPasswordSecurityRequest(BaseModel):
+    phone: str = Field(..., min_length=10, max_length=15, description="Registered phone number")
+    security_answer: str = Field(..., min_length=1, description="Security question answer")
+    new_password: str = Field(..., min_length=6, description="New account password")
 
 class OTPRequest(BaseModel):
     phone: str
@@ -252,11 +259,14 @@ async def register_farmer(req: RegisterRequest, request: Request, response: Resp
     now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
     consent = json.dumps({"farm_memory": True, "ai_improvement": True, "photo_learning": True})
 
+    sec_q = req.security_question.strip() if req.security_question else None
+    sec_ans_hash = hash_password(req.security_answer.strip().lower()) if req.security_answer else None
+
     execute_db("""
-        INSERT INTO users (id, phone, name, password_hash, preferred_language, state, district, village, consent_json, status, role, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'farmer', ?)
+        INSERT INTO users (id, phone, name, password_hash, preferred_language, state, district, village, consent_json, status, role, security_question, security_answer_hash, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'farmer', ?, ?, ?)
     """, (new_id, clean_phone, req.name.strip(), pwd_hash, req.preferred_language or "hi",
-          req.state or "Uttar Pradesh", req.district or "Varanasi", req.village or "Rampur", consent, now_str))
+          req.state or "Uttar Pradesh", req.district or "Varanasi", req.village or "Rampur", consent, sec_q, sec_ans_hash, now_str))
 
     # Automatically create farm entry with area and soil info
     farm_id = f"farm-{uuid.uuid4().hex[:8]}"
@@ -305,6 +315,52 @@ async def register_farmer(req: RegisterRequest, request: Request, response: Resp
         "success": True,
         "message": "Farmer registration successful.",
         "user": user_data
+    }
+
+@router.get("/api/auth/security-question")
+@router.get("/api/v1/auth/security-question")
+async def get_security_question(phone: str):
+    clean_phone = phone.strip()
+    user = query_one("SELECT security_question FROM users WHERE phone = ?", (clean_phone,))
+    if not user:
+        raise HTTPException(status_code=404, detail="इस मोबाइल नंबर से कोई पंजीकृत खाता नहीं मिला (User not found)।")
+    if not user.get("security_question"):
+        raise HTTPException(status_code=400, detail="इस खाते के लिए कोई सुरक्षा प्रश्न सेट नहीं है।")
+    return {
+        "success": True,
+        "question": user["security_question"]
+    }
+
+@router.post("/api/auth/reset-password-security")
+@router.post("/api/v1/auth/reset-password-security")
+async def reset_password_via_security(req: ResetPasswordSecurityRequest, request: Request):
+    clean_phone = req.phone.strip()
+    user = query_one("SELECT id, name, security_answer_hash FROM users WHERE phone = ?", (clean_phone,))
+    if not user:
+        raise HTTPException(status_code=404, detail="उपयोगकर्ता खाता नहीं मिला (User account not found)।")
+
+    stored_hash = user.get("security_answer_hash")
+    if not stored_hash:
+        raise HTTPException(status_code=400, detail="इस खाते पर सुरक्षा प्रश्न उपलब्ध नहीं है।")
+
+    ans_clean = req.security_answer.strip().lower()
+    if not verify_password(ans_clean, stored_hash):
+        raise HTTPException(status_code=400, detail="सुरक्षा प्रश्न का उत्तर गलत है (Incorrect answer)। कृपया पुनः जांचें।")
+
+    new_hash = hash_password(req.new_password)
+    execute_db("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user["id"]))
+
+    await AuditService.log_event(
+        actor_id=user["id"],
+        actor_type="farmer",
+        action="PASSWORD_RESET_SECURITY_QUESTION",
+        resource_type="user",
+        resource_id=user["id"]
+    )
+
+    return {
+        "success": True,
+        "message": "पासवर्ड सफलतापूर्वक बदल दिया गया है! अब आप नए पासवर्ड से लॉगिन कर सकते हैं।"
     }
 
 @router.post("/api/auth/quick-login")

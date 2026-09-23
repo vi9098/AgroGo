@@ -5,362 +5,1135 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>AgriGo — स्मार्ट कृषि अनुस्मारक डैशबोर्ड | Sunrise Saffron Theme</title>
+  <title>AgriGo — Positivus AI Crop Schedule & Reminders</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    /* ── REMINDERS PAGE: Dynamic Time-Management & Agriculture Background ── */
-    body.theme-reminders {
-      --page-banner: linear-gradient(135deg, #7A3E00 0%, #B45309 45%, #D97706 100%);
-      background-color: #FFFDF8;
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 15% 85%, rgba(180, 83, 9, 0.06) 0%, transparent 45%),
-        linear-gradient(180deg, #FFFDF8 0%, #FEF3C7 100%);
-      transition: background 0.6s ease;
-      position: relative;
+    /* ==========================================================================
+       POSITIVUS DESIGN SYSTEM — Neo-Brutalist Agricultural Schedule & Reminders
+       Palette: Lime #B9FF66, Dark #191A23, Grey #F3F3F3, White #FFFFFF
+       ========================================================================== */
+    :root {
+      --pos-lime: #B9FF66;
+      --pos-dark: #191A23;
+      --pos-slate: #292A32;
+      --pos-gray: #F3F3F3;
+      --pos-white: #FFFFFF;
+      --pos-border: #191A23;
+      --pos-shadow: 0px 5px 0px #191A23;
+      --pos-shadow-sm: 0px 3px 0px #191A23;
+      --pos-shadow-active: 0px 1px 0px #191A23;
+      --pos-radius-lg: 36px;
+      --pos-radius-md: 22px;
+      --pos-radius-sm: 14px;
     }
 
-    /* Dynamic Category Shifting Backgrounds */
-    body.theme-reminders.cat-irrigation {
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.12) 0%, transparent 45%),
-        linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%);
-    }
-    body.theme-reminders.cat-fertilizer {
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.12) 0%, transparent 45%),
-        linear-gradient(180deg, #FFFDF5 0%, #FEF3C7 100%);
-    }
-    body.theme-reminders.cat-pest {
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(220, 38, 38, 0.1) 0%, transparent 45%),
-        linear-gradient(180deg, #FFF8F8 0%, #FEE2E2 100%);
-    }
-    body.theme-reminders.cat-weeding {
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(22, 163, 74, 0.1) 0%, transparent 45%),
-        linear-gradient(180deg, #F0FDF4 0%, #DCFCE7 100%);
-    }
-    body.theme-reminders.cat-harvest {
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(180, 83, 9, 0.12) 0%, transparent 45%),
-        linear-gradient(180deg, #FFFDF5 0%, #FFEDD5 100%);
+    body.positivus-theme {
+      background-color: #FFFFFF;
+      color: var(--pos-dark);
+      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
 
-    /* Subtle Animated Clock Watermark in Hero */
-    .rem-hero {
-      background: var(--page-banner);
-      padding: 26px 24px;
-      color: #FFF;
-      position: relative; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(180, 83, 9, 0.2);
+    .pos-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
-    .rem-clock-visual {
-      position: absolute; right: 24px; top: -10px; width: 140px; height: 140px;
-      border: 3px dashed rgba(255, 255, 255, 0.15); border-radius: 50%;
-      pointer-events: none; animation: clockSpin 60s linear infinite;
-    }
-    .rem-clock-hand {
-      position: absolute; top: 50%; left: 50%; width: 2px; height: 48px;
-      background: rgba(255, 255, 255, 0.35); transform-origin: top center;
-      animation: clockHandTick 12s linear infinite;
-    }
-    @keyframes clockSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes clockHandTick { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* Category stats bar */
-    .cat-bar {
+    /* Positivus Badge Pills */
+    .pos-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--pos-lime);
+      color: var(--pos-dark);
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--pos-border);
+      letter-spacing: -0.2px;
+    }
+
+    .pos-pill-dark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--pos-dark);
+      color: var(--pos-lime);
+      font-weight: 800;
+      font-size: 12.5px;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+
+    /* Buttons */
+    .pos-btn {
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 15px;
+      border-radius: var(--pos-radius-sm);
+      padding: 14px 26px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+      -webkit-appearance: none;
+    }
+
+    .pos-btn-lime {
+      background: var(--pos-lime);
+      color: var(--pos-dark);
+      border: 2px solid var(--pos-border);
+      box-shadow: var(--pos-shadow);
+    }
+
+    .pos-btn-lime:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0px 7px 0px var(--pos-dark);
+      background: #c3ff7d;
+    }
+
+    .pos-btn-lime:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: var(--pos-shadow-active);
+    }
+
+    .pos-btn-dark {
+      background: var(--pos-dark);
+      color: #FFFFFF;
+      border: 2px solid var(--pos-border);
+      box-shadow: 0px 5px 0px var(--pos-lime);
+    }
+
+    .pos-btn-dark:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0px 7px 0px var(--pos-lime);
+      background: #242533;
+    }
+
+    .pos-btn-outline {
+      background: #FFFFFF;
+      color: var(--pos-dark);
+      border: 2px solid var(--pos-border);
+      box-shadow: var(--pos-shadow);
+    }
+
+    .pos-btn-outline:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0px 7px 0px var(--pos-dark);
+      background: #F9F9F9;
+    }
+
+    .pos-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Hero Section */
+    .pos-hero {
+      padding: 40px 0 24px 0;
+    }
+
+    .pos-hero-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .pos-hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pos-hero-title {
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--pos-dark);
+      line-height: 1.18;
+      letter-spacing: -1px;
+      margin: 14px 0 16px 0;
+    }
+
+    @media (max-width: 600px) {
+      .pos-hero-title {
+        font-size: 28px;
+      }
+    }
+
+    .pos-hero-desc {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #4B5563;
       margin-bottom: 24px;
     }
 
-    .cat-stat {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--r-md);
-      padding: 14px 16px;
-      text-align: center;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-
-    .cat-stat:hover { transform: translateY(-2px); box-shadow: var(--sh-md); }
-    .cat-stat.active-filter { border-width: 2px; }
-
-    .cat-stat-num {
-      font-size: 26px; font-weight: 900;
-      display: block; margin-top: 2px;
-    }
-
-    .cat-stat-lbl {
-      font-size: 11px; font-weight: 700;
-      color: var(--text-muted); text-transform: uppercase;
-      letter-spacing: 0.4px; margin-top: 2px;
-    }
-
-    /* NLP input bar */
-    .nlp-bar {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--r-md);
-      padding: 16px 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--sh-sm);
-    }
-
-    /* Reminder card type accent */
-    .rem-card {
-      background: #FFFFFF;
-      border: 1.5px solid #E5E7EB;
-      border-radius: var(--r-md);
-      padding: 16px 18px;
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Right Hero Visual Card */
+    .pos-hero-card {
+      background: var(--pos-dark);
+      border: 2px solid var(--pos-dark);
+      border-radius: var(--pos-radius-lg);
+      padding: 30px;
+      box-shadow: 0px 8px 0px var(--pos-lime);
+      color: #FFFFFF;
       position: relative;
       overflow: hidden;
     }
-    .rem-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-    
-    .rem-card.rem-irrigation { border-left: 5px solid #0284C7; background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%); }
-    .rem-card.rem-fertilizer { border-left: 5px solid #D97706; background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%); }
-    .rem-card.rem-pest { border-left: 5px solid #DC2626; background: linear-gradient(180deg, #FFFFFF 0%, #FEF2F2 100%); }
-    .rem-card.rem-weeding { border-left: 5px solid #16A34A; background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%); }
-    .rem-card.rem-harvest { border-left: 5px solid #B45309; background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF5 100%); }
-    .rem-card.rem-general { border-left: 5px solid #64748B; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%); }
-    .rem-card.rem-done { opacity: 0.65; border-left: 5px solid #9CA3AF; background: #F9FAFB; }
 
-    .rem-card-header {
+    .pos-hero-card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 140px;
+      height: 140px;
+      background: rgba(185, 255, 102, 0.12);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Neo-Brutalist Form Card */
+    .pos-generator-card {
+      background: var(--pos-gray);
+      border: 2px solid var(--pos-dark);
+      border-radius: var(--pos-radius-lg);
+      box-shadow: var(--pos-shadow);
+      padding: 34px 38px;
+      margin: 32px 0 44px 0;
+      position: relative;
+    }
+
+    @media (max-width: 640px) {
+      .pos-generator-card {
+        padding: 22px 18px;
+        border-radius: 24px;
+      }
+    }
+
+    .pos-input-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 20px;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 820px) {
+      .pos-input-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    .pos-field {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 8px;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .rem-type-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .rem-irrigation .rem-type-icon { background: #E0F2FE; color: #0369A1; }
-    .rem-fertilizer .rem-type-icon { background: #FEF3C7; color: #B45309; }
-    .rem-pest .rem-type-icon { background: #FEE2E2; color: #B91C1C; }
-    .rem-weeding .rem-type-icon { background: #DCFCE7; color: #15803D; }
-    .rem-harvest .rem-type-icon { background: #FFEDD5; color: #C2410C; }
-    .rem-general .rem-type-icon { background: #F1F5F9; color: #475569; }
-
-    .badge-urgency {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 11px; font-weight: 700; padding: 4px 10px;
-      border-radius: 999px;
-    }
-    .badge-overdue {
-      background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5;
-      animation: remPulse 2s infinite ease-in-out;
-    }
-    .badge-today {
-      background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D;
+    .pos-label {
+      font-size: 14px;
       font-weight: 800;
-    }
-    .badge-upcoming {
-      background: #E0F2FE; color: #0284C7; border: 1px solid #BAE6FD;
-    }
-    .badge-completed {
-      background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC;
+      color: var(--pos-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    @keyframes remPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(0.98); }
-    }
-
-    .rem-actions {
-      display: flex; gap: 8px; margin-top: 12px;
-      padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06);
-      justify-content: flex-end;
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      grid-column: 1 / -1;
-      padding: 60px 20px;
-      color: var(--text-muted);
+    .pos-input, .pos-select {
+      height: 52px;
       background: #FFFFFF;
-      border-radius: var(--r-md);
-      border: 1.5px dashed var(--border);
+      border: 2px solid var(--pos-dark);
+      border-radius: var(--pos-radius-sm);
+      padding: 0 16px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--pos-dark);
+      box-shadow: 0px 3px 0px var(--pos-dark);
+      outline: none;
+      transition: all 0.15s ease;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    .empty-state-icon {
-      font-size: 56px; display: block; margin-bottom: 14px;
-      opacity: 0.6;
+    .pos-input:focus, .pos-select:focus {
+      background: #FFFFFF;
+      border-color: #000000;
+      box-shadow: 0px 4px 0px var(--pos-lime);
+    }
+
+    /* Quick Click Chips */
+    .pos-chips-wrap {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .pos-chip {
+      background: #FFFFFF;
+      border: 1.5px solid var(--pos-border);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--pos-dark);
+      cursor: pointer;
+      box-shadow: 0px 2px 0px var(--pos-border);
+      transition: all 0.1s;
+    }
+
+    .pos-chip:hover {
+      background: var(--pos-lime);
+      transform: translateY(-1px);
+    }
+
+    /* Summary Metrics 3-Card Row (Positivus Services Style) */
+    .pos-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin-bottom: 44px;
+    }
+
+    @media (max-width: 860px) {
+      .pos-summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pos-service-card {
+      border: 2px solid var(--pos-border);
+      border-radius: var(--pos-radius-md);
+      box-shadow: var(--pos-shadow);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pos-card-white {
+      background: #FFFFFF;
+    }
+
+    .pos-card-lime {
+      background: var(--pos-lime);
+    }
+
+    .pos-card-dark {
+      background: var(--pos-dark);
+      color: #FFFFFF;
+      box-shadow: 0px 5px 0px var(--pos-lime);
+    }
+
+    /* Working Process Accordion (Stages 01, 02, 03, 04, 05) */
+    .pos-process-item {
+      background: var(--pos-gray);
+      border: 2px solid var(--pos-border);
+      border-radius: 30px;
+      box-shadow: var(--pos-shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .pos-process-item.active {
+      background: var(--pos-lime);
+    }
+
+    .pos-process-header {
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    @media (max-width: 640px) {
+      .pos-process-header {
+        padding: 18px 20px;
+      }
+    }
+
+    .pos-process-left {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .pos-process-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--pos-dark);
+      letter-spacing: -1px;
+      min-width: 48px;
+    }
+
+    .pos-process-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--pos-dark);
+      margin: 0;
+    }
+
+    .pos-process-toggle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--pos-border);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--pos-dark);
+      box-shadow: 0px 2px 0px var(--pos-border);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .pos-process-item.active .pos-process-toggle {
+      transform: rotate(45deg);
+      background: var(--pos-dark);
+      color: var(--pos-lime);
+    }
+
+    .pos-process-body {
+      padding: 0 32px 28px 32px;
+      display: none;
+      border-top: 1.5px solid var(--pos-border);
+      margin-top: 4px;
+      padding-top: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .pos-process-body {
+        padding: 0 18px 22px 18px;
+        padding-top: 16px;
+      }
+    }
+
+    .pos-process-item.active .pos-process-body {
+      display: block;
+    }
+
+    /* Stage Tasks Grid */
+    .pos-tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .pos-task-card {
+      background: #FFFFFF;
+      border: 2px solid var(--pos-border);
+      border-radius: var(--pos-radius-sm);
+      box-shadow: var(--pos-shadow-sm);
+      padding: 16px 18px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .pos-task-card.task-done {
+      background: #F8F9FA;
+      opacity: 0.7;
+    }
+
+    .pos-task-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      border: 1px solid var(--pos-border);
+    }
+
+    .tag-irrigation { background: #E0F2FE; color: #0284C7; }
+    .tag-fertilizer { background: #FEF3C7; color: #B45309; }
+    .tag-pest { background: #FEE2E2; color: #DC2626; }
+
+    /* Filter Bar */
+    .pos-filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 28px 0 20px 0;
+      align-items: center;
+    }
+
+    .pos-filter-pill {
+      background: #FFFFFF;
+      border: 2px solid var(--pos-border);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--pos-dark);
+      cursor: pointer;
+      box-shadow: 0px 3px 0px var(--pos-border);
+      transition: all 0.15s ease;
+    }
+
+    .pos-filter-pill.active {
+      background: var(--pos-lime);
+      box-shadow: 0px 4px 0px var(--pos-dark);
+      transform: translateY(-2px);
+    }
+
+    /* Loading Modal / State */
+    .pos-loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(25, 26, 35, 0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .pos-loading-box {
+      background: #FFFFFF;
+      border: 3px solid var(--pos-dark);
+      border-radius: var(--pos-radius-lg);
+      box-shadow: 0px 10px 0px var(--pos-lime);
+      padding: 36px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .pos-spinner {
+      width: 54px;
+      height: 54px;
+      border: 5px solid #F3F3F3;
+      border-top: 5px solid var(--pos-dark);
+      border-radius: 50%;
+      margin: 0 auto 20px auto;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
-<body class="theme-reminders" data-page="reminders">
+<body class="positivus-theme" data-page="reminders">
 
-  <!-- Universal Header -->
+  <!-- Universal Header (injected by header.js) -->
   <div id="site-header-mount"></div>
 
-  <!-- Page Hero Banner -->
-  <div class="rem-hero">
-    <div class="rem-clock-visual"><div class="rem-clock-hand"></div></div>
-    <div style="max-width:1140px; margin:0 auto; position:relative; z-index:2;">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+  <main class="pos-container">
+
+    <!-- Positivus Hero Section -->
+    <section class="pos-hero">
+      <div class="pos-hero-grid">
         <div>
-          <div style="display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); padding:4px 13px; border-radius:var(--r-full); font-size:11.5px; font-weight:600; margin-bottom:10px;">
-            🌧️ मौसम-आधारित AI अनुस्मारक प्रणाली
-          </div>
-          <h1 style="font-size:24px; font-weight:900; margin-bottom:5px;">⏰ स्मार्ट कृषि अनुस्मारक डैशबोर्ड</h1>
-          <p id="weather-banner-desc" style="font-size:13px; opacity:0.9; max-width:540px; line-height:1.55;">
-            स्थानीय मौसम पूर्वानुमान के अनुसार आपकी सिंचाई और छिड़काव की तारीखें स्वतः समायोजित की जाती हैं।
+          <span class="pos-pill">🌱 Positivus AI Crop Engine • DeepSeek & ICAR</span>
+          <h1 class="pos-hero-title">
+            स्वचालित फसल अनुस्मारक<br>& संपूर्ण प्रबंधन
+          </h1>
+          <p class="pos-hero-desc">
+            अलग-अलग तारीखें याद रखने का झंझट खत्म! केवल <strong>फसल का नाम</strong>, <strong>बुवाई की तारीख</strong> और <strong>खेत का रकबा (एकड़)</strong> चुनें — DeepSeek AI आपके लिए सिंचाई कैलेंडर, एकड़ अनुसार खाद की सटीक खुराक (kg में) और कीटनाशक सुरक्षा चक्र स्वतः तैयार करेगा।
           </p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="#generator-box" class="pos-btn pos-btn-lime">
+              ⚡ समय-सारणी बनाएं ➔
+            </a>
+            <button type="button" class="pos-btn pos-btn-outline" onclick="openAddModal()">
+              + व्यक्तिगत रिमाइंडर
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Hero Visual Card -->
+        <div class="pos-hero-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <span class="pos-pill" style="font-size:11.5px; padding:3px 10px;">⚡ रीयल-टाइम AI शेड्यूलर</span>
+            <span id="active-crop-badge" style="font-size:12px; color:var(--pos-lime); font-weight:800;">सक्रिय चक्र: गेहूं (Wheat) • 2.5 एकड़</span>
+          </div>
+          <h3 style="font-size:22px; font-weight:900; margin:0 0 10px 0; color:#FFFFFF;">
+            🌾 वैज्ञानिक शस्य-विज्ञान (ICAR Package)
+          </h3>
+          <p style="font-size:13px; color:#D1D5DB; line-height:1.55; margin-bottom:18px;">
+            प्रत्येक फसल की क्रांतिक जल व पोषण अवस्थाओं पर स्वचालित सूचनाएं। बारिश होने पर सिंचाई अनुस्मारक स्वतः पुनर्निर्धारित।
+          </p>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; border-top:1px solid rgba(255,255,255,0.15); padding-top:14px; text-align:center;">
+            <div>
+              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-irr">0</div>
+              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">💧 सिंचाई चक्र</div>
+            </div>
+            <div>
+              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-fert">0</div>
+              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">🌱 खाद खुराक</div>
+            </div>
+            <div>
+              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-pest">0</div>
+              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">🛡️ सुरक्षा स्प्रे</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- THE POSITIVUS GENERATOR CARD (3-Field Smart Generation + Natural Language Voice/Text Bar) -->
+    <section class="pos-generator-card" id="generator-box">
+      <!-- Beginner Farmer Banner -->
+      <div style="background: #E8F5E9; border: 1.5px solid #2E7D32; border-radius: 18px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 26px;">👨‍🌾</span>
+        <div>
+          <div style="font-size: 13.5px; font-weight: 800; color: #1B5E20;">शुरुआती किसान मार्गदर्शन (Beginner Farmer Friendly):</div>
+          <div style="font-size: 12.5px; color: #2E7D32; line-height: 1.45;">
+            यदि आप पहली बार खेती कर रहे हैं, तो किसी अनुभव की आवश्यकता नहीं है! बस बताएं आज आपने कौन सी फसल कितने एकड़ में बोई है — AI मौसम व ICAR शस्य-विज्ञान के अनुसार सिंचाई की तारीखें, खाद की सटीक मात्रा (kg में) और सुरक्षा छिड़काव तुरंत तैयार करेगा।
+          </div>
+        </div>
+      </div>
+
+      <!-- Natural Language Instant Bar -->
+      <div style="background: #FFFFFF; border: 2px solid var(--pos-dark); border-radius: 18px; padding: 16px 20px; box-shadow: var(--pos-shadow-sm); margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+          <label style="font-size:13.5px; font-weight:800; color:var(--pos-dark); display:flex; align-items:center; gap:6px;">
+            <span>🗣️</span> <span>बोलकर या लिखकर बताएं (AI Natural Language Scheduler):</span>
+          </label>
+          <span class="pos-pill" style="font-size:11px; padding:2px 8px;">बहु-फसल (Multi-Crop) समर्थित</span>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a href="mandi.html" class="btn btn-harvest" style="font-weight:700;">💰 मंडी भाव जांचें</a>
-          <button class="btn" style="background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.3); color:#FFF; font-weight:700;" onclick="openAddModal()">
-            + नया अनुस्मारक
+          <input 
+            type="text" 
+            id="nlp-crop-input" 
+            class="pos-input" 
+            placeholder="उदा. 'आज मैंने 3 एकड़ में गेहूं और 2 एकड़ में सरसों बोई है' या 'Today sowed 2 acres wheat'..."
+            style="flex:1; min-width:240px;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();handleNaturalLanguageSowing();}"
+          >
+          <button type="button" class="pos-btn pos-btn-outline" id="btn-voice-mic" onclick="toggleVoiceInput('nlp-crop-input')" title="बोलकर बताएं (Speak Hindi)" style="padding:12px 18px; font-size:15px; font-weight:800;">
+            🎤 बोलें
+          </button>
+          <button type="button" class="pos-btn pos-btn-lime" id="btn-nlp-generate" onclick="handleNaturalLanguageSowing()" style="white-space:nowrap; padding:12px 22px;">
+            <span>⚡</span> <span>AI से तुरंत कैलेंडर बनाएं ➔</span>
+          </button>
+        </div>
+        <div class="pos-chips-wrap" style="margin-top:10px;">
+          <span style="font-size:11.5px; font-weight:700; color:#6B7280; margin-right:4px;">त्वरित उदाहरण:</span>
+          <span class="pos-chip" onclick="fillNlpPrompt('आज 3 एकड़ गेहूं बोया')">🌾 3 एकड़ गेहूं आज</span>
+          <span class="pos-chip" onclick="fillNlpPrompt('आज मैंने 3 एकड़ गेहूं और 2 एकड़ सरसों बोई है')">🌾+🌼 गेहूं 3 एकड़ व सरसों 2 एकड़</span>
+          <span class="pos-chip" onclick="fillNlpPrompt('आज 1.5 एकड़ टमाटर की रोपाई की')">🍅 1.5 एकड़ टमाटर</span>
+          <span class="pos-chip" onclick="fillNlpPrompt('कल सुबह गेहूं में पानी देना')">💧 कल गेहूं में पानी</span>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="display:flex; align-items:center; gap:12px; margin: 24px 0 18px 0;">
+        <div style="flex:1; height:1.5px; background:var(--pos-dark);"></div>
+        <span class="pos-pill-dark" style="font-size:12px;">अथवा नीचे विवरण चुनकर बनाएं</span>
+        <div style="flex:1; height:1.5px; background:var(--pos-dark);"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="pos-pill">01 मिनट में तैयार</span>
+          <h2 style="font-size:22px; font-weight:900; color:var(--pos-dark); margin:6px 0 2px 0;">
+            🌾 अपनी फसल व एकड़ का चयन करें
+          </h2>
+          <p style="font-size:13px; color:#4B5563; margin:0;">
+            एकड़ के हिसाब से खाद की मात्रा और तारीखें स्वतः परिकलित होंगी।
+          </p>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; font-weight:800; color:#4B5563;">इंजन:</span>
+          <span class="pos-pill-dark">ICAR Agronomy + Weather AI</span>
+        </div>
+      </div>
+
+      <!-- 3 Input Fields Grid -->
+      <form id="auto-schedule-form" onsubmit="handleGenerateSchedule(event)">
+        <div class="pos-input-grid">
+
+          <!-- 1. Crop Name -->
+          <div class="pos-field">
+            <label class="pos-label" for="schedule-crop-name">
+              <span>🌾 फसल का नाम (Crop Name)</span>
+            </label>
+            <select id="schedule-crop-name" class="pos-select" required onchange="handleCropSelectChange(this)">
+              <option value="" disabled selected>-- फसल चुनें (Select Crop) --</option>
+              <option value="गेहूं (Wheat)">🌾 गेहूं (Wheat)</option>
+              <option value="धान (Paddy / Rice)">🌾 धान (Paddy / Rice)</option>
+              <option value="सरसों (Mustard)">🌼 सरसों (Mustard)</option>
+              <option value="मक्का (Maize)">🌽 मक्का (Maize)</option>
+              <option value="टमाटर (Tomato)">🍅 टमाटर (Tomato)</option>
+              <option value="कपास (Cotton)">☁️ कपास (Cotton)</option>
+              <option value="आलू (Potato)">🥔 आलू (Potato)</option>
+              <option value="चना (Gram / Chickpea)">🫘 चना (Gram / Chickpea)</option>
+              <option value="गन्ना (Sugarcane)">🎋 गन्ना (Sugarcane)</option>
+              <option value="सोयाबीन (Soybean)">🌱 सोयाबीन (Soybean)</option>
+              <option value="मिर्च (Chilli)">🌶️ मिर्च (Chilli)</option>
+              <option value="प्याज (Onion)">🧅 प्याज (Onion)</option>
+              <option value="बाजरा (Pearl Millet)">🌾 बाजरा (Pearl Millet)</option>
+              <option value="मटर (Green Pea)">🟢 मटर (Green Pea)</option>
+              <option value="__custom__">✏️ अन्य फसल (Type Custom)...</option>
+            </select>
+            <!-- Custom input if needed -->
+            <input type="text" id="schedule-custom-crop" class="pos-input" placeholder="फसल का नाम लिखें (उदा. बैंगन, सूरजमुखी)" style="display:none; margin-top:6px;">
+
+            <!-- Quick Crop Chips -->
+            <div class="pos-chips-wrap">
+              <span class="pos-chip" onclick="setQuickCrop('गेहूं (Wheat)')">🌾 गेहूं</span>
+              <span class="pos-chip" onclick="setQuickCrop('धान (Paddy / Rice)')">🌾 धान</span>
+              <span class="pos-chip" onclick="setQuickCrop('सरसों (Mustard)')">🌼 सरसों</span>
+              <span class="pos-chip" onclick="setQuickCrop('टमाटर (Tomato)')">🍅 टमाटर</span>
+              <span class="pos-chip" onclick="setQuickCrop('मक्का (Maize)')">🌽 मक्का</span>
+            </div>
+          </div>
+
+          <!-- 2. Sowing Date -->
+          <div class="pos-field">
+            <label class="pos-label" for="schedule-sowing-date">
+              <span>📅 बुवाई / रोपाई की तारीख (Sowing Date)</span>
+            </label>
+            <input type="date" id="schedule-sowing-date" class="pos-input" required>
+            <div class="pos-chips-wrap">
+              <span class="pos-chip" onclick="setTodaySowingDate()">📍 आज (Today)</span>
+              <span class="pos-chip" onclick="setPastSowingDays(7)">⏮️ 7 दिन पूर्व</span>
+              <span class="pos-chip" onclick="setPastSowingDays(15)">⏮️ 15 दिन पूर्व</span>
+            </div>
+          </div>
+
+          <!-- 3. Acreage (एकड़) -->
+          <div class="pos-field">
+            <label class="pos-label" for="schedule-acreage">
+              <span>🚜 खेत का रकबा / क्षेत्रफल (Acres)</span>
+            </label>
+            <div style="position:relative;">
+              <input type="number" id="schedule-acreage" class="pos-input" step="0.25" min="0.1" max="100" value="2.5" required placeholder="उदा. 2.5">
+              <span style="position:absolute; right:14px; top:15px; font-weight:800; font-size:13px; color:#4B5563; pointer-events:none;">एकड़ (Acres)</span>
+            </div>
+            <div class="pos-chips-wrap">
+              <span class="pos-chip" onclick="setQuickAcres(1)">1 एकड़</span>
+              <span class="pos-chip" onclick="setQuickAcres(2)">2 एकड़</span>
+              <span class="pos-chip" onclick="setQuickAcres(3)">3 एकड़</span>
+              <span class="pos-chip" onclick="setQuickAcres(5)">5 एकड़</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Big Positivus Action CTA -->
+        <div style="margin-top:26px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div style="font-size:13px; color:#4B5563;">
+            💡 <em>नोट: सिस्टम आपके एकड़ के अनुसार यूरिया, DAP और पोटाश की कुल बोरी / किग्रा गणना करेगा।</em>
+          </div>
+          <button type="submit" id="btn-generate-schedule" class="pos-btn pos-btn-lime" style="min-width:320px;">
+            <span>⚡</span> <span>AI संपूर्ण कृषि समय-सारणी तैयार करें ➔</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 2: POSITIVUS SUMMARY CARDS (Acreage & Dose Overview) -->
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+      <span class="pos-pill">02 फसल सारांश</span>
+      <h2 style="font-size:24px; font-weight:900; margin:0; color:var(--pos-dark);">
+        कुल आवश्यकता व चक्र अवलोकन
+      </h2>
+    </div>
+
+    <section class="pos-summary-grid">
+      <!-- Card 1: Irrigation -->
+      <div class="pos-service-card pos-card-white">
+        <div>
+          <span class="pos-pill" style="background:#E0F2FE; color:#0369A1; border-color:#0284C7;">💧 सिंचाई योजना</span>
+          <h3 style="font-size:22px; font-weight:900; margin:14px 0 8px 0; color:var(--pos-dark);">
+            <span id="stat-irr-count">0</span> सिंचाई चक्र निर्धारित
+          </h3>
+          <p style="font-size:13px; color:#4B5563; line-height:1.5;" id="stat-irr-desc">
+            CRI अवस्था, कल्ले फूटने, गाभा और दाना भराव की क्रांतिक अवस्थाओं पर समयबद्ध सूचना।
+          </p>
+        </div>
+        <div style="margin-top:16px; padding-top:12px; border-top:1.5px solid #E5E7EB; font-size:12px; font-weight:800; color:#0369A1;" id="stat-next-irr">
+          💧 प्रथम सिंचाई: बुवाई के 21 दिन बाद (CRI स्टेज)
+        </div>
+      </div>
+
+      <!-- Card 2: Fertilizer (Acreage Scaled) -->
+      <div class="pos-service-card pos-card-lime">
+        <div>
+          <span class="pos-pill" style="background:#191A23; color:#B9FF66; border:none;">🌱 कुल खाद व उर्वरक खुराक</span>
+          <h3 style="font-size:22px; font-weight:900; margin:14px 0 8px 0; color:var(--pos-dark);" id="stat-fert-title">
+            रकबा अनुसार सटीक मात्रा
+          </h3>
+          <p style="font-size:13px; color:#191A23; line-height:1.5; font-weight:600;" id="stat-fert-breakdown">
+            बुवाई के समय आधार खाद + वानस्पतिक अवस्था में टॉप-ड्रेसिंग यूरिया विभाजित खुराकों में।
+          </p>
+        </div>
+        <div style="margin-top:16px; padding-top:12px; border-top:1.5px solid var(--pos-dark); font-size:12px; font-weight:900; color:var(--pos-dark);" id="stat-fert-acreage-note">
+          कुल रकबा: 2.5 एकड़ हेतु संगणित
+        </div>
+      </div>
+
+      <!-- Card 3: Pest & IPM -->
+      <div class="pos-service-card pos-card-dark">
+        <div>
+          <span class="pos-pill" style="background:var(--pos-lime); color:var(--pos-dark); border:none;">🛡️ पादप सुरक्षा (IPM)</span>
+          <h3 style="font-size:22px; font-weight:900; margin:14px 0 8px 0; color:#FFFFFF;">
+            <span id="stat-pest-count">0</span> सुरक्षा छिड़काव चक्र
+          </h3>
+          <p style="font-size:13px; color:#D1D5DB; line-height:1.5;" id="stat-pest-desc">
+            फंगस (झुलसा/रतुआ) व कीट (माहू/तना छेदक) की पूर्व रोकथाम हेतु वैज्ञानिक अनुशंसाएं।
+          </p>
+        </div>
+        <div style="margin-top:16px; padding-top:12px; border-top:1.5px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800; color:var(--pos-lime);" id="stat-ipm-tip">
+          नीम तेल (10,000 PPM) + बायो-कंट्रोल एकीकृत
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: POSITIVUS WORKING PROCESS ACCORDION (Stages 01, 02, 03, 04, 05) -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+      <div>
+        <span class="pos-pill">03 कार्य प्रणाली</span>
+        <h2 style="font-size:24px; font-weight:900; margin:8px 0 4px 0; color:var(--pos-dark);">
+          फसल के मुख्य चरण व कार्य कैलेंडर (Working Process)
+        </h2>
+        <p style="font-size:13px; color:#4B5563; margin:0;">
+          बुवाई से कटाई तक के सभी 5 चरणों की समय-सारणी का विस्तार देखें:
+        </p>
+      </div>
+      <div>
+        <button type="button" class="pos-btn pos-btn-outline" style="padding:8px 16px; font-size:12.5px;" onclick="expandAllProcessStages()">
+          📂 सभी चरण खोलें / बंद करें
+        </button>
+      </div>
+    </div>
+
+    <!-- Process Stages Container (Instant Interactive Beginner Stages) -->
+    <div id="process-stages-container">
+      <!-- Stage 01 -->
+      <div class="pos-process-item active" id="stage-item-01">
+        <div class="pos-process-header" onclick="toggleProcessStage('01')">
+          <div class="pos-process-left">
+            <span class="pos-process-num">01</span>
+            <div>
+              <h3 class="pos-process-title">बुवाई व आधार खाद चरण (Basal & Sowing Stage)</h3>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">बुवाई के 0-15 दिन</span>
+                <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">3 कार्य संलग्न</span>
+              </div>
+            </div>
+          </div>
+          <div class="pos-process-toggle">+</div>
+        </div>
+        <div class="pos-process-body" id="stage-body-01" style="display:block;">
+          <div class="pos-tasks-grid">
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-fertilizer">🌱 खाद व पोषण</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">🔥 आज देय</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">आधार खाद अनुप्रयोग (Basal Fertilizer)</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">बुवाई के समय खेत में अनुशंसित DAP, MOP व जिंक की पूरी मात्रा डालें।</p>
+                <div style="font-size:12px; font-weight:800; color:#191A23; background:#FEF9C3; border:1px solid #CA8A04; border-radius:6px; padding:4px 8px; margin:8px 0;">⚖️ DAP: 55 kg/एकड़ • पोटाश: 25 kg/एकड़ • जिंक: 10 kg/एकड़</div>
+              </div>
+            </div>
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-irrigation">💧 सिंचाई</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">📅 बुवाई समय</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">पलेवा व बुवाई पूर्व सिंचाई</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">मिट्टी में पर्याप्त ओट (नमी) आने पर ही बीज की बुवाई करें ताकि 100% अंकुरण हो।</p>
+              </div>
+            </div>
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-pest">🛡️ पादप सुरक्षा</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">✓ बीज शोधन</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">बीज उपचार (Seed Treatment)</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">थीरम या ट्राइकोडर्मा (2g/kg) से बीजोपचार करें। दीमक से बचाव हेतु क्लोरपायरीफॉस डालें।</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 02 -->
+      <div class="pos-process-item" id="stage-item-02">
+        <div class="pos-process-header" onclick="toggleProcessStage('02')">
+          <div class="pos-process-left">
+            <span class="pos-process-num">02</span>
+            <div>
+              <h3 class="pos-process-title">वानस्पतिक व कल्ले फूटने का चरण (Vegetative & Tillering Stage)</h3>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">बुवाई के 16-45 दिन</span>
+                <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">3 कार्य संलग्न</span>
+              </div>
+            </div>
+          </div>
+          <div class="pos-process-toggle">+</div>
+        </div>
+        <div class="pos-process-body" id="stage-body-02" style="display:none;">
+          <div class="pos-tasks-grid">
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-irrigation">💧 सिंचाई</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">⏳ 21 दिन बाद</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">CRI / कल्ले फूटने पर प्रथम सिंचाई</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">फसल की सबसे क्रांतिक अवस्था! इस समय पानी की कमी होने पर उपज में 40% तक कमी हो सकती है।</p>
+              </div>
+            </div>
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-fertilizer">🌱 खाद व पोषण</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">⏳ पहली सिंचाई उपरांत</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">यूरिया प्रथम टॉप ड्रेसिंग (1st Top Dressing)</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">सिंचाई के 2-3 दिन बाद ओट आने पर यूरिया का भुरकाव करें।</p>
+                <div style="font-size:12px; font-weight:800; color:#191A23; background:#FEF9C3; border:1px solid #CA8A04; border-radius:6px; padding:4px 8px; margin:8px 0;">⚖️ यूरिया: 45 kg प्रति एकड़</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 03 -->
+      <div class="pos-process-item" id="stage-item-03">
+        <div class="pos-process-header" onclick="toggleProcessStage('03')">
+          <div class="pos-process-left">
+            <span class="pos-process-num">03</span>
+            <div>
+              <h3 class="pos-process-title">गाभा व फूल आने का क्रांतिक चरण (Booting & Flowering Stage)</h3>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">बुवाई के 46-75 दिन</span>
+                <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">3 कार्य संलग्न</span>
+              </div>
+            </div>
+          </div>
+          <div class="pos-process-toggle">+</div>
+        </div>
+        <div class="pos-process-body" id="stage-body-03" style="display:none;">
+          <div class="pos-tasks-grid">
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-irrigation">💧 सिंचाई</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">⏳ 60-65 दिन</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">गाभा / फूल आने पर सिंचाई</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">हवा शांत होने पर ही पानी दें ताकि फसल गिरे (lodging) नहीं।</p>
+              </div>
+            </div>
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-pest">🛡️ पादप सुरक्षा</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">🔍 कीट जांच</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">माहू (Aphid) व रतुआ रोकथाम</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">पत्तियों पर पीला पाउडर या माहू कीट दिखने पर नीम तेल 5ml/L या प्रोपिकोनाजोल 1ml/L छिड़कें।</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 04 -->
+      <div class="pos-process-item" id="stage-item-04">
+        <div class="pos-process-header" onclick="toggleProcessStage('04')">
+          <div class="pos-process-left">
+            <span class="pos-process-num">04</span>
+            <div>
+              <h3 class="pos-process-title">दाना भराव व दुग्ध अवस्था (Grain Filling & Milking Stage)</h3>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">बुवाई के 76-105 दिन</span>
+                <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">2 कार्य संलग्न</span>
+              </div>
+            </div>
+          </div>
+          <div class="pos-process-toggle">+</div>
+        </div>
+        <div class="pos-process-body" id="stage-body-04" style="display:none;">
+          <div class="pos-tasks-grid">
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-fertilizer">🌱 खाद व पोषण</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">⏳ दाना वजन</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">0:0:50 पोटाश स्प्रे (दाना भराव व चमक)</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">दाना सिकुड़ने से बचाने व वजन बढ़ाने हेतु घुलनशील पोटाश 10g/L पानी में मिलाकर छिड़कें।</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 05 -->
+      <div class="pos-process-item" id="stage-item-05">
+        <div class="pos-process-header" onclick="toggleProcessStage('05')">
+          <div class="pos-process-left">
+            <span class="pos-process-num">05</span>
+            <div>
+              <h3 class="pos-process-title">परिपक्वता व कटाई चरण (Maturity & Harvesting Stage)</h3>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">बुवाई के 106-140 दिन</span>
+                <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">2 कार्य संलग्न</span>
+              </div>
+            </div>
+          </div>
+          <div class="pos-process-toggle">+</div>
+        </div>
+        <div class="pos-process-body" id="stage-body-05" style="display:none;">
+          <div class="pos-tasks-grid">
+            <div class="pos-task-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <span class="pos-task-tag tag-irrigation">💧 सिंचाई</span>
+                  <span class="pos-pill" style="font-size:11px; padding:2px 7px;">🛑 पानी बंद</span>
+                </div>
+                <h4 style="font-size:14px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0;">कटाई से 12 दिन पूर्व सिंचाई बंद करें</h4>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">खेत सूखने दें ताकि कंबाइन या रीपर आसानी से चल सके और दाने में फफूंद न लगे।</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: ALL REMINDERS LIST WITH POSITIVUS FILTER CHIPS -->
+    <div style="margin-top:44px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="pos-pill">04 कार्य सूची</span>
+          <h2 style="font-size:24px; font-weight:900; margin:0; color:var(--pos-dark);">
+            समस्त कार्य व अनुस्मारक
+          </h2>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="pos-btn pos-btn-outline" style="padding:10px 16px; font-size:13px; color:#DC2626; border-color:#DC2626;" onclick="handleClearAllReminders()" title="पूरा कैलेंडर साफ करें और नया शुरू करें">
+            🗑️ कैलेंडर रीसेट करें
+          </button>
+          <button class="pos-btn pos-btn-dark" style="padding:10px 20px; font-size:13px;" onclick="openAddModal()">
+            + नया रिमाइंडर जोड़ें
           </button>
         </div>
       </div>
-    </div>
-  </div>
 
-  <main class="container">
+      <!-- Filter Bar -->
+      <div class="pos-filter-bar">
+        <button class="pos-filter-pill active" onclick="filterPositivusReminders('all', this)">🔖 सभी (<span id="pill-all-count">0</span>)</button>
+        <button class="pos-filter-pill" onclick="filterPositivusReminders('irrigation', this)">💧 सिंचाई (<span id="pill-irr-count">0</span>)</button>
+        <button class="pos-filter-pill" onclick="filterPositivusReminders('fertilizer', this)">🌱 खाद/उर्वरक (<span id="pill-fert-count">0</span>)</button>
+        <button class="pos-filter-pill" onclick="filterPositivusReminders('pesticide', this)">🛡️ कीट व रोग (<span id="pill-pest-count">0</span>)</button>
+        <button class="pos-filter-pill" onclick="filterPositivusReminders('completed', this)">✅ पूर्ण कार्य (<span id="pill-done-count">0</span>)</button>
+      </div>
 
-    <!-- NLP Quick Add Bar -->
-    <div class="nlp-bar">
-      <label style="font-size:13px; font-weight:700; display:block; margin-bottom:8px; color:var(--primary);">
-        🗣️ बोलकर या लिखकर रिमाइंडर जोड़ें (AI Natural Language Scheduler):
-      </label>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <input type="text" id="nl-input" class="form-input" placeholder="उदा. 'हर रविवार गेहूं चेक करना' या 'कल शाम टमाटर में पानी देना'..." style="flex:1; min-width:200px;">
-        <button class="btn btn-primary" style="white-space:nowrap;" onclick="handleQuickAddNLP()">⚡ रिमाइंडर लगाएं ➔</button>
-      </div>
-      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='कल सुबह 6 बजे गेहूं में पानी देना'; handleQuickAddNLP()">💧 गेहूं सिंचाई कल</button>
-        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='अगले हफ्ते यूरिया डालना'; handleQuickAddNLP()">🌱 यूरिया अगले हफ्ते</button>
-        <button class="btn btn-secondary" style="font-size:12px; padding:5px 12px;" onclick="document.getElementById('nl-input').value='हर शनिवार कीट निरीक्षण करना'; handleQuickAddNLP()">🔍 साप्ताहिक कीट जांच</button>
-      </div>
-    </div>
-
-    <!-- Category Stats Bar -->
-    <div class="cat-bar">
-      <div class="cat-stat" style="border-bottom:3px solid #0288D1;" onclick="filterReminders('irrigation', this)">
-        <div style="font-size:22px;">💧</div>
-        <span class="cat-stat-num" id="count-irrigation" style="color:#0288D1;">0</span>
-        <span class="cat-stat-lbl">सिंचाई (Irrigation)</span>
-      </div>
-      <div class="cat-stat" style="border-bottom:3px solid #2E7D32;" onclick="filterReminders('fertilizer', this)">
-        <div style="font-size:22px;">🌱</div>
-        <span class="cat-stat-num" id="count-fertilizer" style="color:#2E7D32;">0</span>
-        <span class="cat-stat-lbl">खाद / उर्वरक</span>
-      </div>
-      <div class="cat-stat" style="border-bottom:3px solid #E65100;" onclick="filterReminders('pest', this)">
-        <div style="font-size:22px;">🔍</div>
-        <span class="cat-stat-num" id="count-pest" style="color:#E65100;">0</span>
-        <span class="cat-stat-lbl">कीट निरीक्षण</span>
-      </div>
-      <div class="cat-stat" style="border-bottom:3px solid #7B1FA2;" onclick="filterReminders('weeding', this)">
-        <div style="font-size:22px;">🌿</div>
-        <span class="cat-stat-num" id="count-weeding" style="color:#7B1FA2;">0</span>
-        <span class="cat-stat-lbl">निराई-गुड़ाई</span>
-      </div>
-      <div class="cat-stat" style="border-bottom:3px solid var(--gold);" onclick="filterReminders('harvest', this)">
-        <div style="font-size:22px;">🌾</div>
-        <span class="cat-stat-num" id="count-harvest" style="color:var(--gold);">0</span>
-        <span class="cat-stat-lbl">कटाई / फसल</span>
-      </div>
-      <div class="cat-stat" style="border-bottom:3px solid #757575;" onclick="filterReminders('completed', this)">
-        <div style="font-size:22px;">✅</div>
-        <span class="cat-stat-num" id="count-completed" style="color:#757575;">0</span>
-        <span class="cat-stat-lbl">पूर्ण कार्य</span>
-      </div>
-    </div>
-
-    <!-- Filter Chips Row -->
-    <div class="section-head">
-      <div class="section-title">📋 कृषि कार्य सूची</div>
-      <div class="filter-chips">
-        <button class="filter-chip active" onclick="filterReminders('all', this)">🔖 सभी</button>
-        <button class="filter-chip" onclick="filterReminders('irrigation', this)">💧 सिंचाई</button>
-        <button class="filter-chip" onclick="filterReminders('fertilizer', this)">🌱 खाद</button>
-        <button class="filter-chip" onclick="filterReminders('pest', this)">🔍 कीट</button>
-        <button class="filter-chip" onclick="filterReminders('weeding', this)">🌿 निराई</button>
-        <button class="filter-chip" onclick="filterReminders('harvest', this)">🌾 कटाई</button>
-        <button class="filter-chip" onclick="filterReminders('completed', this)">✅ पूर्ण</button>
-      </div>
-    </div>
-
-    <!-- Reminders Grid -->
-    <div class="rem-grid" id="reminders-grid" style="margin-top:16px;">
-      <div style="text-align:center; grid-column:1/-1; padding:40px; color:var(--text-muted);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">⏰</span>
-        कृषि अनुस्मारक लोड हो रहे हैं...
+      <!-- Reminders Grid -->
+      <div class="pos-tasks-grid" id="reminders-grid" style="margin-bottom:60px;">
+        <!-- Filled by reminders.js -->
       </div>
     </div>
 
   </main>
 
-  <!-- Add Reminder Modal -->
-  <div class="modal-overlay" id="add-modal">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-        <h3 style="font-size:18px; font-weight:800; color:var(--primary);">+ नया कृषि अनुस्मारक</h3>
-        <button onclick="closeAddModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">✕</button>
+  <!-- ADD MANUAL REMINDER MODAL (Positivus Neo-Brutalist Style) -->
+  <div id="add-modal" style="display:none; position:fixed; inset:0; background:rgba(25, 26, 35, 0.7); z-index:9999; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(3px);">
+    <div style="background:#FFFFFF; border:3px solid var(--pos-dark); border-radius:30px; box-shadow:0px 10px 0px var(--pos-lime); max-width:500px; width:100%; padding:30px; position:relative; max-height:90vh; overflow-y:auto;">
+      <button onclick="closeAddModal()" style="position:absolute; top:18px; right:18px; background:var(--pos-gray); border:2px solid var(--pos-dark); border-radius:50%; width:36px; height:36px; font-size:18px; font-weight:800; cursor:pointer; color:var(--pos-dark);">✕</button>
+
+      <span class="pos-pill" style="margin-bottom:8px;">+ नया कार्य</span>
+      <h3 style="font-size:20px; font-weight:900; color:var(--pos-dark); margin:6px 0 18px 0;">व्यक्तिगत कृषि अनुस्मारक</h3>
+
+      <div class="pos-field" style="margin-bottom:14px;">
+        <label class="pos-label">कार्य का नाम (Title)</label>
+        <input type="text" id="m-title" class="pos-input" placeholder="उदा. गेहूं कल्ले फूटने पर यूरिया छिड़काव">
       </div>
 
-      <div class="form-group">
-        <label class="form-label">कार्य का नाम (Title)</label>
-        <input type="text" id="m-title" class="form-input" placeholder="उदा. गेहूं पहली सिंचाई (CRI Stage)">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">श्रेणी (Category)</label>
-        <select id="m-type" class="form-select">
+      <div class="pos-field" style="margin-bottom:14px;">
+        <label class="pos-label">श्रेणी (Category)</label>
+        <select id="m-type" class="pos-select">
           <option value="irrigation">💧 सिंचाई (Irrigation)</option>
           <option value="fertilizer">🌱 खाद व उर्वरक (Fertilizer)</option>
-          <option value="pest">🔍 कीट निरीक्षण (Pest Scouting)</option>
+          <option value="pest">🛡️ कीट व रोग सुरक्षा (IPM Spray)</option>
           <option value="weeding">🌿 निराई-गुड़ाई (Weeding)</option>
           <option value="harvest">🌾 कटाई (Harvesting)</option>
-          <option value="general">📋 सामान्य (General)</option>
+          <option value="general">📋 अन्य सामान्य कार्य</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">तारीख / समय (Due Date)</label>
-        <input type="text" id="m-due" class="form-input" placeholder="उदा. कल सुबह 06:00 AM या 25 Sep 2026">
+      <div class="pos-field" style="margin-bottom:14px;">
+        <label class="pos-label">तारीख (Due Date)</label>
+        <input type="date" id="m-due" class="pos-input">
       </div>
 
-      <div class="form-group">
-        <label class="form-label">विवरण / निर्देश (Notes)</label>
-        <textarea id="m-desc" class="form-input" rows="2" placeholder="उदा. 45 मिनट ड्रिप चलाएं या 25kg यूरिया/एकड़ डालें"></textarea>
+      <div class="pos-field" style="margin-bottom:18px;">
+        <label class="pos-label">विवरण व खुराक (Notes & Dosage)</label>
+        <textarea id="m-desc" class="pos-input" style="height:80px; padding:10px 14px;" placeholder="उदा. 45 किग्रा यूरिया प्रति एकड़ या 2ml दवा प्रति लीटर पानी"></textarea>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">प्राथमिकता (Priority)</label>
-        <select id="m-priority" class="form-select">
-          <option value="high">🔴 उच्च (High)</option>
-          <option value="normal" selected>🟡 सामान्य (Normal)</option>
-          <option value="low">🟢 कम (Low)</option>
-        </select>
-      </div>
-
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-        <button class="btn btn-outline" onclick="closeAddModal()">रद्द करें</button>
-        <button class="btn btn-primary" onclick="handleSaveCustomReminder()">✓ सुरक्षित करें ➔</button>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" class="pos-btn pos-btn-outline" onclick="closeAddModal()">रद्द करें</button>
+        <button type="button" class="pos-btn pos-btn-lime" onclick="handleSaveCustomReminder()">✓ सुरक्षित करें ➔</button>
       </div>
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script src="js/i18n.js"></script>
-  <script src="js/header.js"></script>
-  <script src="js/reminders.js"></script>
+  <!-- Loading Overlay for AI Generation -->
+  <div class="pos-loading-overlay" id="loading-overlay">
+    <div class="pos-loading-box">
+      <div class="pos-spinner"></div>
+      <h3 style="font-size:22px; font-weight:900; color:var(--pos-dark); margin:0 0 10px 0;">
+        ⚡ AI संपूर्ण कैलेंडर तैयार कर रहा है...
+      </h3>
+      <p style="font-size:14px; color:#4B5563; line-height:1.55; margin:0;" id="loading-status-text">
+        DeepSeek AI व ICAR शस्य-विज्ञान डेटाबेस से आपकी बुवाई तारीख और एकड़ के आधार पर सिंचाई, खाद और छिड़काव की गणना की जा रही है।
+      </p>
+    </div>
+  </div>
+
+  <!-- Positivus Footer Strip -->
+  <footer style="background:var(--pos-dark); color:#FFFFFF; padding:32px 20px; margin-top:80px; border-top:3px solid var(--pos-lime); text-align:center;">
+    <div class="pos-container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="pos-pill" style="font-size:11px;">🌾 AgriGo AI</span>
+        <span style="font-size:13px; font-weight:700;">Positivus Crop Scheduling Engine</span>
+      </div>
+      <div style="font-size:12.5px; color:#9CA3AF;">
+        भारतीय कृषि अनुसंधान परिषद (ICAR) एवं DeepSeek AI समर्थित • 2026
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js?v=3.0"></script>
+  <script src="js/i18n.js?v=3.0"></script>
+  <script src="js/header.js?v=3.0"></script>
+  <script src="js/reminders.js?v=3.0"></script>
 </body>
 </html>

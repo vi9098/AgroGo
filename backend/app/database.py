@@ -590,13 +590,26 @@ def init_sql_schema():
     """)
 
     # Migration checks for existing databases
-    for col, col_type in [("reminder_type", "TEXT DEFAULT 'general'"), ("crop_id", "TEXT"), ("priority", "TEXT DEFAULT 'normal'")]:
+    for col, col_type in [
+        ("reminder_type", "TEXT DEFAULT 'general'"),
+        ("crop_id", "TEXT"),
+        ("priority", "TEXT DEFAULT 'normal'"),
+        ("category", "TEXT DEFAULT 'general'"),
+        ("dosage_info", "TEXT"),
+        ("acreage", "REAL DEFAULT 1.0"),
+        ("stage_name", "TEXT")
+    ]:
         try:
             cursor.execute(f"ALTER TABLE reminders ADD COLUMN {col} {col_type}")
         except sqlite3.OperationalError:
             pass
 
-    for col, col_type in [("status", "TEXT DEFAULT 'active'"), ("role", "TEXT DEFAULT 'farmer'")]:
+    for col, col_type in [
+        ("status", "TEXT DEFAULT 'active'"),
+        ("role", "TEXT DEFAULT 'farmer'"),
+        ("security_question", "TEXT"),
+        ("security_answer_hash", "TEXT")
+    ]:
         try:
             cursor.execute(f"ALTER TABLE users ADD COLUMN {col} {col_type}")
         except sqlite3.OperationalError:

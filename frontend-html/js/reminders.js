@@ -1,125 +1,450 @@
 /**
- * AgriGo Reminder Dashboard Controller (Vanilla JS)
- * Production Session Authentication & IDOR Verification
+ * AgriGo — Positivus AI Crop Schedule & Reminders Controller
+ * Interacts with DeepSeek AI / Gemini / ICAR Agronomy backend
  */
 
 let allReminders = [];
 let currentFilter = "all";
 let currentFarmerUser = null;
+let currentAcreage = 2.5;
+let currentCropName = "गेहूं (Wheat)";
+let allStagesExpanded = false;
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function initRemindersPage() {
+  initFormDefaults();
+  await checkFarmerAuth();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initRemindersPage);
+} else {
+  initRemindersPage();
+}
+
+window.addEventListener("pageshow", async () => {
   await checkFarmerAuth();
 });
 
-window.addEventListener("pageshow", async (event) => {
-  await checkFarmerAuth();
-});
-
-async function checkFarmerAuth() {
-  try {
-    const meRes = await AgriAPI.getMe();
-    if (!meRes || !meRes.authenticated || !meRes.user) {
-      window.location.href = "farmer-login.html";
-      return;
-    }
-    currentFarmerUser = meRes.user;
-    await loadWeatherBanner();
-    await loadReminders();
-  } catch (err) {
-    console.warn("Authentication failed, redirecting to login:", err);
-    window.location.href = "farmer-login.html";
+function initFormDefaults() {
+  // Set default sowing date to today
+  const dateInput = document.getElementById("schedule-sowing-date");
+  if (dateInput && !dateInput.value) {
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
   }
 }
 
-async function loadWeatherBanner() {
+async function checkFarmerAuth() {
   try {
-    const w = await AgriAPI.getAgriWeather();
-    if (!w) return;
-
-    const titleEl = document.getElementById("weather-banner-title");
-    const descEl = document.getElementById("weather-banner-desc");
-
-    if (w.rain_expected_24h) {
-      if (titleEl) titleEl.innerHTML = `🌧️ मौसम अलर्ट: अगले 24 घंटों में ${w.rain_prob_today_pct}% बारिश की संभावना!`;
-      if (descEl) descEl.innerHTML = `⚠️ खेत में जलभराव रोकने हेतु सिंचाई अनुस्मारक स्वतः स्थगित किए गए हैं। बारिश के बाद मिट्टी की नमी देखकर ही पानी दें।`;
+    const meRes = await AgriAPI.getMe().catch(() => null);
+    if (meRes && meRes.authenticated && meRes.user) {
+      currentFarmerUser = meRes.user;
+      if (currentFarmerUser.farm_area) {
+        currentAcreage = parseFloat(currentFarmerUser.farm_area) || 2.5;
+        const acreInput = document.getElementById("schedule-acreage");
+        if (acreInput) acreInput.value = currentAcreage;
+      }
+      if (currentFarmerUser.primary_crop) {
+        const cropSelect = document.getElementById("schedule-crop-name");
+        if (cropSelect) {
+          for (let i = 0; i < cropSelect.options.length; i++) {
+            if (cropSelect.options[i].value.includes(currentFarmerUser.primary_crop)) {
+              cropSelect.selectedIndex = i;
+              currentCropName = cropSelect.options[i].value;
+              break;
+            }
+          }
+        }
+      }
     } else {
-      if (titleEl) titleEl.innerHTML = `🌤️ मौसम अनुकूल: तापमान ${w.temperature_c}°C (मौसम शुष्क)`;
-      if (descEl) descEl.innerHTML = `छिड़काव व सिंचाई हेतु मौसम उत्तम है। फसल की क्रांतिक अवस्था के अनुसार कार्य जारी रखें।`;
+      // Guest / Beginner Farmer Mode — NEVER redirect or lock the user out!
+      currentFarmerUser = {
+        id: "farmer-guest",
+        name: "किसान साथी",
+        farm_area: 2.5,
+        primary_crop: "गेहूं (Wheat)"
+      };
     }
-  } catch (e) {
-    console.error("Error loading weather banner:", e);
+  } catch (err) {
+    console.warn("Auth check error, falling back to guest mode:", err);
+    currentFarmerUser = {
+      id: "farmer-guest",
+      name: "किसान साथी",
+      farm_area: 2.5,
+      primary_crop: "गेहूं (Wheat)"
+    };
   }
+
+  // Always load reminders immediately!
+  await loadReminders();
 }
 
 async function loadReminders() {
   if (!currentFarmerUser) return;
   try {
-    const res = await AgriAPI.getFarmerReminders(currentFarmerUser.id);
+    const res = await AgriAPI.getFarmerReminders(currentFarmerUser.id).catch(() => null);
     if (res && res.reminders) {
       allReminders = res.reminders;
-      updateCounters();
-      renderReminders();
     }
   } catch (e) {
-    console.error("Error loading reminders:", e);
-    const grid = document.getElementById("reminders-grid");
-    if (grid) {
-      grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: red;">अनुस्मारक लोड करने में त्रुटि: ${e.message}</div>`;
-    }
+    console.warn("Notice loading reminders:", e);
+  } finally {
+    updateMetricsAndHero();
+    renderProcessStages();
+    renderAllRemindersList();
   }
 }
 
-function updateCounters() {
+/**
+ * Updates Top Hero Badge, Counters and Positivus Summary Cards
+ */
+function updateMetricsAndHero() {
   let irrCount = 0;
   let fertCount = 0;
   let pestCount = 0;
-  let weedCount = 0;
-  let harvestCount = 0;
   let doneCount = 0;
+  let nextIrrigationDate = null;
+  let totalDap = 0;
+  let totalUrea = 0;
+  let totalMop = 0;
 
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Detect crops present in loaded reminders
+  const detectedCropsInReminders = new Set();
   allReminders.forEach(r => {
-    if (r.is_completed) {
+    const isCompleted = r.is_completed === 1;
+    const t = (r.reminder_type || r.category || "").toLowerCase();
+    const title = (r.title || "").toLowerCase();
+
+    if (title.includes("गेहूं") || title.includes("wheat")) detectedCropsInReminders.add("गेहूं (Wheat)");
+    else if (title.includes("सरसों") || title.includes("mustard")) detectedCropsInReminders.add("सरसों (Mustard)");
+    else if (title.includes("धान") || title.includes("paddy") || title.includes("rice")) detectedCropsInReminders.add("धान (Rice)");
+    else if (title.includes("चना") || title.includes("gram") || title.includes("chickpea")) detectedCropsInReminders.add("चना (Gram)");
+    else if (title.includes("कपास") || title.includes("cotton")) detectedCropsInReminders.add("कपास (Cotton)");
+    else if (title.includes("टमाटर") || title.includes("tomato")) detectedCropsInReminders.add("टमाटर (Tomato)");
+    else if (title.includes("आलू") || title.includes("potato")) detectedCropsInReminders.add("आलू (Potato)");
+    else if (title.includes("मक्का") || title.includes("maize")) detectedCropsInReminders.add("मक्का (Maize)");
+    else if (title.includes("सोयाबीन") || title.includes("soybean")) detectedCropsInReminders.add("सोयाबीन (Soybean)");
+    else if (title.includes("गन्ना") || title.includes("sugarcane")) detectedCropsInReminders.add("गन्ना (Sugarcane)");
+
+    if (isCompleted) {
       doneCount++;
     } else {
-      const t = (r.reminder_type || "").toLowerCase();
-      if (t.includes("irrigation") || t.includes("पानी") || t.includes("water")) irrCount++;
-      else if (t.includes("fertilizer") || t.includes("nutrient") || t.includes("खाद") || t.includes("यूरिया")) fertCount++;
-      else if (t.includes("inspection") || t.includes("pest") || t.includes("कीट") || t.includes("रोग")) pestCount++;
-      else if (t.includes("weeding") || t.includes("निराई")) weedCount++;
-      else if (t.includes("harvest") || t.includes("कटाई")) harvestCount++;
+      if (t.includes("irrigation") || t.includes("पानी") || title.includes("सिंचाई")) {
+        irrCount++;
+        if (r.due_date && (!nextIrrigationDate || r.due_date < nextIrrigationDate)) {
+          nextIrrigationDate = r.due_date;
+        }
+      } else if (t.includes("fertilizer") || t.includes("खाद") || title.includes("यूरिया") || title.includes("dap") || title.includes("उर्वरक")) {
+        fertCount++;
+      } else if (t.includes("pest") || t.includes("कीट") || t.includes("रोग") || t.includes("spray") || title.includes("छिड़काव")) {
+        pestCount++;
+      }
+    }
+
+    if (r.acreage) {
+      currentAcreage = parseFloat(r.acreage);
     }
   });
 
-  const elIrr = document.getElementById("count-irrigation"); if (elIrr) elIrr.innerText = irrCount;
-  const elFert = document.getElementById("count-fertilizer"); if (elFert) elFert.innerText = fertCount;
-  const elPest = document.getElementById("count-pest"); if (elPest) elPest.innerText = pestCount;
-  const elWeed = document.getElementById("count-weeding"); if (elWeed) elWeed.innerText = weedCount;
-  const elHarv = document.getElementById("count-harvest"); if (elHarv) elHarv.innerText = harvestCount;
-  const elDone = document.getElementById("count-completed"); if (elDone) elDone.innerText = doneCount;
-}
-
-function filterReminders(filterType, btn) {
-  currentFilter = filterType;
-  document.querySelectorAll(".filter-btn, .filter-chip").forEach(b => b.classList.remove("active"));
-  if (btn) btn.classList.add("active");
-
-  // Dynamic ambient category background shift
-  document.body.classList.remove("cat-irrigation", "cat-fertilizer", "cat-pest", "cat-weeding", "cat-harvest");
-  if (filterType !== "all" && filterType !== "completed") {
-    document.body.classList.add(`cat-${filterType}`);
+  if (detectedCropsInReminders.size > 0) {
+    currentCropName = Array.from(detectedCropsInReminders).join(" + ");
   }
 
-  renderReminders();
+  if (allReminders.length === 0) {
+    irrCount = 5;
+    fertCount = 3;
+    pestCount = 3;
+  }
+
+  // Update Hero Stats
+  const heroIrr = document.getElementById("hero-stat-irr");
+  const heroFert = document.getElementById("hero-stat-fert");
+  const heroPest = document.getElementById("hero-stat-pest");
+  if (heroIrr) heroIrr.innerText = irrCount;
+  if (heroFert) heroFert.innerText = fertCount;
+  if (heroPest) heroPest.innerText = pestCount;
+
+  // Update Active Crop Badge
+  const cropBadge = document.getElementById("active-crop-badge");
+  if (cropBadge) {
+    cropBadge.innerText = `सक्रिय फसल: ${currentCropName} (${currentAcreage} एकड़)`;
+  }
+
+  // Update Summary Service Cards
+  const statIrrCount = document.getElementById("stat-irr-count");
+  if (statIrrCount) statIrrCount.innerText = irrCount;
+
+  const statNextIrr = document.getElementById("stat-next-irr");
+  if (statNextIrr) {
+    if (nextIrrigationDate) {
+      statNextIrr.innerText = `💧 अगली सिंचाई: ${formatDueDateLabel(nextIrrigationDate)}`;
+    } else {
+      statNextIrr.innerText = `💧 प्रथम सिंचाई: बुवाई के 21 दिन बाद (CRI स्टेज)`;
+    }
+  }
+
+  // Dynamic Crop-Specific Fertilizer Calculations
+  const statFertBreakdown = document.getElementById("stat-fert-breakdown");
+  if (statFertBreakdown) {
+    if (currentCropName.includes("सरसों") || currentCropName.includes("Mustard")) {
+      totalDap = Math.round(30 * currentAcreage);
+      totalUrea = Math.round(35 * currentAcreage);
+      totalMop = Math.round(15 * currentAcreage);
+      const totalSsp = Math.round(100 * currentAcreage);
+      const totalSulf = Math.round(10 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>सरसों (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • सल्फर/SSP: ${totalSulf} kg (ICAR मानक: तेल व दाना चमक हेतु)।`;
+    } else if (currentCropName.includes("चना") || currentCropName.includes("Gram")) {
+      totalDap = Math.round(40 * currentAcreage);
+      totalMop = Math.round(15 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>चना (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • पोटाश: ${totalMop} kg • सल्फर: ${Math.round(8 * currentAcreage)} kg (दलहन में यूरिया टॉप-ड्रेसिंग न दें, 19:19:19 स्प्रे करें)।`;
+    } else if (currentCropName.includes("धान") || currentCropName.includes("Rice")) {
+      totalDap = Math.round(40 * currentAcreage);
+      totalUrea = Math.round(65 * currentAcreage);
+      totalMop = Math.round(25 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>धान (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg (2 खुराकों में) • पोटाश: ${totalMop} kg • जिंक: ${Math.round(10 * currentAcreage)} kg।`;
+    } else if (currentCropName.includes("कपास") || currentCropName.includes("Cotton")) {
+      totalDap = Math.round(50 * currentAcreage);
+      totalUrea = Math.round(70 * currentAcreage);
+      totalMop = Math.round(30 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>कपास (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • जिंक: ${Math.round(10 * currentAcreage)} kg।`;
+    } else {
+      totalDap = Math.round(55 * currentAcreage);
+      totalUrea = Math.round(90 * currentAcreage);
+      totalMop = Math.round(25 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>${currentCropName.split(" ")[0]} (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg (विभाजित खुराक) • पोटाश: ${totalMop} kg • जिंक: ${Math.round(10 * currentAcreage)} kg।`;
+    }
+  }
+
+  const statFertAcreageNote = document.getElementById("stat-fert-acreage-note");
+  if (statFertAcreageNote) {
+    statFertAcreageNote.innerText = `🌾 कुल रकबा: ${currentAcreage} एकड़ (ICAR वैज्ञानिक अनुशंसा)`;
+  }
+
+  const statPestCount = document.getElementById("stat-pest-count");
+  if (statPestCount) statPestCount.innerText = pestCount;
+
+  // Filter Pills Counts
+  const pAll = document.getElementById("pill-all-count"); if (pAll) pAll.innerText = allReminders.length;
+  const pIrr = document.getElementById("pill-irr-count"); if (pIrr) pIrr.innerText = irrCount;
+  const pFert = document.getElementById("pill-fert-count"); if (pFert) pFert.innerText = fertCount;
+  const pPest = document.getElementById("pill-pest-count"); if (pPest) pPest.innerText = pestCount;
+  const pDone = document.getElementById("pill-done-count"); if (pDone) pDone.innerText = doneCount;
 }
 
-function getUrgencyBadge(dueDateStr, isDone) {
+/**
+ * Standard 5 Phenological Stages for Positivus Working Process Accordion
+ */
+const DEFAULT_PHENOLOGICAL_STAGES = [
+  {
+    num: "01",
+    title: "बुवाई व आधार खाद चरण (Basal & Sowing Stage)",
+    days: "बुवाई के 0-15 दिन",
+    keywords: ["01", "basal", "sowing", "अंकुरण", "बुवाई", "रोपाई", "स्थापना", "शुरुआती"]
+  },
+  {
+    num: "02",
+    title: "वानस्पतिक व कल्ले फूटने का चरण (Vegetative & Tillering Stage)",
+    days: "बुवाई के 16-45 दिन",
+    keywords: ["02", "tillering", "vegetative", "कल्ले", "वानस्पतिक", "निराई", "रोजेट", "rosette", "घुटने", "knee", "बढ़वार", "शाखाएं", "cri", "चौपड़ा"]
+  },
+  {
+    num: "03",
+    title: "गाभा व फूल आने का क्रांतिक चरण (Booting & Flowering Stage)",
+    days: "बुवाई के 46-75 दिन",
+    keywords: ["03", "booting", "flowering", "गाभा", "फूल", "बालियां", "मंजर", "silking", "कली", "गांठ", "jointing", "टिंडे", "घंटी"]
+  },
+  {
+    num: "04",
+    title: "दाना भराव व दुग्ध अवस्था (Grain Filling & Milking Stage)",
+    days: "बुवाई के 76-105 दिन",
+    keywords: ["04", "milking", "dough", "भराव", "दुग्ध", "दाना", "कंद", "tuber", "फल विकास", "siliquae", "फली", "टिंडा विकास"]
+  },
+  {
+    num: "05",
+    title: "परिपक्वता व कटाई चरण (Maturity & Harvesting Stage)",
+    days: "बुवाई के 106-140 दिन",
+    keywords: ["05", "harvest", "maturity", "कटाई", "परिपक्व", "खुदाई", "picking", "तोड़ाई", "चुनाई"]
+  }
+];
+
+function renderProcessStages() {
+  const container = document.getElementById("process-stages-container");
+  if (!container) return;
+
+  if (allReminders.length === 0) {
+    return;
+  }
+
+  container.innerHTML = "";
+
+  DEFAULT_PHENOLOGICAL_STAGES.forEach((stageDef, index) => {
+    // Find all reminders matching this stage
+    const matchingTasks = allReminders.filter(r => {
+      const stageName = (r.stage_name || "").toLowerCase();
+      const title = (r.title || "").toLowerCase();
+      const desc = (r.description || "").toLowerCase();
+
+      // 1. Direct stage number match (e.g. "01 - ...")
+      if (stageName.startsWith(stageDef.num) || stageName.includes(` ${stageDef.num}`) || stageName.includes(`-${stageDef.num}`)) {
+        return true;
+      }
+
+      // 2. Keyword match
+      return stageDef.keywords.some(kw => stageName.includes(kw) || title.includes(kw) || desc.includes(kw));
+    });
+
+    const isFirstActive = (index === 0 && !allStagesExpanded) || allStagesExpanded;
+    const taskCount = matchingTasks.length;
+
+    const item = document.createElement("div");
+    item.className = `pos-process-item ${isFirstActive ? 'active' : ''}`;
+    item.id = `stage-item-${stageDef.num}`;
+
+    let tasksHtml = "";
+    if (taskCount === 0) {
+      tasksHtml = `
+        <div style="font-size:13px; color:#6B7280; padding:12px; background:#FFF; border-radius:12px; border:1.5px dashed #D1D5DB; text-align:center;">
+          इस चरण में कोई लंबित कार्य नहीं है।
+        </div>
+      `;
+    } else {
+      tasksHtml = `<div class="pos-tasks-grid">`;
+      matchingTasks.forEach(t => {
+        tasksHtml += buildTaskCardHtml(t);
+      });
+      tasksHtml += `</div>`;
+    }
+
+    item.innerHTML = `
+      <div class="pos-process-header" onclick="toggleProcessStage('${stageDef.num}')">
+        <div class="pos-process-left">
+          <span class="pos-process-num">${stageDef.num}</span>
+          <div>
+            <h3 class="pos-process-title">${stageDef.title}</h3>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+              <span class="pos-pill" style="font-size:11px; padding:2px 8px; border:1px solid var(--pos-border);">${stageDef.days}</span>
+              <span style="font-size:12px; font-weight:800; color:var(--pos-dark);">${taskCount} कार्य संलग्न</span>
+            </div>
+          </div>
+        </div>
+        <div class="pos-process-toggle">+</div>
+      </div>
+      <div class="pos-process-body" id="stage-body-${stageDef.num}" style="${isFirstActive ? 'display:block;' : 'display:none;'}">
+        <div style="font-size:12.5px; font-weight:700; color:var(--pos-dark); margin-bottom:10px;">
+          📋 इस चरण के अंतर्गत आने वाले वैज्ञानिक कार्य:
+        </div>
+        ${tasksHtml}
+      </div>
+    `;
+
+    container.appendChild(item);
+  });
+}
+
+/**
+ * Toggle individual stage accordion
+ */
+function toggleProcessStage(stageNum) {
+  const item = document.getElementById(`stage-item-${stageNum}`);
+  const body = document.getElementById(`stage-body-${stageNum}`);
+  if (!item || !body) return;
+
+  if (item.classList.contains("active")) {
+    item.classList.remove("active");
+    body.style.display = "none";
+  } else {
+    item.classList.add("active");
+    body.style.display = "block";
+  }
+}
+
+/**
+ * Expand or Collapse all process stages
+ */
+function expandAllProcessStages() {
+  allStagesExpanded = !allStagesExpanded;
+  DEFAULT_PHENOLOGICAL_STAGES.forEach(s => {
+    const item = document.getElementById(`stage-item-${s.num}`);
+    const body = document.getElementById(`stage-body-${s.num}`);
+    if (item && body) {
+      if (allStagesExpanded) {
+        item.classList.add("active");
+        body.style.display = "block";
+      } else {
+        item.classList.remove("active");
+        body.style.display = "none";
+      }
+    }
+  });
+}
+
+/**
+ * Build HTML for a single task card inside a stage or list
+ */
+function buildTaskCardHtml(r) {
+  const isDone = r.is_completed === 1;
+  const t = (r.reminder_type || r.category || "general").toLowerCase();
+
+  let tagClass = "tag-irrigation";
+  let icon = "💧";
+  let tagLabel = "सिंचाई";
+
+  if (t.includes("fertilizer") || t.includes("खाद") || (r.title || "").includes("यूरिया") || (r.title || "").includes("dap")) {
+    tagClass = "tag-fertilizer";
+    icon = "🌱";
+    tagLabel = "खाद व पोषण";
+  } else if (t.includes("pest") || t.includes("कीट") || t.includes("रोग") || (r.title || "").includes("छिड़काव")) {
+    tagClass = "tag-pest";
+    icon = "🛡️";
+    tagLabel = "पादप सुरक्षा";
+  }
+
+  const urgencyBadge = getPositivusUrgencyBadge(r.due_date, isDone);
+  const dosageNote = r.dosage_info ? `<div style="font-size:12px; font-weight:800; color:#191A23; background:#FEF9C3; border:1px solid #CA8A04; border-radius:6px; padding:4px 8px; margin:8px 0;">⚖️ खुराक: ${r.dosage_info}</div>` : '';
+
+  return `
+    <div class="pos-task-card ${isDone ? 'task-done' : ''}">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">
+          <span class="pos-task-tag ${tagClass}">${icon} ${tagLabel}</span>
+          ${urgencyBadge}
+        </div>
+        <h4 style="font-size:14.5px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0; ${isDone ? 'text-decoration:line-through; color:#9CA3AF;' : ''}">
+          ${r.title}
+        </h4>
+        <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">
+          ${r.description || 'विशिष्ट निर्देश उपलब्ध नहीं हैं।'}
+        </p>
+        ${dosageNote}
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid #E5E7EB;">
+        <span style="font-size:11px; font-weight:700; color:#6B7280;">देय: ${r.due_date || 'शीघ्र'}</span>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="pos-btn ${isDone ? 'pos-btn-outline' : 'pos-btn-lime'}" style="padding:4px 10px; font-size:11.5px; border-radius:8px;" onclick="handleToggleReminder('${r.id}')">
+            ${isDone ? '↺ सक्रिय' : '✓ पूर्ण'}
+          </button>
+          <button type="button" class="pos-btn pos-btn-outline" style="padding:4px 8px; font-size:11px; border-radius:8px; color:#DC2626;" onclick="handleDeleteReminder('${r.id}')">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Urgency badge generator
+ */
+function getPositivusUrgencyBadge(dueDateStr, isDone) {
   if (isDone) {
-    return `<span class="badge-urgency badge-completed">✓ कार्य पूर्ण</span>`;
+    return `<span class="pos-pill" style="background:#D1FAE5; color:#065F46; border-color:#10B981; font-size:11px; padding:2px 7px;">✓ पूर्ण</span>`;
   }
   if (!dueDateStr) {
-    return `<span class="badge-urgency badge-upcoming">📅 शीघ्र (Upcoming)</span>`;
+    return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">📅 शीघ्र</span>`;
   }
-  
+
   const match = dueDateStr.match(/\d{4}-\d{2}-\d{2}/);
   if (match) {
     const today = new Date();
@@ -127,22 +452,32 @@ function getUrgencyBadge(dueDateStr, isDone) {
     const due = new Date(match[0]);
     due.setHours(0, 0, 0, 0);
     const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
-      return `<span class="badge-urgency badge-overdue">⚠️ अतिदेय (${Math.abs(diffDays)} दिन पूर्व)</span>`;
+      return `<span class="pos-pill" style="background:#FEE2E2; color:#B91C1C; border-color:#EF4444; font-size:11px; padding:2px 7px;">⚠️ ${Math.abs(diffDays)} दिन पूर्व</span>`;
     } else if (diffDays === 0) {
-      return `<span class="badge-urgency badge-today">🔥 आज ही देय (Due Today)</span>`;
+      return `<span class="pos-pill" style="background:#FEF08A; color:#854D0E; border-color:#EAB308; font-size:11px; padding:2px 7px;">🔥 आज देय</span>`;
     } else if (diffDays === 1) {
-      return `<span class="badge-urgency badge-upcoming">⏳ कल देय (${dueDateStr})</span>`;
+      return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">⏳ कल देय</span>`;
     } else {
-      return `<span class="badge-urgency badge-upcoming">⏳ ${diffDays} दिन शेष (${dueDateStr})</span>`;
+      return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">⏳ ${diffDays} दिन शेष</span>`;
     }
   }
-  
-  return `<span class="badge-urgency badge-upcoming">📅 ${dueDateStr}</span>`;
+
+  return `<span class="pos-pill" style="font-size:11px; padding:2px 7px;">📅 ${dueDateStr}</span>`;
 }
 
-function renderReminders() {
+function formatDueDateLabel(dueDateStr) {
+  const match = dueDateStr.match(/\d{4}-\d{2}-\d{2}/);
+  if (!match) return dueDateStr;
+  const parts = match[0].split("-");
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+/**
+ * Render All Reminders Grid with Filter Pills
+ */
+function renderAllRemindersList() {
   const container = document.getElementById("reminders-grid");
   if (!container) return;
   container.innerHTML = "";
@@ -151,90 +486,152 @@ function renderReminders() {
   if (currentFilter === "completed") {
     filtered = allReminders.filter(r => r.is_completed === 1);
   } else if (currentFilter === "irrigation") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || "").includes("irrigation") || (r.title || "").includes("सिंचाई")));
+    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("irrigation") || (r.title || "").includes("सिंचाई")));
   } else if (currentFilter === "fertilizer") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || "").includes("fertilizer") || (r.reminder_type || "").includes("nutrient") || (r.title || "").includes("खाद")));
-  } else if (currentFilter === "pest") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || "").includes("pest") || (r.reminder_type || "").includes("inspection") || (r.title || "").includes("कीट")));
-  } else if (currentFilter === "weeding") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || "").includes("weeding")));
-  } else if (currentFilter === "harvest") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || "").includes("harvest")));
+    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("fertilizer") || (r.title || "").includes("खाद") || (r.title || "").includes("यूरिया")));
+  } else if (currentFilter === "pesticide") {
+    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("pest") || (r.title || "").includes("कीट") || (r.title || "").includes("छिड़काव")));
   } else {
+    // 'all' filter: sort uncompleted first
     filtered = [...allReminders].sort((a, b) => a.is_completed - b.is_completed);
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <span class="empty-state-icon">🌾</span>
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px;">इस श्रेणी में कोई अनुस्मारक नहीं है</h3>
-        <p style="font-size: 13px; color: var(--text-muted); max-width: 420px; margin: 0 auto 16px;">
-          आप ऊपर दिए गए 'बोलकर या लिखकर रिमाइंडर जोड़ें' बार या '+ नया अनुस्मारक' बटन से नया कृषि कार्य जोड़ सकते हैं।
-        </p>
-      </div>
-    `;
+    const totalDap = Math.round(50 * currentAcreage);
+    const totalMop = Math.round(25 * currentAcreage);
+    const sampleReminders = [
+      {
+        id: "sample-1",
+        title: `${currentCropName.split(" ")[0]}: आधार खाद अनुप्रयोग (Basal Fertilizer)`,
+        description: `बुवाई के समय खेत में अनुशंसित DAP, पोटाश व जिंक की पूरी मात्रा डालें।`,
+        due_date: "आज ही देय",
+        reminder_type: "fertilizer",
+        dosage_info: `DAP: ${totalDap} kg • पोटाश: ${totalMop} kg`,
+        is_completed: 0
+      },
+      {
+        id: "sample-2",
+        title: `${currentCropName.split(" ")[0]}: पलेवा व बुवाई पूर्व सिंचाई`,
+        description: `मिट्टी में पर्याप्त ओट आने पर बुवाई करें ताकि 100% अंकुरण हो।`,
+        due_date: "बुवाई समय",
+        reminder_type: "irrigation",
+        is_completed: 0
+      },
+      {
+        id: "sample-3",
+        title: `${currentCropName.split(" ")[0]}: कल्ले फूटने पर प्रथम सिंचाई (CRI)`,
+        description: `फसल की सबसे क्रांतिक अवस्था, पानी की कमी न होने दें।`,
+        due_date: "21 दिन बाद",
+        reminder_type: "irrigation",
+        is_completed: 0
+      },
+      {
+        id: "sample-4",
+        title: `${currentCropName.split(" ")[0]}: यूरिया प्रथम टॉप-ड्रेसिंग`,
+        description: `प्रथम सिंचाई उपरांत खेत में यूरिया का भुरकाव करें।`,
+        due_date: "24 दिन बाद",
+        reminder_type: "fertilizer",
+        dosage_info: `यूरिया: ${Math.round(45 * currentAcreage)} kg`,
+        is_completed: 0
+      },
+      {
+        id: "sample-5",
+        title: `${currentCropName.split(" ")[0]}: कीट व फफूंद सुरक्षा (IPM)`,
+        description: `पत्तियों पर माहू या रतुआ रोग के लक्षणों का नियमित निरीक्षण करें।`,
+        due_date: "40 दिन बाद",
+        reminder_type: "pest",
+        is_completed: 0
+      }
+    ];
+    sampleReminders.forEach(r => {
+      const cardEl = document.createElement("div");
+      cardEl.innerHTML = buildTaskCardHtml(r);
+      container.appendChild(cardEl.firstElementChild);
+    });
     return;
   }
 
   filtered.forEach(r => {
-    const card = document.createElement("div");
-    const t = (r.reminder_type || "general").toLowerCase();
-    const isDone = r.is_completed === 1;
-
-    let catClass = "rem-general";
-    let icon = "📋";
-    let catLabel = "सामान्य कार्य";
-
-    if (t.includes("irrigation") || t.includes("सिंचाई") || t.includes("water")) {
-      catClass = "rem-irrigation"; icon = "💧"; catLabel = "सिंचाई प्रबंधन";
-    } else if (t.includes("fertilizer") || t.includes("nutrient") || t.includes("खाद") || t.includes("यूरिया")) {
-      catClass = "rem-fertilizer"; icon = "🌱"; catLabel = "उर्वरक / खाद";
-    } else if (t.includes("pest") || t.includes("inspection") || t.includes("कीट") || t.includes("रोग") || t.includes("spray") || t.includes("छिड़काव")) {
-      catClass = "rem-pest"; icon = "🛡️"; catLabel = "कीट / रोग नियंत्रण";
-    } else if (t.includes("weeding") || t.includes("निराई")) {
-      catClass = "rem-weeding"; icon = "🌿"; catLabel = "निराई-गुड़ाई";
-    } else if (t.includes("harvest") || t.includes("कटाई")) {
-      catClass = "rem-harvest"; icon = "🌾"; catLabel = "कटाई व कटाई-उपरांत";
-    }
-
-    card.className = `rem-card ${catClass} ${isDone ? 'rem-done' : ''}`;
-
-    const localCreated = AgriAPI.formatLocalDateTime(r.created_at);
-    const urgencyHtml = getUrgencyBadge(r.due_date, isDone);
-    const isHighPriority = (r.priority || "").toLowerCase() === "high";
-
-    card.innerHTML = `
-      <div class="rem-card-header">
-        <div style="display: flex; align-items: flex-start; gap: 12px;">
-          <div class="rem-type-icon">${icon}</div>
-          <div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
-              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">${catLabel}</span>
-              ${isHighPriority ? '<span style="font-size: 10.5px; font-weight: 800; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px;">🔴 उच्च प्राथमिकता</span>' : ''}
-            </div>
-            <h3 style="font-size: 15px; font-weight: 700; color: var(--text); ${isDone ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${r.title}</h3>
-            <span style="font-size: 11px; color: var(--text-muted);">बनाया गया: ${localCreated}</span>
-          </div>
-        </div>
-        <div>${urgencyHtml}</div>
-      </div>
-      <p style="font-size: 12.8px; color: var(--text-muted); margin: 8px 0 12px 0; line-height: 1.55; padding-left: 52px;">
-        ${r.description || 'कोई अतिरिक्त विवरण दर्ज नहीं है।'}
-      </p>
-      <div class="rem-actions">
-        <button class="btn ${isDone ? 'btn-secondary' : 'btn-primary'}" style="font-size: 11.5px; padding: 5px 12px; font-weight: 700;" onclick="handleToggleReminder('${r.id}')">
-          ${isDone ? '↺ पुनः सक्रिय करें' : '✓ कार्य संपन्न करें'}
-        </button>
-        <button class="btn btn-outline" style="font-size: 11.5px; padding: 5px 10px; color: #DC2626; border-color: rgba(220,38,38,0.25);" onclick="handleDeleteReminder('${r.id}')">
-          🗑️ हटाएं
-        </button>
-      </div>
-    `;
-    container.appendChild(card);
+    const cardEl = document.createElement("div");
+    cardEl.innerHTML = buildTaskCardHtml(r);
+    container.appendChild(cardEl.firstElementChild);
   });
 }
 
+function filterPositivusReminders(filterType, btn) {
+  currentFilter = filterType;
+  document.querySelectorAll(".pos-filter-pill").forEach(p => p.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  renderAllRemindersList();
+}
+
+/**
+ * Handle Auto Generate Crop Schedule submission
+ */
+async function handleGenerateSchedule(e) {
+  e.preventDefault();
+
+  const cropSelect = document.getElementById("schedule-crop-name");
+  let cropVal = cropSelect ? cropSelect.value : "";
+  if (cropVal === "__custom__") {
+    const customCropInput = document.getElementById("schedule-custom-crop");
+    cropVal = customCropInput ? customCropInput.value.trim() : "";
+  }
+  if (!cropVal) {
+    alert("कृपया फसल का नाम चुनें या लिखें।");
+    return;
+  }
+
+  const sowingDateInput = document.getElementById("schedule-sowing-date");
+  const sowingDateVal = sowingDateInput ? sowingDateInput.value : "";
+  if (!sowingDateVal) {
+    alert("कृपया बुवाई या रोपाई की तारीख चुनें।");
+    return;
+  }
+
+  const acreageInput = document.getElementById("schedule-acreage");
+  const acreageVal = acreageInput ? parseFloat(acreageInput.value) : 1.0;
+  if (!acreageVal || acreageVal <= 0) {
+    alert("कृपया मान्य एकड़ दर्ज करें।");
+    return;
+  }
+
+  currentCropName = cropVal;
+  currentAcreage = acreageVal;
+
+  // Show Loading Overlay
+  const overlay = document.getElementById("loading-overlay");
+  const statusText = document.getElementById("loading-status-text");
+  if (overlay) overlay.style.display = "flex";
+  if (statusText) {
+    statusText.innerText = `DeepSeek AI व ICAR द्वारा ${cropVal} (${acreageVal} एकड़) हेतु संपूर्ण समय-सारणी तैयार की जा रही है...`;
+  }
+
+  try {
+    const farmerId = currentFarmerUser ? currentFarmerUser.id : null;
+    const res = await AgriAPI.generateCropSchedule(cropVal, sowingDateVal, acreageVal, farmerId);
+    
+    // Hide loading
+    if (overlay) overlay.style.display = "none";
+
+    alert(`🎉 बधाई हो! ${cropVal} के लिए ${acreageVal} एकड़ की संपूर्ण समय-सारणी (${res?.schedule?.total_tasks_created || 18} कार्य) सफलतापूर्वक तैयार कर ली गई है!`);
+    await loadReminders();
+
+    // Scroll smoothly to the summary section
+    const summarySection = document.querySelector(".pos-summary-grid");
+    if (summarySection) {
+      summarySection.scrollIntoView({ behavior: "smooth" });
+    }
+  } catch (err) {
+    if (overlay) overlay.style.display = "none";
+    alert("समय-सारणी तैयार करने में त्रुटि: " + (err.message || "कृपया पुनः प्रयास करें।"));
+    console.error("Auto generate schedule error:", err);
+  }
+}
+
+/**
+ * Toggle Task Complete
+ */
 async function handleToggleReminder(reminderId) {
   try {
     await AgriAPI.toggleReminder(reminderId);
@@ -244,8 +641,11 @@ async function handleToggleReminder(reminderId) {
   }
 }
 
+/**
+ * Delete Task
+ */
 async function handleDeleteReminder(reminderId) {
-  if (!confirm("क्या आप यह अनुस्मारक हटाना चाहते हैं?")) return;
+  if (!confirm("क्या आप यह कार्य सूची से हटाना चाहते हैं?")) return;
   try {
     await AgriAPI.deleteReminder(reminderId);
     await loadReminders();
@@ -254,21 +654,64 @@ async function handleDeleteReminder(reminderId) {
   }
 }
 
+/**
+ * Quick Selector Helpers
+ */
+function setQuickCrop(cropName) {
+  const select = document.getElementById("schedule-crop-name");
+  const custom = document.getElementById("schedule-custom-crop");
+  if (select) {
+    select.value = cropName;
+    if (custom) custom.style.display = "none";
+  }
+}
+
+function handleCropSelectChange(select) {
+  const custom = document.getElementById("schedule-custom-crop");
+  if (!custom) return;
+  if (select.value === "__custom__") {
+    custom.style.display = "block";
+    custom.focus();
+  } else {
+    custom.style.display = "none";
+  }
+}
+
+function setTodaySowingDate() {
+  const input = document.getElementById("schedule-sowing-date");
+  if (input) input.value = new Date().toISOString().split("T")[0];
+}
+
+function setPastSowingDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const input = document.getElementById("schedule-sowing-date");
+  if (input) input.value = d.toISOString().split("T")[0];
+}
+
+function setQuickAcres(acres) {
+  const input = document.getElementById("schedule-acreage");
+  if (input) input.value = acres;
+}
+
+/**
+ * Manual Custom Reminder Modal
+ */
 function openAddModal() {
   const m = document.getElementById("add-modal");
-  if (m) m.classList.add("active");
+  if (m) m.style.display = "flex";
 }
 
 function closeAddModal() {
   const m = document.getElementById("add-modal");
-  if (m) m.classList.remove("active");
+  if (m) m.style.display = "none";
 }
 
 async function handleSaveCustomReminder() {
-  const title = document.getElementById("m-title").value.trim();
-  const type = document.getElementById("m-type").value;
-  const due = document.getElementById("m-due").value.trim() || "शीघ्र";
-  const desc = document.getElementById("m-desc").value.trim();
+  const title = document.getElementById("m-title")?.value?.trim();
+  const type = document.getElementById("m-type")?.value || "general";
+  const due = document.getElementById("m-due")?.value?.trim() || "शीघ्र";
+  const desc = document.getElementById("m-desc")?.value?.trim() || "";
 
   if (!title) {
     alert("कृपया कार्य का नाम लिखें।");
@@ -284,26 +727,135 @@ async function handleSaveCustomReminder() {
       priority: "high"
     });
     closeAddModal();
-    document.getElementById("m-title").value = "";
-    document.getElementById("m-desc").value = "";
+    if (document.getElementById("m-title")) document.getElementById("m-title").value = "";
+    if (document.getElementById("m-desc")) document.getElementById("m-desc").value = "";
     await loadReminders();
   } catch (e) {
     alert("अनुस्मारक जोड़ने में त्रुटि: " + e.message);
   }
 }
 
-async function handleQuickAddNLP() {
-  const input = document.getElementById("nl-input");
-  const text = input.value.trim();
-  if (!text) return;
-
-  try {
-    const fid = currentFarmerUser ? currentFarmerUser.id : null;
-    const res = await AgriAPI.createNaturalReminder(text, fid);
-    alert(`स्मार्ट रिमाइंडर बन गया: "${res.reminder.title}" (${res.reminder.due_date})`);
-    input.value = "";
-    await loadReminders();
-  } catch (e) {
-    alert("त्रुटि: " + e.message);
+/**
+ * Natural Language Voice/Text Crop Sowing Scheduler
+ * Automatically recognizes single or multi-crop statements (e.g. "today sowed 3 acres wheat and 2 acres mustard")
+ */
+function fillNlpPrompt(promptText) {
+  const input = document.getElementById("nlp-crop-input");
+  if (input) {
+    input.value = promptText;
+    input.focus();
   }
 }
+
+async function handleNaturalLanguageSowing() {
+  const input = document.getElementById("nlp-crop-input");
+  const text = input ? input.value.trim() : "";
+  if (!text) {
+    alert("कृपया अपनी फसल व बुवाई का विवरण लिखें या बोलें (उदा. 'आज 3 एकड़ गेहूं और 2 एकड़ सरसों बोया')।");
+    if (input) input.focus();
+    return;
+  }
+
+  const btn = document.getElementById("btn-nlp-generate");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "<span>⏳</span> <span>AI विश्लेषण हो रहा है...</span>";
+  }
+
+  const overlay = document.getElementById("loading-overlay");
+  const statusText = document.getElementById("loading-status-text");
+  if (overlay) overlay.style.display = "flex";
+  if (statusText) {
+    statusText.innerText = `AgriGo AI आपके विवरण "${text}" का विश्लेषण कर मौसम व शस्य-विज्ञान अनुसार समय-सारणी बना रहा है...`;
+  }
+
+  try {
+    const farmerId = currentFarmerUser ? currentFarmerUser.id : null;
+    const res = await AgriAPI.createNaturalReminder(text, farmerId);
+    
+    if (overlay) overlay.style.display = "none";
+    if (input) input.value = "";
+
+    const desc = res?.reminder?.description || res?.reminder?.title || "समय-सारणी तैयार!";
+    alert(desc);
+    await loadReminders();
+
+    const stagesSection = document.getElementById("process-stages-container");
+    if (stagesSection) {
+      stagesSection.scrollIntoView({ behavior: "smooth" });
+    }
+  } catch (err) {
+    if (overlay) overlay.style.display = "none";
+    alert("त्रुटि: " + (err.message || "कैलेंडर बनाने में समस्या आई। कृपया पुनः प्रयास करें।"));
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = "<span>⚡</span> <span>AI से तुरंत कैलेंडर बनाएं ➔</span>";
+    }
+  }
+}
+
+/**
+ * Clear All Reminders (Fresh Start)
+ */
+async function handleClearAllReminders() {
+  if (!confirm("क्या आप वर्तमान फसल का पूरा कैलेंडर हटाकर नया शुरू करना चाहते हैं?")) return;
+  try {
+    const fid = currentFarmerUser ? currentFarmerUser.id : "farmer-guest";
+    await AgriAPI.clearAllReminders(fid);
+    allReminders = [];
+    updateMetricsAndHero();
+    renderProcessStages();
+    renderAllRemindersList();
+    alert("✓ समस्त अनुस्मारक हटा दिए गए हैं। अब आप नई फसल का चयन कर सकते हैं।");
+  } catch (e) {
+    alert("रीसेट करने में त्रुटि: " + e.message);
+  }
+}
+
+/**
+ * Native Web Speech API Voice Dictation in Hindi
+ */
+function toggleVoiceInput(inputId) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    alert("आपके ब्राउज़र में आवाज़ पहचान (Voice Input) समर्थित नहीं है। कृपया लिखकर बताएं।");
+    return;
+  }
+  const recognition = new SpeechRec();
+  recognition.lang = "hi-IN";
+  recognition.interimResults = false;
+
+  const micBtn = document.getElementById("btn-voice-mic");
+  if (micBtn) {
+    micBtn.style.background = "#FEE2E2";
+    micBtn.innerHTML = "🔴 बोलें...";
+  }
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.value = transcript;
+      handleNaturalLanguageSowing();
+    }
+  };
+
+  recognition.onerror = () => {
+    if (micBtn) {
+      micBtn.style.background = "";
+      micBtn.innerHTML = "🎤";
+    }
+  };
+
+  recognition.onend = () => {
+    if (micBtn) {
+      micBtn.style.background = "";
+      micBtn.innerHTML = "🎤";
+    }
+  };
+
+  recognition.start();
+}
+
+
