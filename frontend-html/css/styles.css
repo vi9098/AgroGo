@@ -1502,20 +1502,121 @@ body {
   overscroll-behavior-x: contain;
 }
 
-/* Mobile Performance Optimizations */
+/* ===========================
+   RESPONSIVE — GLOBAL MOBILE RULES
+   =========================== */
+
+/* Small screens (≤ 480px) */
+@media (max-width: 480px) {
+  .header-top {
+    padding: 0 12px;
+    height: 52px;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    font-size: 16px;
+    gap: 6px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  /* Hide status pills on mobile — they're not critical */
+  .header-status {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .taskbar {
+    padding: 0 8px;
+    height: 40px;
+    gap: 1px;
+  }
+
+  .task-link {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .page-hero {
+    padding: 20px 16px;
+  }
+
+  .page-hero h1 {
+    font-size: 20px;
+  }
+
+  .page-hero p {
+    font-size: 12.5px;
+  }
+
+  .container {
+    padding: 16px 12px;
+  }
+}
+
+/* Medium screens (481px — 768px) */
 @media (max-width: 768px) {
+  .header-top {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    font-size: 18px;
+  }
+
+  .brand-tagline {
+    font-size: 9px;
+  }
+
+  .header-status {
+    gap: 6px;
+  }
+
+  .status-pill {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .page-hero {
+    padding: 24px 16px;
+  }
+
+  .page-hero h1 {
+    font-size: 22px;
+  }
+
+  .container {
+    padding: 20px 14px;
+  }
+
   .home-hero {
     padding: 36px 16px 32px;
     background: linear-gradient(180deg, #092613 0%, #134222 55%, #0B2B16 100%) !important;
     background-image: none !important;
   }
+
   .home-hero .hero-brand-name {
     font-size: 38px !important;
   }
+
   .table-wrap, .table-container, .mandi-table-wrap {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
   }
+
   .card, .calc-card {
     padding: 16px;
   }
