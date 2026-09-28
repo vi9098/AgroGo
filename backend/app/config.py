@@ -8,10 +8,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     HOST: str = "0.0.0.0"
     DEBUG: bool = True
-    
-    # MongoDB
-    MONGODB_URI: str = "mongodb://localhost:27017/agrigo"
-    MONGODB_DB_NAME: str = "agrigo"
+
     
     # Security & Tokens
     JWT_SECRET: str = "agrigo-super-secure-jwt-secret-key-2026-production-minimum-32bytes"

@@ -17,18 +17,16 @@ logger = logging.getLogger("agrigo.supabase")
 class SupabaseClient:
     def __init__(self):
         self.url = (settings.SUPABASE_URL or os.getenv("SUPABASE_URL", "")).rstrip("/")
-        self.secret_key = (
+        # Determine active Supabase key (prioritizing the verified working publishable key)
+        self.api_key = (
+            settings.SUPABASE_KEY or 
+            os.getenv("SUPABASE_KEY") or 
             settings.SUPABASE_SERVICE_ROLE_KEY or 
             os.getenv("SUPABASE_SERVICE_ROLE_KEY") or 
-            settings.SUPABASE_KEY or 
-            os.getenv("SUPABASE_KEY") or 
             ""
         )
-        self.publishable_key = (
-            settings.SUPABASE_KEY or 
-            os.getenv("SUPABASE_KEY") or 
-            ""
-        )
+        self.secret_key = self.api_key
+        self.publishable_key = self.api_key
         
         # Configure robust connection pooling with retries
         self.session = requests.Session()
@@ -38,28 +36,26 @@ class SupabaseClient:
             status_forcelist=[502, 503, 504],
             raise_on_status=False
         )
-        adapter = HTTPAdapter(pool_connections=10, pool_maxsize=25, max_retries=retries)
+        adapter = HTTPAdapter(pool_connections=15, pool_maxsize=30, max_retries=retries)
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
         
-        # Default headers
+        # Default headers for Supabase PostgREST
         self._headers = {
-            "apikey": self.secret_key,
-            "Authorization": f"Bearer {self.secret_key}",
+            "apikey": self.api_key,
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "Prefer": "return=representation"
         }
         self._is_available: Optional[bool] = None
 
     def is_configured(self) -> bool:
-        if self._is_available is False:
-            return False
-        return bool(self.url and self.secret_key)
+        return bool(self.url and self.api_key)
 
     def is_available(self) -> bool:
-        if self._is_available is False:
-            return False
-        return bool(self.url and self.secret_key)
+        if self._is_available is None:
+            return self.check_health()
+        return self._is_available
 
     def check_health(self) -> bool:
         """Verifies live connectivity to Supabase PostgREST endpoint."""
@@ -67,18 +63,23 @@ class SupabaseClient:
             self._is_available = False
             return False
         try:
-            r = self.session.get(f"{self.url}/rest/v1/", headers=self._headers, timeout=4.0)
-            if r.status_code == 200:
+            # Query a known table with limit=1 to verify PostgREST table read access
+            r = self.session.get(f"{self.url}/rest/v1/crops", headers=self._headers, params={"limit": "1"}, timeout=5.0)
+            if r.status_code in (200, 206):
                 self._is_available = True
+                logger.info(f"[Supabase] Live PostgREST connection verified on {self.url} (HTTP 200)")
                 return True
-            if r.status_code in (401, 403):
-                self._is_available = False
-                logger.info(f"[Supabase] Credentials not registered for {self.url} (HTTP {r.status_code}). Operating in local SQLite mode.")
-                return False
+            # Alternative: verify GoTrue auth health
+            r_auth = self.session.get(f"{self.url}/auth/v1/health", headers=self._headers, timeout=5.0)
+            if r_auth.status_code == 200:
+                self._is_available = True
+                logger.info(f"[Supabase] Live GoTrue connection verified on {self.url} (HTTP 200)")
+                return True
+            logger.warning(f"[Supabase Health] Check returned HTTP {r.status_code}: {r.text[:200]}")
             self._is_available = False
             return False
         except Exception as e:
-            logger.debug(f"[Supabase Health Check] Connection bypassed: {e}")
+            logger.error(f"[Supabase Health Check] Connection error: {e}")
             self._is_available = False
             return False
 

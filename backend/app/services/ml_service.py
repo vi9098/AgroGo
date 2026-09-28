@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import logging
 import warnings
 from pathlib import Path
@@ -12,7 +11,7 @@ pd = None
 # Suppress scikit-learn feature names warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
-from app.database import DB_PATH
+from app.supabase_client import supabase_client
 
 logger = logging.getLogger("agrigo.ml_service")
 
@@ -309,78 +308,80 @@ class AgriMLService:
 
     def get_historical_benchmarks(self, crop: str, state: Optional[str] = None, district: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
-        Queries official 455k record database for district/state crop statistics.
+        Queries official record database for district/state crop statistics directly from Supabase.
         """
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
         try:
-            # Match crop name flexibly (e.g. 'Wheat', 'Rice', 'Cotton')
-            crop_pattern = f"%{crop.strip()}%"
+            crop_name = crop.strip()
 
             # 1. District level if provided
             if district and state:
-                c.execute("""
-                    SELECT state_name, district_name, crop_name, season, avg_yield, max_yield, min_yield, avg_production, record_count
-                    FROM district_crop_benchmarks
-                    WHERE state_name LIKE ? AND district_name LIKE ? AND crop_name LIKE ?
-                    ORDER BY record_count DESC LIMIT 1
-                """, (f"%{state.strip()}%", f"%{district.strip()}%", crop_pattern))
-                row = c.fetchone()
-                if row:
+                rows = supabase_client.select(
+                    "district_crop_benchmarks",
+                    filters={
+                        "state_name": f"ilike.*{state.strip()}*",
+                        "district_name": f"ilike.*{district.strip()}*",
+                        "crop_name": f"ilike.*{crop_name}*"
+                    },
+                    order="record_count.desc",
+                    limit=1
+                )
+                if rows:
+                    r = rows[0]
                     return {
                         "level": "District",
-                        "state": row[0],
-                        "district": row[1],
-                        "crop": row[2],
-                        "season": row[3],
-                        "avg_yield_tonnes_per_ha": row[4],
-                        "max_yield_tonnes_per_ha": row[5],
-                        "min_yield_tonnes_per_ha": row[6],
-                        "avg_annual_production_tonnes": row[7],
-                        "historical_years_recorded": row[8],
+                        "state": r.get("state_name"),
+                        "district": r.get("district_name"),
+                        "crop": r.get("crop_name"),
+                        "season": r.get("season"),
+                        "avg_yield_tonnes_per_ha": float(r.get("avg_yield", 0)),
+                        "max_yield_tonnes_per_ha": float(r.get("max_yield", 0)),
+                        "min_yield_tonnes_per_ha": float(r.get("min_yield", 0)),
+                        "avg_annual_production_tonnes": float(r.get("avg_production", 0)),
+                        "historical_years_recorded": int(r.get("record_count", 1)),
                         "source": "Government of India Directorate of Economics & Statistics"
                     }
 
             # 2. State level
             if state:
-                c.execute("""
-                    SELECT state_name, crop_name, ROUND(AVG(avg_yield), 3), ROUND(MAX(max_yield), 3), ROUND(MIN(min_yield), 3), SUM(avg_production), SUM(record_count)
-                    FROM district_crop_benchmarks
-                    WHERE state_name LIKE ? AND crop_name LIKE ?
-                    GROUP BY state_name, crop_name
-                    ORDER BY SUM(record_count) DESC LIMIT 1
-                """, (f"%{state.strip()}%", crop_pattern))
-                row = c.fetchone()
-                if row:
+                rows = supabase_client.select(
+                    "district_crop_benchmarks",
+                    filters={
+                        "state_name": f"ilike.*{state.strip()}*",
+                        "crop_name": f"ilike.*{crop_name}*"
+                    },
+                    order="record_count.desc",
+                    limit=1
+                )
+                if rows:
+                    r = rows[0]
                     return {
                         "level": "State",
-                        "state": row[0],
-                        "crop": row[1],
-                        "avg_yield_tonnes_per_ha": row[2],
-                        "max_yield_tonnes_per_ha": row[3],
-                        "min_yield_tonnes_per_ha": row[4],
-                        "avg_annual_production_tonnes": round(row[5], 2) if row[5] else None,
-                        "historical_years_recorded": row[6],
+                        "state": r.get("state_name"),
+                        "crop": r.get("crop_name"),
+                        "avg_yield_tonnes_per_ha": float(r.get("avg_yield", 0)),
+                        "max_yield_tonnes_per_ha": float(r.get("max_yield", 0)),
+                        "min_yield_tonnes_per_ha": float(r.get("min_yield", 0)),
+                        "avg_annual_production_tonnes": float(r.get("avg_production", 0)),
+                        "historical_years_recorded": int(r.get("record_count", 1)),
                         "source": "Government of India Directorate of Economics & Statistics"
                     }
 
             # 3. National level
-            c.execute("""
-                SELECT crop_name, ROUND(AVG(avg_yield), 3), ROUND(MAX(max_yield), 3), ROUND(MIN(min_yield), 3), COUNT(*)
-                FROM district_crop_benchmarks
-                WHERE crop_name LIKE ?
-                GROUP BY crop_name
-                ORDER BY COUNT(*) DESC LIMIT 1
-            """, (crop_pattern,))
-            row = c.fetchone()
-            if row:
+            rows = supabase_client.select(
+                "district_crop_benchmarks",
+                filters={"crop_name": f"ilike.*{crop_name}*"},
+                order="record_count.desc",
+                limit=1
+            )
+            if rows:
+                r = rows[0]
                 return {
                     "level": "National Average",
-                    "crop": row[0],
-                    "avg_yield_tonnes_per_ha": row[1],
-                    "max_yield_tonnes_per_ha": row[2],
-                    "min_yield_tonnes_per_ha": row[3],
-                    "historical_records_analyzed": row[4],
+                    "crop": r.get("crop_name"),
+                    "avg_yield_tonnes_per_ha": float(r.get("avg_yield", 0)),
+                    "max_yield_tonnes_per_ha": float(r.get("max_yield", 0)),
+                    "min_yield_tonnes_per_ha": float(r.get("min_yield", 0)),
+                    "historical_records_analyzed": int(r.get("record_count", 1)),
                     "source": "Government of India Directorate of Economics & Statistics"
                 }
 
@@ -388,39 +389,37 @@ class AgriMLService:
         except Exception as e:
             logger.debug(f"Historical benchmarks table unavailable: {e}")
             return None
-        finally:
-            conn.close()
 
     def get_top_district_crops(self, state: str, district: str, limit: int = 6) -> List[Dict[str, Any]]:
         """
-        Returns top cultivated crops in a given district with average productivity.
+        Returns top cultivated crops in a given district with average productivity from Supabase.
         """
         try:
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-            try:
-                c.execute("""
-                    SELECT crop_name, crop_type, season, avg_yield, avg_production, record_count
-                    FROM district_crop_benchmarks
-                    WHERE state_name LIKE ? AND district_name LIKE ?
-                    ORDER BY avg_production DESC LIMIT ?
-                """, (f"%{state.strip()}%", f"%{district.strip()}%", limit))
-                rows = c.fetchall()
+            filters = {
+                "state_name": f"ilike.*{state.strip()}*",
+                "district_name": f"ilike.*{district.strip()}*"
+            }
+            rows = supabase_client.select(
+                "district_crop_benchmarks",
+                filters=filters,
+                order="avg_production.desc",
+                limit=limit
+            )
+            if rows:
                 return [
                     {
-                        "crop": r[0],
-                        "crop_type": r[1],
-                        "season": r[2],
-                        "avg_yield_tonnes_per_ha": r[3],
-                        "avg_production_tonnes": r[4],
-                        "data_records": r[5]
+                        "crop": r.get("crop_name"),
+                        "crop_type": r.get("crop_type"),
+                        "season": r.get("season"),
+                        "avg_yield_tonnes_per_ha": float(r.get("avg_yield", 0)),
+                        "avg_production_tonnes": float(r.get("avg_production", 0)),
+                        "data_records": int(r.get("record_count", 1))
                     }
                     for r in rows
                 ]
-            finally:
-                conn.close()
+            return []
         except Exception as e:
-            logger.warning(f"Could not load top district crops from database: {e}")
+            logger.warning(f"Could not load top district crops from Supabase: {e}")
             return []
 
     def get_supported_states_and_districts(self) -> Dict[str, List[str]]:
@@ -442,29 +441,6 @@ class AgriMLService:
             "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Jagtial", "Karimnagar", "Khammam", "Mahabubnagar", "Mancherial", "Medak", "Nalgonda", "Nizamabad", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Warangal"],
             "Tamil Nadu": ["Ariyalur", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Karur", "Madurai", "Nagapattinam", "Namakkal", "Pudukkottai", "Ramanathapuram", "Salem", "Thanjavur", "Theni", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvannamalai", "Vellore", "Villupuram", "Virudhunagar"]
         }
-
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-            try:
-                c.execute("""
-                    SELECT DISTINCT state_name, district_name 
-                    FROM district_crop_benchmarks 
-                    ORDER BY state_name, district_name
-                """)
-                rows = c.fetchall()
-                if not rows:
-                    return fallback_hierarchy
-                mapping: Dict[str, List[str]] = {}
-                for state, dist in rows:
-                    if state not in mapping:
-                        mapping[state] = []
-                    mapping[state].append(dist)
-                return mapping if mapping else fallback_hierarchy
-            finally:
-                conn.close()
-        except Exception as e:
-            logger.info(f"Using standard India agricultural hierarchy ({e})")
-            return fallback_hierarchy
+        return fallback_hierarchy
 
 ml_service = AgriMLService()

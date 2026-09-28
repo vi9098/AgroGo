@@ -8,7 +8,7 @@ import datetime
 import logging
 from typing import Optional, Dict, Any, Tuple
 
-from app.database import query_one, execute_db, get_db_connection
+from app.database import query_one, execute_db
 
 logger = logging.getLogger("agrigo.session")
 
@@ -166,26 +166,10 @@ class SessionService:
     @classmethod
     def destroy_all_user_sessions(cls, user_id: str) -> int:
         """Destroys all active sessions for a user (e.g. upon password change, suspension, or deletion)."""
-        conn = get_db_connection()
-        try:
-            cur = conn.cursor()
-            cur.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
-            count = cur.rowcount
-            conn.commit()
-            return count
-        finally:
-            conn.close()
+        return execute_db("DELETE FROM sessions WHERE user_id = ?", (user_id,))
 
     @classmethod
     def cleanup_expired(cls) -> int:
         """Periodically purges expired sessions."""
         now_str = cls._now_iso()
-        conn = get_db_connection()
-        try:
-            cur = conn.cursor()
-            cur.execute("DELETE FROM sessions WHERE expires_at < ?", (now_str,))
-            count = cur.rowcount
-            conn.commit()
-            return count
-        finally:
-            conn.close()
+        return execute_db("DELETE FROM sessions WHERE expires_at < ?", (now_str,))
