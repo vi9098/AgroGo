@@ -1,3 +1,4 @@
+import os
 from typing import Optional, List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,7 +30,7 @@ class Settings(BaseSettings):
     
     # Storage
     STORAGE_PROVIDER: str = "local"
-    UPLOAD_DIR: str = "./uploads"
+    UPLOAD_DIR: str = "/tmp/uploads" if (os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")) else "./uploads"
     
     # Providers
     PRIMARY_LLM_PROVIDER: str = "gemini"

@@ -57,8 +57,11 @@ app.add_middleware(
 )
 
 # Static files for uploaded media
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+try:
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+except Exception:
+    pass
 
 # Include Core API Routers
 API_PREFIX = "/api/v1"

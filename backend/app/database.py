@@ -11,8 +11,19 @@ from app.supabase_client import supabase_client
 
 logger = logging.getLogger("agrigo.database")
 
-# Database file path in backend directory
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "agrigo.db"))
+# Database file path in backend directory (or /tmp in serverless environments like Vercel)
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    TMP_DB = os.path.join("/tmp", "agrigo.db")
+    ORIG_DB = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "agrigo.db"))
+    if not os.path.exists(TMP_DB) and os.path.exists(ORIG_DB):
+        import shutil
+        try:
+            shutil.copy2(ORIG_DB, TMP_DB)
+        except Exception:
+            pass
+    DB_PATH = TMP_DB
+else:
+    DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "agrigo.db"))
 
 def get_db_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, timeout=20.0, check_same_thread=False)
