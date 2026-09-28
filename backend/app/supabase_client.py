@@ -14,6 +14,22 @@ from app.config import settings
 
 logger = logging.getLogger("agrigo.supabase")
 
+TABLE_SCHEMAS = {
+    'users': {'id', 'phone', 'name', 'password_hash', 'preferred_language', 'state', 'district', 'village', 'consent_json', 'created_at', 'status', 'role'},
+    'crops': {'id', 'farm_id', 'farmer_id', 'crop_name', 'variety', 'stage', 'health_status', 'sowing_date', 'area_acres', 'created_at'},
+    'farms': {'id', 'farmer_id', 'name', 'total_area_acres', 'soil_type', 'irrigation_type', 'created_at'},
+    'crop_cycles': {'id', 'field_id', 'farmer_id', 'crop_name', 'variety', 'sowing_date', 'expected_harvest_date', 'area_acres', 'irrigation_method', 'soil_type', 'current_stage', 'health_status', 'created_at'},
+    'reminders': {'id', 'farmer_id', 'title', 'description', 'due_date', 'is_completed', 'created_at', 'reminder_type', 'crop_id', 'priority'},
+    'sessions': {'id', 'user_id', 'role', 'ip_address', 'user_agent', 'created_at', 'last_accessed_at', 'expires_at'},
+    'otps': {'id', 'phone', 'code', 'expires_at', 'is_used', 'created_at', 'logid'},
+    'admin_users': {'id', 'email', 'password_hash', 'full_name', 'role', 'is_2fa_enabled', 'totp_secret', 'created_at'},
+    'knowledge_docs': {'id', 'title', 'category', 'crop', 'content', 'source', 'verified', 'created_at'},
+    'knowledge_sources': {'id', 'name', 'url', 'organization', 'country', 'languages_json', 'source_type', 'license_name', 'license_url', 'terms_url', 'allows_automated_collection', 'allows_text_reuse', 'allows_model_training', 'requires_attribution', 'robots_checked', 'verified_at', 'status', 'created_at'},
+    'knowledge_chunks': {'id', 'document_id', 'text', 'crop', 'topic', 'region', 'language', 'source', 'source_url', 'license', 'confidence', 'created_at'},
+    'district_crop_benchmarks': {'state_name', 'district_name', 'crop_name', 'crop_type', 'season', 'avg_yield', 'max_yield', 'min_yield', 'avg_production', 'avg_area', 'record_count'},
+    'audit_logs': {'id', 'actor_id', 'actor_type', 'action', 'resource_type', 'resource_id', 'ip_hash', 'details_json', 'timestamp'}
+}
+
 class SupabaseClient:
     def __init__(self):
         self.url = (settings.SUPABASE_URL or os.getenv("SUPABASE_URL", "")).rstrip("/")
@@ -154,9 +170,31 @@ class SupabaseClient:
         upsert: bool = False,
         timeout: float = 6.0
     ) -> List[Dict[str, Any]]:
-        """Inserts or upserts records into Supabase table."""
+        """Inserts or upserts records into Supabase table with automatic column sanitization."""
         if not self.is_available():
-            return []
+            self.check_health()
+
+        # Sanitize data against known Supabase schema columns
+        if table in TABLE_SCHEMAS:
+            allowed = TABLE_SCHEMAS[table]
+            def _clean(item: Dict[str, Any]) -> Dict[str, Any]:
+                d = dict(item)
+                if table == "reminders" and "description" in d:
+                    extras = []
+                    if "acreage" in d and d["acreage"]:
+                        extras.append(f"क्षेत्रफल: {d['acreage']} एकड़")
+                    if "stage_name" in d and d["stage_name"]:
+                        extras.append(f"चरण: {d['stage_name']}")
+                    if "dosage_info" in d and d["dosage_info"]:
+                        extras.append(f"मात्रा: {d['dosage_info']}")
+                    if extras:
+                        d["description"] = f"{d['description']} ({', '.join(extras)})"
+                return {k: v for k, v in d.items() if k in allowed}
+
+            if isinstance(data, dict):
+                data = _clean(data)
+            elif isinstance(data, list):
+                data = [_clean(item) for item in data]
 
         url = f"{self.url}/rest/v1/{table}"
         headers = dict(self._headers)
@@ -169,10 +207,6 @@ class SupabaseClient:
             r = self.session.post(url, headers=headers, json=data, timeout=timeout)
             if r.status_code in (200, 201):
                 return r.json() if isinstance(r.json(), list) else [data]
-            if r.status_code in (401, 403):
-                self._is_available = False
-                logger.info(f"[Supabase] {table} insert authentication rejected (HTTP {r.status_code}). Marked offline; continuing with SQLite.")
-                return []
             logger.warning(f"[Supabase Insert] {table} returned HTTP {r.status_code}: {r.text[:200]}")
             return []
         except Exception as e:
@@ -188,7 +222,12 @@ class SupabaseClient:
     ) -> List[Dict[str, Any]]:
         """Updates records matching filters in Supabase table."""
         if not self.is_available():
-            return []
+            self.check_health()
+
+        if table in TABLE_SCHEMAS:
+            allowed = TABLE_SCHEMAS[table]
+            data = {k: v for k, v in data.items() if k in allowed}
+            filters = {k: v for k, v in filters.items() if k in allowed}
 
         params: Dict[str, str] = {}
         for col, val in filters.items():
@@ -210,10 +249,6 @@ class SupabaseClient:
                     return r.json() if isinstance(r.json(), list) else []
                 except Exception:
                     return [data]
-            if r.status_code in (401, 403):
-                self._is_available = False
-                logger.info(f"[Supabase] {table} update authentication rejected (HTTP {r.status_code}). Marked offline; continuing with SQLite.")
-                return []
             logger.warning(f"[Supabase Update] {table} returned HTTP {r.status_code}: {r.text[:200]}")
             return []
         except Exception as e:

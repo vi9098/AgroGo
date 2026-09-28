@@ -345,25 +345,25 @@ class ReminderEngine:
         # A. Irrigation Tasks
         for t in schedule_data.get("irrigation_tasks", []):
             rem_id = f"rem-{uuid.uuid4().hex[:8]}"
-            title = t.get("title", f"{crop_clean} सिंचाई")
-            due = t.get("due_date", sowing_date_str)
             stage = t.get("stage", "Irrigation")
+            title = f"{crop_clean}: {t.get('title', 'सिंचाई')} ({stage})"
+            due = t.get("due_date", sowing_date_str)
             desc = t.get("description", f"{crop_clean} की सिंचाई आवश्यकता अनुसार करें।")
             priority = t.get("priority", "high")
 
             execute_db("""
-                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, category, dosage_info, acreage, stage_name, priority, created_at)
-                VALUES (?, ?, ?, ?, ?, 0, 'irrigation', 'irrigation', NULL, ?, ?, ?, ?)
-            """, (rem_id, farmer_id, title, desc, due, acreage, stage, priority, now.isoformat()))
+                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, priority, created_at)
+                VALUES (?, ?, ?, ?, ?, 0, 'irrigation', ?, ?)
+            """, (rem_id, farmer_id, title, desc, due, priority, now.isoformat()))
             created_count += 1
             all_created_reminders.append({"id": rem_id, "category": "irrigation", "title": title, "due_date": due, "stage": stage, "description": desc})
 
         # B. Fertilizer Tasks
         for t in schedule_data.get("fertilizer_tasks", []):
             rem_id = f"rem-{uuid.uuid4().hex[:8]}"
-            title = t.get("title", f"{crop_clean} खाद व उर्वरक")
-            due = t.get("due_date", sowing_date_str)
             stage = t.get("stage", "Fertilizer")
+            title = f"{crop_clean}: {t.get('title', 'खाद व उर्वरक')} ({stage})"
+            due = t.get("due_date", sowing_date_str)
             dosage = t.get("dosage_kg", "")
             desc = t.get("description", "")
             if dosage and "खुराक:" not in desc:
@@ -371,18 +371,18 @@ class ReminderEngine:
             priority = t.get("priority", "high")
 
             execute_db("""
-                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, category, dosage_info, acreage, stage_name, priority, created_at)
-                VALUES (?, ?, ?, ?, ?, 0, 'fertilizer', 'fertilizer', ?, ?, ?, ?, ?)
-            """, (rem_id, farmer_id, title, desc, due, dosage, acreage, stage, priority, now.isoformat()))
+                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, priority, created_at)
+                VALUES (?, ?, ?, ?, ?, 0, 'fertilizer', ?, ?)
+            """, (rem_id, farmer_id, title, desc, due, priority, now.isoformat()))
             created_count += 1
             all_created_reminders.append({"id": rem_id, "category": "fertilizer", "title": title, "due_date": due, "stage": stage, "dosage_kg": dosage, "description": desc})
 
         # C. Pesticide / IPM Tasks
         for t in schedule_data.get("pesticide_tasks", []):
             rem_id = f"rem-{uuid.uuid4().hex[:8]}"
-            title = t.get("title", f"{crop_clean} कीट व रोग नियंत्रण (IPM)")
-            due = t.get("due_date", sowing_date_str)
             stage = t.get("stage", "Plant Protection")
+            title = f"{crop_clean}: {t.get('title', 'सुरक्षा व IPM')} ({stage})"
+            due = t.get("due_date", sowing_date_str)
             dosage = t.get("dosage", "")
             desc = t.get("description", "")
             if dosage and "अनुशंसा:" not in desc:
@@ -390,9 +390,9 @@ class ReminderEngine:
             priority = t.get("priority", "normal")
 
             execute_db("""
-                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, category, dosage_info, acreage, stage_name, priority, created_at)
-                VALUES (?, ?, ?, ?, ?, 0, 'pest', 'pesticide', ?, ?, ?, ?, ?)
-            """, (rem_id, farmer_id, title, desc, due, dosage, acreage, stage, priority, now.isoformat()))
+                INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, priority, created_at)
+                VALUES (?, ?, ?, ?, ?, 0, 'pest', ?, ?)
+            """, (rem_id, farmer_id, title, desc, due, priority, now.isoformat()))
             created_count += 1
             all_created_reminders.append({"id": rem_id, "category": "pesticide", "title": title, "due_date": due, "stage": stage, "dosage": dosage, "description": desc})
 
