@@ -108,8 +108,20 @@ async function checkFarmerAuth() {
 async function loadReminders() {
   if (!currentFarmerUser) return;
   try {
-    const res = await AgriAPI.getFarmerReminders(currentFarmerUser.id).catch(() => null);
-    if (res && res.reminders) {
+    let res = await AgriAPI.getFarmerReminders(currentFarmerUser.id).catch(() => null);
+    if (!res || !res.reminders || res.reminders.length === 0) {
+      // First visit: automatically auto-generate initial ICAR baseline schedule for active crop
+      const today = new Date().toISOString().split("T")[0];
+      const genRes = await AgriAPI.generateCropSchedule(currentCropName, today, currentAcreage, currentFarmerUser.id).catch(() => null);
+      if (genRes && genRes.schedule && genRes.schedule.created_reminders) {
+        allReminders = genRes.schedule.created_reminders;
+      } else {
+        res = await AgriAPI.getFarmerReminders(currentFarmerUser.id).catch(() => null);
+        if (res && res.reminders) {
+          allReminders = res.reminders;
+        }
+      }
+    } else {
       allReminders = res.reminders;
     }
   } catch (e) {
@@ -118,8 +130,21 @@ async function loadReminders() {
     updateMetricsAndHero();
     renderProcessStages();
     renderAllRemindersList();
+    if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+      window.AgriI18n.applyTranslation();
+    }
   }
 }
+
+// Seamless English/Hindi language change listener
+window.addEventListener("agrigo:langchange", () => {
+  updateMetricsAndHero();
+  renderProcessStages();
+  renderAllRemindersList();
+  if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+    window.AgriI18n.applyTranslation();
+  }
+});
 
 /**
  * Updates Top Hero Badge, Counters and Positivus Summary Cards
@@ -136,23 +161,54 @@ function updateMetricsAndHero() {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // Detect crops present in loaded reminders
+  // Comprehensive 30+ Crop Detection
   const detectedCropsInReminders = new Set();
+  const cropMappings = [
+    { name: "गेहूं (Wheat)", keys: ["गेहूं", "wheat"] },
+    { name: "सरसों (Mustard)", keys: ["सरसों", "mustard", "राई"] },
+    { name: "धान (Paddy / Rice)", keys: ["धान", "paddy", "rice", "चावल"] },
+    { name: "चना (Gram / Chickpea)", keys: ["चना", "gram", "chickpea"] },
+    { name: "मक्का (Maize)", keys: ["मक्का", "maize", "corn"] },
+    { name: "कपास (Cotton)", keys: ["कपास", "cotton"] },
+    { name: "आलू (Potato)", keys: ["आलू", "potato"] },
+    { name: "टमाटर (Tomato)", keys: ["टमाटर", "tomato"] },
+    { name: "प्याज (Onion)", keys: ["प्याज", "onion"] },
+    { name: "लहसुन (Garlic)", keys: ["लहसुन", "garlic"] },
+    { name: "मिर्च (Chilli)", keys: ["मिर्च", "chilli", "chili"] },
+    { name: "बैंगन (Brinjal)", keys: ["बैंगन", "brinjal", "eggplant"] },
+    { name: "फूलगोभी (Cauliflower)", keys: ["फूलगोभी", "cauliflower"] },
+    { name: "पत्तागोभी (Cabbage)", keys: ["पत्तागोभी", "cabbage"] },
+    { name: "भिंडी (Okra)", keys: ["भिंडी", "okra", "bhindi"] },
+    { name: "सोयाबीन (Soybean)", keys: ["सोयाबीन", "soybean"] },
+    { name: "गन्ना (Sugarcane)", keys: ["गन्ना", "sugarcane"] },
+    { name: "बाजरा (Pearl Millet)", keys: ["बाजरा", "bajra", "pearl millet"] },
+    { name: "ज्वार (Sorghum)", keys: ["ज्वार", "jowar", "sorghum"] },
+    { name: "जौ (Barley)", keys: ["जौ", "jau", "barley"] },
+    { name: "अरहर (Pigeon Pea / Arhar)", keys: ["अरहर", "arhar", "tur", "तुअर"] },
+    { name: "मूंग (Green Gram)", keys: ["मूंग", "moong", "green gram"] },
+    { name: "उड़द (Black Gram)", keys: ["उड़द", "urad", "black gram"] },
+    { name: "मटर (Green Pea)", keys: ["मटर", "pea", "matar"] },
+    { name: "मसूर (Lentil)", keys: ["मसूर", "masoor", "lentil"] },
+    { name: "मूंगफली (Groundnut)", keys: ["मूंगफली", "groundnut", "peanut"] },
+    { name: "सूरजमुखी (Sunflower)", keys: ["सूरजमुखी", "sunflower"] },
+    { name: "अदरक (Ginger)", keys: ["अदरक", "ginger"] },
+    { name: "हल्दी (Turmeric)", keys: ["हल्दी", "turmeric"] },
+    { name: "जीरा (Cumin / Jeera)", keys: ["जीरा", "jeera", "cumin"] },
+    { name: "धनिया (Coriander)", keys: ["धनिया", "dhaniya", "coriander"] },
+    { name: "तरबूज (Watermelon)", keys: ["तरबूज", "watermelon"] }
+  ];
+
   allReminders.forEach(r => {
     const isCompleted = r.is_completed === 1;
     const t = (r.reminder_type || r.category || "").toLowerCase();
     const title = (r.title || "").toLowerCase();
 
-    if (title.includes("गेहूं") || title.includes("wheat")) detectedCropsInReminders.add("गेहूं (Wheat)");
-    else if (title.includes("सरसों") || title.includes("mustard")) detectedCropsInReminders.add("सरसों (Mustard)");
-    else if (title.includes("धान") || title.includes("paddy") || title.includes("rice")) detectedCropsInReminders.add("धान (Rice)");
-    else if (title.includes("चना") || title.includes("gram") || title.includes("chickpea")) detectedCropsInReminders.add("चना (Gram)");
-    else if (title.includes("कपास") || title.includes("cotton")) detectedCropsInReminders.add("कपास (Cotton)");
-    else if (title.includes("टमाटर") || title.includes("tomato")) detectedCropsInReminders.add("टमाटर (Tomato)");
-    else if (title.includes("आलू") || title.includes("potato")) detectedCropsInReminders.add("आलू (Potato)");
-    else if (title.includes("मक्का") || title.includes("maize")) detectedCropsInReminders.add("मक्का (Maize)");
-    else if (title.includes("सोयाबीन") || title.includes("soybean")) detectedCropsInReminders.add("सोयाबीन (Soybean)");
-    else if (title.includes("गन्ना") || title.includes("sugarcane")) detectedCropsInReminders.add("गन्ना (Sugarcane)");
+    for (const cm of cropMappings) {
+      if (cm.keys.some(k => title.includes(k))) {
+        detectedCropsInReminders.add(cm.name);
+        break;
+      }
+    }
 
     if (isCompleted) {
       doneCount++;
@@ -211,30 +267,51 @@ function updateMetricsAndHero() {
     }
   }
 
-  // Dynamic Crop-Specific Fertilizer Calculations
+  // Dynamic Crop-Specific Fertilizer Calculations for all 30+ Crops
   const statFertBreakdown = document.getElementById("stat-fert-breakdown");
   if (statFertBreakdown) {
-    if (currentCropName.includes("सरसों") || currentCropName.includes("Mustard")) {
+    const cName = currentCropName.toLowerCase();
+    if (cName.includes("सरसों") || cName.includes("mustard")) {
       totalDap = Math.round(30 * currentAcreage);
       totalUrea = Math.round(35 * currentAcreage);
       totalMop = Math.round(15 * currentAcreage);
-      const totalSsp = Math.round(100 * currentAcreage);
       const totalSulf = Math.round(10 * currentAcreage);
-      statFertBreakdown.innerHTML = `<strong>सरसों (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • सल्फर/SSP: ${totalSulf} kg (ICAR मानक: तेल व दाना चमक हेतु)।`;
-    } else if (currentCropName.includes("चना") || currentCropName.includes("Gram")) {
+      statFertBreakdown.innerHTML = `<strong>सरसों (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • सल्फर/SSP: ${totalSulf} kg (ICAR: तेल प्रतिशत व दाना चमक हेतु)।`;
+    } else if (cName.includes("चना") || cName.includes("मूंग") || cName.includes("उड़द") || cName.includes("मटर") || cName.includes("मसूर") || cName.includes("अरहर") || cName.includes("gram") || cName.includes("pulse")) {
       totalDap = Math.round(40 * currentAcreage);
       totalMop = Math.round(15 * currentAcreage);
-      statFertBreakdown.innerHTML = `<strong>चना (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • पोटाश: ${totalMop} kg • सल्फर: ${Math.round(8 * currentAcreage)} kg (दलहन में यूरिया टॉप-ड्रेसिंग न दें, 19:19:19 स्प्रे करें)।`;
-    } else if (currentCropName.includes("धान") || currentCropName.includes("Rice")) {
+      const totalSulf = Math.round(8 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>दलहनी फसल (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • पोटाश: ${totalMop} kg • सल्फर: ${totalSulf} kg (दलहन में यूरिया टॉप-ड्रेसिंग न दें, 19:19:19 स्प्रे करें)।`;
+    } else if (cName.includes("धान") || cName.includes("rice") || cName.includes("paddy")) {
       totalDap = Math.round(40 * currentAcreage);
       totalUrea = Math.round(65 * currentAcreage);
       totalMop = Math.round(25 * currentAcreage);
       statFertBreakdown.innerHTML = `<strong>धान (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg (2 खुराकों में) • पोटाश: ${totalMop} kg • जिंक: ${Math.round(10 * currentAcreage)} kg।`;
-    } else if (currentCropName.includes("कपास") || currentCropName.includes("Cotton")) {
+    } else if (cName.includes("कपास") || cName.includes("cotton")) {
       totalDap = Math.round(50 * currentAcreage);
       totalUrea = Math.round(70 * currentAcreage);
       totalMop = Math.round(30 * currentAcreage);
-      statFertBreakdown.innerHTML = `<strong>कपास (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • जिंक: ${Math.round(10 * currentAcreage)} kg।`;
+      statFertBreakdown.innerHTML = `<strong>कपास (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • मैग्नीशियम सल्फेट: ${Math.round(10 * currentAcreage)} kg।`;
+    } else if (cName.includes("आलू") || cName.includes("potato")) {
+      totalDap = Math.round(60 * currentAcreage);
+      totalUrea = Math.round(75 * currentAcreage);
+      totalMop = Math.round(40 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>आलू (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg (कंद का आकार व छिलका सुदृढ़ करने हेतु)।`;
+    } else if (cName.includes("टमाटर") || cName.includes("मिर्च") || cName.includes("बैंगन") || cName.includes("tomato") || cName.includes("chilli")) {
+      totalDap = Math.round(50 * currentAcreage);
+      totalUrea = Math.round(60 * currentAcreage);
+      totalMop = Math.round(30 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>सब्जी फसल (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg + बोरॉन स्प्रे (फल फटने से बचाव)।`;
+    } else if (cName.includes("प्याज") || cName.includes("लहसुन") || cName.includes("onion") || cName.includes("garlic")) {
+      totalDap = Math.round(45 * currentAcreage);
+      totalUrea = Math.round(50 * currentAcreage);
+      totalMop = Math.round(25 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>कंद फसल (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg • पोटाश: ${totalMop} kg • सल्फर: ${Math.round(12 * currentAcreage)} kg (तीखापन व भंडारण हेतु)।`;
+    } else if (cName.includes("गन्ना") || cName.includes("sugarcane")) {
+      totalDap = Math.round(60 * currentAcreage);
+      totalUrea = Math.round(110 * currentAcreage);
+      totalMop = Math.round(40 * currentAcreage);
+      statFertBreakdown.innerHTML = `<strong>गन्ना (${currentAcreage} एकड़):</strong> DAP: ${totalDap} kg • यूरिया: ${totalUrea} kg (3 खुराकों में) • पोटाश: ${totalMop} kg।`;
     } else {
       totalDap = Math.round(55 * currentAcreage);
       totalUrea = Math.round(90 * currentAcreage);
@@ -428,7 +505,7 @@ function buildTaskCardHtml(r) {
   }
 
   const urgencyBadge = getPositivusUrgencyBadge(r.due_date, isDone);
-  const dosageNote = r.dosage_info ? `<div style="font-size:12px; font-weight:800; color:#191A23; background:#FEF9C3; border:1px solid #CA8A04; border-radius:6px; padding:4px 8px; margin:8px 0;">⚖️ खुराक: ${r.dosage_info}</div>` : '';
+  const dosageNote = r.dosage_info ? `<div style="font-size:12.5px; font-weight:800; color:#78350F; background:#FEF3C7; border:1.5px solid #D97706; border-radius:8px; padding:6px 10px; margin:8px 0;">⚖️ खुराक: ${r.dosage_info}</div>` : '';
 
   return `
     <div class="pos-task-card ${isDone ? 'task-done' : ''}">
@@ -437,21 +514,21 @@ function buildTaskCardHtml(r) {
           <span class="pos-task-tag ${tagClass}">${icon} ${tagLabel}</span>
           ${urgencyBadge}
         </div>
-        <h4 style="font-size:14.5px; font-weight:800; color:var(--pos-dark); margin:4px 0 6px 0; ${isDone ? 'text-decoration:line-through; color:#9CA3AF;' : ''}">
+        <h4 style="font-size:15px; font-weight:800; color:#0F172A; margin:4px 0 6px 0; ${isDone ? 'text-decoration:line-through; color:#6B7280;' : ''}">
           ${r.title}
         </h4>
-        <p style="font-size:12.5px; color:#4B5563; line-height:1.45; margin:0;">
+        <p style="font-size:13.5px; color:#1F2937; line-height:1.55; margin:0; font-weight:500;">
           ${r.description || 'विशिष्ट निर्देश उपलब्ध नहीं हैं।'}
         </p>
         ${dosageNote}
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid #E5E7EB;">
-        <span style="font-size:11px; font-weight:700; color:#6B7280;">देय: ${r.due_date || 'शीघ्र'}</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1.5px solid #E2E8F0;">
+        <span style="font-size:12px; font-weight:800; color:#0F172A;">देय: ${r.due_date || 'शीघ्र'}</span>
         <div style="display:flex; gap:6px;">
-          <button type="button" class="pos-btn ${isDone ? 'pos-btn-outline' : 'pos-btn-lime'}" style="padding:4px 10px; font-size:11.5px; border-radius:8px;" onclick="handleToggleReminder('${r.id}')">
+          <button type="button" class="pos-btn ${isDone ? 'pos-btn-outline' : 'pos-btn-lime'}" style="padding:5px 12px; font-size:12px; border-radius:8px; font-weight:800;" onclick="handleToggleReminder('${r.id}')" aria-label="${isDone ? 'कार्य पुनः सक्रिय करें' : 'कार्य पूर्ण चिह्नित करें'}">
             ${isDone ? '↺ सक्रिय' : '✓ पूर्ण'}
           </button>
-          <button type="button" class="pos-btn pos-btn-outline" style="padding:4px 8px; font-size:11px; border-radius:8px; color:#DC2626;" onclick="handleDeleteReminder('${r.id}')">
+          <button type="button" class="pos-btn pos-btn-outline" style="padding:5px 10px; font-size:12px; border-radius:8px; color:#DC2626; border-color:#DC2626;" onclick="handleDeleteReminder('${r.id}')" aria-label="कार्य हटाएं" title="हटाएं (Delete)">
             🗑️
           </button>
         </div>
@@ -465,10 +542,10 @@ function buildTaskCardHtml(r) {
  */
 function getPositivusUrgencyBadge(dueDateStr, isDone) {
   if (isDone) {
-    return `<span class="pos-pill" style="background:#D1FAE5; color:#065F46; border-color:#10B981; font-size:11px; padding:2px 7px;">✓ पूर्ण</span>`;
+    return `<span class="pos-pill" style="background:#DCFCE7; color:#14532D; border:1.5px solid #16A34A; font-size:11.5px; font-weight:800; padding:3px 8px;">✓ पूर्ण</span>`;
   }
   if (!dueDateStr) {
-    return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">📅 शीघ्र</span>`;
+    return `<span class="pos-pill" style="background:#E0F2FE; color:#034E7B; border:1.5px solid #0284C7; font-size:11.5px; font-weight:800; padding:3px 8px;">📅 शीघ्र</span>`;
   }
 
   const match = dueDateStr.match(/\d{4}-\d{2}-\d{2}/);
@@ -480,17 +557,17 @@ function getPositivusUrgencyBadge(dueDateStr, isDone) {
     const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      return `<span class="pos-pill" style="background:#FEE2E2; color:#B91C1C; border-color:#EF4444; font-size:11px; padding:2px 7px;">⚠️ ${Math.abs(diffDays)} दिन पूर्व</span>`;
+      return `<span class="pos-pill" style="background:#FEE2E2; color:#991B1B; border:1.5px solid #DC2626; font-size:11.5px; font-weight:800; padding:3px 8px;">⚠️ ${Math.abs(diffDays)} दिन पूर्व</span>`;
     } else if (diffDays === 0) {
-      return `<span class="pos-pill" style="background:#FEF08A; color:#854D0E; border-color:#EAB308; font-size:11px; padding:2px 7px;">🔥 आज देय</span>`;
+      return `<span class="pos-pill" style="background:#FEF08A; color:#713F12; border:1.5px solid #CA8A04; font-size:11.5px; font-weight:800; padding:3px 8px;">🔥 आज देय</span>`;
     } else if (diffDays === 1) {
-      return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">⏳ कल देय</span>`;
+      return `<span class="pos-pill" style="background:#E0F2FE; color:#034E7B; border:1.5px solid #0284C7; font-size:11.5px; font-weight:800; padding:3px 8px;">⏳ कल देय</span>`;
     } else {
-      return `<span class="pos-pill" style="background:#E0F2FE; color:#0369A1; font-size:11px; padding:2px 7px;">⏳ ${diffDays} दिन शेष</span>`;
+      return `<span class="pos-pill" style="background:#E0F2FE; color:#034E7B; border:1.5px solid #0284C7; font-size:11.5px; font-weight:800; padding:3px 8px;">⏳ ${diffDays} दिन शेष</span>`;
     }
   }
 
-  return `<span class="pos-pill" style="font-size:11px; padding:2px 7px;">📅 ${dueDateStr}</span>`;
+  return `<span class="pos-pill" style="background:#F3F4F6; color:#0F172A; border:1.5px solid #0F172A; font-size:11.5px; font-weight:800; padding:3px 8px;">📅 ${dueDateStr}</span>`;
 }
 
 function formatDueDateLabel(dueDateStr) {

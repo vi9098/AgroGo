@@ -33,6 +33,11 @@
       -webkit-text-size-adjust: 100%;
     }
 
+    *:focus-visible {
+      outline: 3px solid #16A34A !important;
+      outline-offset: 2px !important;
+    }
+
     /* Ambient Elliptical Background Shapes — clipped to viewport */
     .bg-ellipse-1 {
       position: fixed;
@@ -667,7 +672,12 @@
 
   <!-- Universal Footer -->
   <footer style="text-align: center; padding: 14px 16px; color: #166534; font-size: 12px; background: #DCFCE7; border-top: 1px solid rgba(34, 197, 94, 0.2); width: 100%; flex-shrink: 0;">
-    AgriGo AI • जय जवान, जय किसान • 2026
+    <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:6px; font-weight:700;">
+      <a href="privacy.html" style="color:#15803D; text-decoration:none;">गोपनीयता नीति (Privacy Policy)</a> •
+      <a href="terms.html" style="color:#15803D; text-decoration:none;">नियम व शर्तें (Terms)</a> •
+      <a href="cookies.html" style="color:#15803D; text-decoration:none;">कुकी नीति (Cookies)</a>
+    </div>
+    <div>AgriGo AI • केवल आवश्यक डेटा संग्रह • जय जवान, जय किसान • 2026</div>
   </footer>
 
   <script src="js/api.js"></script>

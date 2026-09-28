@@ -173,10 +173,16 @@
       }
     }
 
+    *:focus-visible {
+      outline: 3px solid #15803D !important;
+      outline-offset: 2px !important;
+    }
+
     .pos-hero-desc {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #4B5563;
+      font-size: 15.5px;
+      line-height: 1.65;
+      color: #111827;
+      font-weight: 500;
       margin-bottom: 24px;
     }
 
@@ -460,17 +466,16 @@
     }
 
     .pos-task-tag {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 800;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 6px;
       display: inline-block;
-      border: 1px solid var(--pos-border);
     }
 
-    .tag-irrigation { background: #E0F2FE; color: #0284C7; }
-    .tag-fertilizer { background: #FEF3C7; color: #B45309; }
-    .tag-pest { background: #FEE2E2; color: #DC2626; }
+    .tag-irrigation { background: #E0F2FE; color: #034E7B; border: 1.5px solid #0284C7; }
+    .tag-fertilizer { background: #FEF3C7; color: #78350F; border: 1.5px solid #D97706; }
+    .tag-pest { background: #FEE2E2; color: #991B1B; border: 1.5px solid #DC2626; }
 
     /* Filter Bar */
     .pos-filter-bar {
@@ -488,14 +493,20 @@
       padding: 8px 18px;
       font-size: 13.5px;
       font-weight: 800;
-      color: var(--pos-dark);
+      color: #0F172A;
       cursor: pointer;
       box-shadow: 0px 3px 0px var(--pos-border);
       transition: all 0.15s ease;
     }
 
+    .pos-filter-pill:hover {
+      background: #F8FAFC;
+      border-color: #000000;
+    }
+
     .pos-filter-pill.active {
       background: var(--pos-lime);
+      color: #000000;
       box-shadow: 0px 4px 0px var(--pos-dark);
       transform: translateY(-2px);
     }
@@ -580,21 +591,21 @@
           <h3 style="font-size:22px; font-weight:900; margin:0 0 10px 0; color:#FFFFFF;">
             🌾 वैज्ञानिक शस्य-विज्ञान (ICAR Package)
           </h3>
-          <p style="font-size:13px; color:#D1D5DB; line-height:1.55; margin-bottom:18px;">
+          <p style="font-size:13.5px; color:#FFFFFF; line-height:1.6; margin-bottom:18px;">
             प्रत्येक फसल की क्रांतिक जल व पोषण अवस्थाओं पर स्वचालित सूचनाएं। बारिश होने पर सिंचाई अनुस्मारक स्वतः पुनर्निर्धारित।
           </p>
-          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; border-top:1px solid rgba(255,255,255,0.15); padding-top:14px; text-align:center;">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; border-top:1.5px solid rgba(255,255,255,0.25); padding-top:14px; text-align:center;">
             <div>
-              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-irr">0</div>
-              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">💧 सिंचाई चक्र</div>
+              <div style="font-size:22px; font-weight:900; color:var(--pos-lime);" id="hero-stat-irr">0</div>
+              <div style="font-size:12px; color:#F3F4F6; font-weight:800;">💧 सिंचाई चक्र</div>
             </div>
             <div>
-              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-fert">0</div>
-              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">🌱 खाद खुराक</div>
+              <div style="font-size:22px; font-weight:900; color:var(--pos-lime);" id="hero-stat-fert">0</div>
+              <div style="font-size:12px; color:#F3F4F6; font-weight:800;">🌱 खाद खुराक</div>
             </div>
             <div>
-              <div style="font-size:20px; font-weight:900; color:var(--pos-lime);" id="hero-stat-pest">0</div>
-              <div style="font-size:11px; color:#9CA3AF; font-weight:700;">🛡️ सुरक्षा स्प्रे</div>
+              <div style="font-size:22px; font-weight:900; color:var(--pos-lime);" id="hero-stat-pest">0</div>
+              <div style="font-size:12px; color:#F3F4F6; font-weight:800;">🛡️ सुरक्षा स्प्रे</div>
             </div>
           </div>
         </div>
@@ -1157,13 +1168,18 @@
   </div>
 
   <!-- Positivus Footer Strip -->
-  <footer style="background:var(--pos-dark); color:#FFFFFF; padding:32px 20px; margin-top:80px; border-top:3px solid var(--pos-lime); text-align:center;">
+  <footer style="background:var(--pos-dark); color:#FFFFFF; padding:28px 20px; margin-top:80px; border-top:3px solid var(--pos-lime); text-align:center;">
     <div class="pos-container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
       <div style="display:flex; align-items:center; gap:8px;">
         <span class="pos-pill" style="font-size:11px;">🌾 AgriGo AI</span>
         <span style="font-size:13px; font-weight:700;">Positivus Crop Scheduling Engine</span>
       </div>
-      <div style="font-size:12.5px; color:#9CA3AF;">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; font-weight:700;">
+        <a href="privacy.html" style="color:var(--pos-lime); text-decoration:none;">गोपनीयता नीति (Privacy Policy)</a> •
+        <a href="terms.html" style="color:var(--pos-lime); text-decoration:none;">नियम व शर्तें (Terms)</a> •
+        <a href="cookies.html" style="color:var(--pos-lime); text-decoration:none;">कुकी नीति (Cookie Policy)</a>
+      </div>
+      <div style="font-size:12.5px; color:#E5E7EB; font-weight:600;">
         भारतीय कृषि अनुसंधान परिषद (ICAR) एवं DeepSeek AI समर्थित • 2026
       </div>
     </div>

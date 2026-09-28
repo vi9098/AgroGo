@@ -7,6 +7,7 @@ Fully resilient: DeepSeek / Gemini AI with instant ICAR scientific agronomy & li
 import uuid
 import datetime
 import re
+import os
 import asyncio
 import logging
 from typing import List, Dict, Any, Optional

@@ -292,9 +292,10 @@ def execute_local_db(query: str, params: tuple = ()) -> int:
 
 def query_db(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
     # 1. Attempt live query directly from Supabase PostgreSQL
+    supa_results = None
     try:
         supa_results = parse_and_query_supabase(query, params)
-        if supa_results is not None:
+        if supa_results is not None and len(supa_results) > 0:
             return supa_results
     except Exception as e:
         logger.debug(f"[Supabase Query Fallback] {e}")
@@ -305,9 +306,13 @@ def query_db(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        local_results = [dict(row) for row in rows]
+        if local_results:
+            return local_results
     finally:
         conn.close()
+
+    return supa_results if supa_results is not None else []
 
 def query_one(query: str, params: tuple = ()) -> Optional[Dict[str, Any]]:
     rows = query_db(query, params)

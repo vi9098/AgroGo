@@ -5,8 +5,9 @@
  * - Weather Hub metrics & agro-advisories
  * - Mandi Live Rates & Income Calculator
  * - Farmer AI Chat, voice prompts, and sidebar
- * - Reminders & Task manager
- * - Login & Registration forms
+ * - Reminders & Task manager (Full 30+ Crops & Phenological Stages)
+ * - Login, Registration, and Password Reset forms
+ * - Privacy Policy, Terms & Conditions, and Cookie Consent
  * 
  * Persists user preference across all pages via localStorage and cookies.
  */
@@ -41,6 +42,18 @@
     "अपडेटेड": "Updated",
     "अंतिम सिंक: आज का सत्यापित Agmarknet रिकॉर्ड": "Last sync: Today's verified Agmarknet record",
 
+    // ── Cookie Notice & Legal ──
+    "डेटा सुरक्षा व आवश्यक कुकीज": "Data Privacy & Essential Cookies",
+    "गोपनीयता नीति (Privacy Policy)": "Privacy Policy",
+    "गोपनीयता नीति": "Privacy Policy",
+    "नियम और शर्तें (Terms & Conditions)": "Terms & Conditions",
+    "नियम व शर्तें": "Terms & Conditions",
+    "कुकी नीति (Cookie Policy)": "Cookie Policy",
+    "कुकी नीति": "Cookie Policy",
+    "स्वीकार करें": "Accept",
+    "स्वीकार करें (Accept)": "Accept",
+    "अस्वीकार करें": "Decline",
+
     // ── Notifications ──
     "कृषि कार्य सूचनाएं": "Agri Task Notifications",
     "0 कार्य लंबित": "0 tasks pending",
@@ -72,6 +85,150 @@
     "देश भर की प्रमुख मंडियों के लाइव भाव, MSP तुलना व अपनी फसल का शुद्ध मुनाफा जांचें।": "Live mandi rates across India, MSP comparison & calculate your net profit.",
     "⏰ स्मार्ट कृषि अनुस्मारक": "⏰ Smart Agri Reminders",
     "बुवाई, खाद, सिंचाई और कटाई के समय पर स्वचालित WhatsApp व ब्राउज़र अलर्ट्स पाएं।": "Automated reminders for sowing, fertilizer, irrigation & harvest.",
+
+    // ── Reminders Dashboard & Scheduler (Positivus Engine) ──
+    "स्वचालित फसल अनुस्मारक": "Automated Crop Reminders",
+    "& संपूर्ण प्रबंधन": "& Complete Management",
+    "स्वचालित फसल अनुस्मारक\n& संपूर्ण प्रबंधन": "Automated Crop Reminders\n& Complete Management",
+    "समय-सारणी बनाएं ➔": "Generate Schedule ➔",
+    "+ व्यक्तिगत रिमाइंडर": "+ Custom Reminder",
+    "⚡ रीयल-टाइम AI शेड्यूलर": "⚡ Real-time AI Scheduler",
+    "🌾 वैज्ञानिक शस्य-विज्ञान (ICAR Package)": "🌾 Scientific Agronomy (ICAR Package)",
+    "प्रत्येक फसल की क्रांतिक जल व पोषण अवस्थाओं पर स्वचालित सूचनाएं। बारिश होने पर सिंचाई अनुस्मारक स्वतः पुनर्निर्धारित।": "Automated alerts for critical crop water and nutrition stages. Irrigations reschedule automatically when rain is forecast.",
+    "💧 सिंचाई चक्र": "💧 Irrigation Cycles",
+    "🌱 खाद खुराक": "🌱 Fertilizer Doses",
+    "🛡️ सुरक्षा स्प्रे": "🛡️ Plant Protection",
+    "शुरुआती किसान मार्गदर्शन (Beginner Farmer Friendly):": "Beginner Farmer Friendly Guide:",
+    "बोलकर या लिखकर बताएं (AI Natural Language Scheduler):": "Speak or Type Sowing Details (AI Natural Language Scheduler):",
+    "बहु-फसल (Multi-Crop) समर्थित": "Multi-Crop Supported",
+    "🎤 बोलें": "🎤 Speak",
+    "बोलें": "Speak",
+    "⚡ AI से तुरंत कैलेंडर बनाएं ➔": "⚡ Generate AI Calendar ➔",
+    "त्वरित उदाहरण:": "Quick Examples:",
+    "अथवा नीचे विवरण चुनकर बनाएं": "Or Choose Details Below",
+    "01 मिनट में तैयार": "Ready in 1 Minute",
+    "🌾 अपनी फसल व एकड़ का चयन करें": "🌾 Select Crop & Acreage",
+    "एकड़ के हिसाब से खाद की मात्रा और तारीखें स्वतः परिकलित होंगी।": "Fertilizer quantities and task dates are calculated accurately by acreage.",
+    "इंजन:": "Engine:",
+    "🌾 फसल का नाम (Crop Name)": "🌾 Crop Name",
+    "📅 बुवाई / रोपाई की तारीख (Sowing Date)": "📅 Sowing / Planting Date",
+    "🚜 खेत का रकबा / क्षेत्रफल (Acres)": "🚜 Farm Land Area (Acres)",
+    "एकड़ (Acres)": "Acres",
+    "📍 आज (Today)": "📍 Today",
+    "⏮️ 7 दिन पूर्व": "⏮️ 7 Days Ago",
+    "⏮️ 15 दिन पूर्व": "⏮️ 15 Days Ago",
+    "1 एकड़": "1 Acre",
+    "2 एकड़": "2 Acres",
+    "3 एकड़": "3 Acres",
+    "5 एकड़": "5 Acres",
+    "⚡ संपूर्ण फसल कैलेंडर व अनुस्मारक तैयार करें ➔": "⚡ Generate Full Crop Calendar & Reminders ➔",
+    "📋 फसल जीवन-चक्र चरण (Crop Lifecycle & Process)": "📋 Crop Lifecycle & Phenological Process",
+    "सभी चरण विस्तार करें": "Expand All Stages",
+    "सभी कार्य": "All Tasks",
+    "💧 सिंचाई": "💧 Irrigation",
+    "🌱 खाद व पोषण": "🌱 Fertilizer & Nutrients",
+    "🛡️ पादप सुरक्षा": "🛡️ Plant Protection",
+    "✓ पूर्ण": "✓ Completed",
+    "सिंचाई": "Irrigation",
+    "पादप सुरक्षा": "Plant Protection",
+    "खाद व पोषण": "Fertilizer & Nutrients",
+    "देय:": "Due:",
+    "शीघ्र": "Upcoming",
+    "आज ही देय": "Due Today",
+    "कल देय": "Due Tomorrow",
+    "दिन पूर्व": "days ago",
+    "दिन शेष": "days left",
+    "✓ पूर्ण": "✓ Done",
+    "↺ सक्रिय": "↺ Active",
+    "कार्य संलग्न": "tasks attached",
+    "📋 इस चरण के अंतर्गत आने वाले वैज्ञानिक कार्य:": "📋 Scientific tasks for this stage:",
+    "इस चरण में कोई लंबित कार्य नहीं है।": "No pending tasks in this stage.",
+    "कृषि अनुस्मारक": "Agri Reminders",
+    "लंबित कार्य": "Pending Tasks",
+    "पूर्ण कार्य": "Completed Tasks",
+    "नया अनुस्मारक जोड़ें": "Add New Reminder",
+    "कार्य का विवरण": "Task Description",
+    "नियत तारीख": "Due Date",
+    "प्राथमिकता": "Priority",
+    "अति-आवश्यक": "Urgent",
+    "सामान्य": "Normal",
+    "कम": "Low",
+    "सुरक्षित करें": "Save Reminder",
+    "रद्द करें": "Cancel",
+    "कार्य जोड़ें": "Add Task",
+    "खुदाई / निराई": "Weeding & Hoeing",
+    "खुराक:": "Dosage:",
+    "कटाई": "Harvest",
+    "परिपक्वता": "Maturity",
+
+    // ── 30+ Crops Names (Bilingual Match) ──
+    "-- 30+ वैज्ञानिक फसलों में से चुनें (Select Crop) --": "-- Select from 30+ Scientific Crops --",
+    "🌾 अनाज व मोटे अनाज (Cereals & Millets)": "🌾 Cereals & Millets",
+    "🫘 दलहनी फसलें (Pulses & Legumes)": "🫘 Pulses & Legumes",
+    "🌻 तिलहनी फसलें (Oilseeds)": "🌻 Oilseeds",
+    "🎋 नकदी व रेशेदार फसलें (Cash & Fiber)": "🎋 Cash & Fiber",
+    "🥔 सब्जियां (Vegetables)": "🥔 Vegetables",
+    "🌿 मसाले (Spices & Condiments)": "🌿 Spices & Condiments",
+    "🍉 फल (Fruits)": "🍉 Fruits",
+    "✏️ अन्य फसल (Type Custom)...": "✏️ Other Crop (Type Custom)...",
+    "🌾 गेहूं (Wheat)": "🌾 Wheat",
+    "🌾 धान (Paddy / Rice)": "🌾 Paddy / Rice",
+    "🌽 मक्का (Maize)": "🌽 Maize",
+    "🌾 बाजरा (Pearl Millet)": "🌾 Pearl Millet (Bajra)",
+    "🌾 ज्वार (Sorghum / Jowar)": "🌾 Sorghum (Jowar)",
+    "🌾 जौ (Barley)": "🌾 Barley (Jau)",
+    "🫘 चना (Gram / Chickpea)": "🫘 Chickpea (Gram)",
+    "🫘 अरहर (Pigeon Pea / Arhar)": "🫘 Pigeon Pea (Arhar/Tur)",
+    "🟢 मूंग (Green Gram / Moong)": "🟢 Green Gram (Moong)",
+    "⚫ उड़द (Black Gram / Urad)": "⚫ Black Gram (Urad)",
+    "🟢 मटर (Green Pea)": "🟢 Green Pea (Matar)",
+    "🫘 मसूर (Lentil / Masoor)": "🫘 Lentil (Masoor)",
+    "🌼 सरसों (Mustard)": "🌼 Mustard (Sarson)",
+    "🌱 सोयाबीन (Soybean)": "🌱 Soybean",
+    "🥜 मूंगफली (Groundnut)": "🥜 Groundnut (Peanut)",
+    "🌻 सूरजमुखी (Sunflower)": "🌻 Sunflower",
+    "☁️ कपास (Cotton)": "☁️ Cotton",
+    "🎋 गन्ना (Sugarcane)": "🎋 Sugarcane",
+    "🥔 आलू (Potato)": "🥔 Potato",
+    "🍅 टमाटर (Tomato)": "🍅 Tomato",
+    "🧅 प्याज (Onion)": "🧅 Onion",
+    "🧄 लहसुन (Garlic)": "🧄 Garlic",
+    "🌶️ मिर्च (Chilli)": "🌶️ Chilli",
+    "🍆 बैंगन (Brinjal)": "🍆 Brinjal (Eggplant)",
+    "🥦 फूलगोभी (Cauliflower)": "🥦 Cauliflower",
+    "🥬 पत्तागोभी (Cabbage)": "🥬 Cabbage",
+    "🥬 भिंडी (Okra)": "🥬 Okra (Bhindi)",
+    "🫚 अदरक (Ginger)": "🫚 Ginger",
+    "🟡 हल्दी (Turmeric)": "🟡 Turmeric",
+    "🟤 जीरा (Cumin / Jeera)": "🟤 Cumin (Jeera)",
+    "🌿 धनिया (Coriander)": "🌿 Coriander (Dhaniya)",
+    "🍉 तरबूज (Watermelon)": "🍉 Watermelon",
+
+    // ── Quick Chips ──
+    "🌼 सरसों": "🌼 Mustard",
+    "🌾 गेहूं": "🌾 Wheat",
+    "🫘 चना": "🫘 Gram",
+    "🧄 लहसुन": "🧄 Garlic",
+    "🧅 प्याज": "🧅 Onion",
+    "🌶️ मिर्च": "🌶️ Chilli",
+    "🍅 टमाटर": "🍅 Tomato",
+    "🥔 आलू": "🥔 Potato",
+    "🌾 3 एकड़ गेहूं आज": "🌾 3 Acres Wheat Today",
+    "🌾+🌼 गेहूं 3 एकड़ व सरसों 2 एकड़": "🌾+🌼 Wheat 3 Ac & Mustard 2 Ac",
+    "🍅 1.5 एकड़ टमाटर": "🍅 1.5 Acres Tomato",
+    "💧 कल गेहूं में पानी": "💧 Irrigate Wheat Tomorrow",
+
+    // ── Stages ──
+    "बुवाई व आधार खाद चरण (Basal & Sowing Stage)": "Basal & Sowing Stage",
+    "वानस्पतिक व कल्ले फूटने का चरण (Vegetative & Tillering Stage)": "Vegetative & Tillering Stage",
+    "गाभा व फूल आने का क्रांतिक चरण (Booting & Flowering Stage)": "Booting & Flowering Stage",
+    "दाना भराव व दुग्ध अवस्था (Grain Filling & Milking Stage)": "Grain Filling & Milking Stage",
+    "परिपक्वता व कटाई चरण (Maturity & Harvesting Stage)": "Maturity & Harvesting Stage",
+    "बुवाई के 0-15 दिन": "0-15 Days from Sowing",
+    "बुवाई के 16-45 दिन": "16-45 Days from Sowing",
+    "बुवाई के 46-75 दिन": "46-75 Days from Sowing",
+    "बुवाई के 76-105 दिन": "76-105 Days from Sowing",
+    "बुवाई के 106-140 दिन": "106-140 Days from Sowing",
 
     // ── Mandi Prices & Revenue Calculator ──
     "भारत सरकार लाइव मंडी भाव व फसल आय कैलकुलेटर (Agmarknet)": "Govt of India Live Mandi Rates & Crop Revenue Calculator (Agmarknet)",
@@ -122,18 +279,6 @@
     "🔍 जिंस या मंडी खोजें...": "🔍 Search commodity or mandi...",
     "मंडी भाव लोड हो रहे हैं...": "Loading mandi rates...",
 
-    // ── Crop Chips ──
-    "🌾 गेहूं": "🌾 Wheat",
-    "🍚 धान": "🍚 Paddy",
-    "🟡 सरसों": "🟡 Mustard",
-    "🟤 चना": "🟤 Chickpea",
-    "🌽 मक्का": "🌽 Maize",
-    "🌱 सोयाबीन": "🌱 Soybean",
-    "⚪ कपास": "⚪ Cotton",
-    "🍅 टमाटर": "🍅 Tomato",
-    "🥔 आलू": "🥔 Potato",
-    "🧅 प्याज": "🧅 Onion",
-
     // ── Weather Center ──
     "🌤️ मौसम केंद्र": "🌤️ Weather Center",
     "वर्तमान मौसम": "Current Weather",
@@ -177,27 +322,19 @@
     "सत्यापित स्रोत": "Verified Source",
     "🏛️ सत्यापित स्रोत": "🏛️ Verified Sources",
 
-    // ── Reminders Dashboard ──
-    "कृषि अनुस्मारक": "Agri Reminders",
-    "लंबित कार्य": "Pending Tasks",
-    "पूर्ण कार्य": "Completed Tasks",
-    "सभी कार्य": "All Tasks",
-    "नया अनुस्मारक जोड़ें": "Add New Reminder",
-    "कार्य का विवरण": "Task Description",
-    "नियत तारीख": "Due Date",
-    "प्राथमिकता": "Priority",
-    "अति-आवश्यक": "Urgent",
-    "सामान्य": "Normal",
-    "कम": "Low",
-    "सुरक्षित करें": "Save Reminder",
-    "रद्द करें": "Cancel",
-    "कार्य जोड़ें": "Add Task",
-
     // ── Registration & Login ──
+    "नमस्ते किसान भाई!": "Welcome Farmer!",
+    "अपने पंजीकृत मोबाइल नंबर से प्रवेश करें": "Enter using your registered mobile number",
+    "किसान लॉगिन • Farmer Login": "Farmer Login",
+    "मोबाइल नंबर (Mobile Number)": "Mobile Number",
+    "पासवर्ड (Password)": "Password",
+    "अपना पासवर्ड दर्ज करें": "Enter your password",
+    "🔑 पासवर्ड भूल गए? (Forgot Password?)": "🔑 Forgot Password?",
+    "खेत में प्रवेश करें ➔": "Enter Dashboard ➔",
+    "🌱 नया पंजीकरण (Register)": "🌱 New Registration",
+    "🏠 मुख्य पृष्ठ (Home)": "🏠 Home",
     "नया किसान पंजीकरण": "New Farmer Registration",
     "पूरा नाम": "Full Name",
-    "मोबाइल नंबर": "Mobile Number",
-    "पासवर्ड": "Password",
     "गांव / कस्बा": "Village / Town",
     "फार्म का आकार (एकड़)": "Farm Size (Acres)",
     "पंजीकरण करें": "Register Now",
@@ -228,7 +365,7 @@
 
   function setLanguage(lang) {
     if (!lang) lang = DEFAULT_LANG;
-    // Normalize: 'hi' is Hindi, 'en' is English; 'ta','te','pa' map cleanly to English mode for UI text
+    // Normalize: 'hi' is Hindi, 'en' is English; other regional scripts cleanly fall back to English if requested
     const normalized = (lang === "hi") ? "hi" : "en";
 
     try {
@@ -252,7 +389,7 @@
 
     applyTranslation(normalized);
 
-    // Notify listeners across app (e.g. mandi.js, farmer.js, weather.js)
+    // Notify listeners across app (e.g. reminders.js, mandi.js, farmer.js, weather.js)
     try {
       window.dispatchEvent(new CustomEvent("agrigo:langchange", { detail: { lang: normalized, rawLang: lang } }));
     } catch (_) {}
@@ -265,7 +402,6 @@
   function applyTranslation(targetLang, rootNode = document.body) {
     if (!rootNode) return;
     const isHindi = (targetLang === "hi");
-    const dict = isHindi ? REVERSE_DICT : DICT;
 
     // 1. Explicit data-i18n elements
     rootNode.querySelectorAll("[data-i18n]").forEach(el => {
@@ -312,7 +448,7 @@
       const currentVal = node.nodeValue.trim();
       if (!currentVal) return;
 
-      // Cache original Hindi text on node
+      // Cache original text on node
       if (!node._origAgriText) {
         node._origAgriText = currentVal;
       }
@@ -338,8 +474,8 @@
         } else {
           // Check substring replacements for compound sentences
           for (const [hiStr, enStr] of Object.entries(DICT)) {
-            if (hiStr.length >= 4 && node.nodeValue.includes(hiStr)) {
-              node.nodeValue = node.nodeValue.replace(hiStr, enStr);
+            if (hiStr.length >= 3 && node.nodeValue.includes(hiStr)) {
+              node.nodeValue = node.nodeValue.split(hiStr).join(enStr);
             }
           }
         }
@@ -362,17 +498,18 @@
         if (DICT[orig]) {
           input.setAttribute("placeholder", DICT[orig]);
         } else {
+          let updated = orig;
           for (const [hiStr, enStr] of Object.entries(DICT)) {
-            if (hiStr.length >= 4 && ph.includes(hiStr)) {
-              input.setAttribute("placeholder", ph.replace(hiStr, enStr));
-              break;
+            if (hiStr.length >= 3 && updated.includes(hiStr)) {
+              updated = updated.split(hiStr).join(enStr);
             }
           }
+          input.setAttribute("placeholder", updated);
         }
       }
     });
 
-    // 4. Translate Select Options (State, District, Dropdowns)
+    // 4. Translate Select Options & Optgroups
     rootNode.querySelectorAll("select option").forEach(opt => {
       const text = opt.textContent.trim();
       if (!opt.dataset.origText) {
@@ -384,9 +521,71 @@
         const orig = opt.dataset.origText;
         if (DICT[orig]) {
           opt.textContent = DICT[orig];
+        } else {
+          let updated = orig;
+          for (const [hiStr, enStr] of Object.entries(DICT)) {
+            if (hiStr.length >= 3 && updated.includes(hiStr)) {
+              updated = updated.split(hiStr).join(enStr);
+            }
+          }
+          opt.textContent = updated;
         }
       }
     });
+
+    rootNode.querySelectorAll("select optgroup").forEach(grp => {
+      const label = grp.getAttribute("label");
+      if (!label) return;
+      if (!grp.dataset.origLabel) {
+        grp.dataset.origLabel = label;
+      }
+      if (isHindi) {
+        grp.setAttribute("label", grp.dataset.origLabel);
+      } else {
+        const orig = grp.dataset.origLabel;
+        if (DICT[orig]) {
+          grp.setAttribute("label", DICT[orig]);
+        }
+      }
+    });
+
+    // 5. Translate Titles & Aria-Labels for Accessibility
+    rootNode.querySelectorAll("[title]").forEach(el => {
+      const t = el.getAttribute("title");
+      if (!t) return;
+      if (!el.dataset.origTitle) el.dataset.origTitle = t;
+      if (isHindi) {
+        el.setAttribute("title", el.dataset.origTitle);
+      } else {
+        const orig = el.dataset.origTitle;
+        if (DICT[orig]) el.setAttribute("title", DICT[orig]);
+      }
+    });
+  }
+
+  // Auto MutationObserver for dynamically injected elements when in English mode
+  let translationTimeout = null;
+  function observeDynamicContent() {
+    const observer = new MutationObserver((mutations) => {
+      if (getLanguage() === "hi") return;
+      let shouldTranslate = false;
+      for (const m of mutations) {
+        if (m.addedNodes.length > 0) {
+          shouldTranslate = true;
+          break;
+        }
+      }
+      if (shouldTranslate) {
+        clearTimeout(translationTimeout);
+        translationTimeout = setTimeout(() => {
+          applyTranslation(getLanguage() === "hi" ? "hi" : "en");
+        }, 80);
+      }
+    });
+
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   }
 
   function init() {
@@ -410,6 +609,8 @@
         setLanguage(e.target.value);
       });
     }
+
+    observeDynamicContent();
   }
 
   // Fast boot: run on DOM ready or immediately if already loaded

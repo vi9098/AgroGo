@@ -398,12 +398,61 @@
     }
   }
 
+  function checkAndShowCookieConsent() {
+    try {
+      if (localStorage.getItem("agrigo_cookie_consent")) return;
+    } catch (_) {
+      return;
+    }
+
+    if (document.getElementById("agrigo-cookie-banner")) return;
+
+    const banner = document.createElement("div");
+    banner.id = "agrigo-cookie-banner";
+    banner.setAttribute("role", "region");
+    banner.setAttribute("aria-label", "कुकी व डेटा सहमति");
+    banner.style.cssText = "position:fixed; bottom:0; left:0; right:0; z-index:99999; background:#0F3D25; color:#FFFFFF; border-top:3px solid #86EFAC; padding:14px 20px; box-shadow:0 -4px 25px rgba(0,0,0,0.3); font-family:inherit;";
+    
+    banner.innerHTML = `
+      <div style="max-width:1140px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="font-size:13px; line-height:1.5; flex:1; min-width:260px;">
+          🍪 <strong>डेटा सुरक्षा व आवश्यक कुकीज (Essential Cookies Only):</strong> AgriGo केवल सुरक्षित लॉगिन और भाषा प्राथमिकता हेतु अनिवार्य कुकीज का उपयोग करता है। हम आपका डेटा कभी ट्रैक या साझा नहीं करते। 
+          <a href="cookies.html" style="color:#86EFAC; text-decoration:underline; font-weight:700; margin-left:4px;">कुकी नीति (Cookie Policy)</a>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button type="button" onclick="window.AgriHeader.acceptCookieConsent()" style="background:#22C55E; color:#0F3D25; font-size:13px; font-weight:800; border:none; padding:8px 20px; border-radius:999px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+            स्वीकार करें (Accept)
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(banner);
+    if (window.AgriI18n && window.AgriI18n.applyTranslation) {
+      window.AgriI18n.applyTranslation(banner);
+    }
+  }
+
+  function acceptCookieConsent() {
+    try {
+      localStorage.setItem("agrigo_cookie_consent", "necessary");
+    } catch (_) {}
+    const banner = document.getElementById("agrigo-cookie-banner");
+    if (banner) {
+      banner.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      banner.style.opacity = "0";
+      banner.style.transform = "translateY(20px)";
+      setTimeout(() => banner.remove(), 300);
+    }
+  }
+
   // Auto-inject if data-page attribute is set on <body>
   document.addEventListener('DOMContentLoaded', function () {
     const pg = document.body.getAttribute('data-page');
     if (pg) {
       injectHeader({ page: pg });
     }
+    setTimeout(checkAndShowCookieConsent, 600);
   });
 
   window.AgriHeader = {
@@ -411,6 +460,7 @@
     handleLogout: handleLogout,
     toggleNotifications: toggleNotifications,
     completeReminderFromNotif: completeReminderFromNotif,
-    requestBrowserNotifications: requestBrowserNotifications
+    requestBrowserNotifications: requestBrowserNotifications,
+    acceptCookieConsent: acceptCookieConsent
   };
 })();
