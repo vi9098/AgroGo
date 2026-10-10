@@ -82,7 +82,7 @@
               </a>
             </div>
 
-            <select id="hdr-lang-select" class="form-select" style="width: auto; padding: 4px 8px; font-size: 11.5px; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); color: #FFF; border-radius: var(--r-full);" title="भाषा चुनें">
+            <select id="hdr-lang-select" class="form-select" style="width: auto; padding: 4px 24px 4px 10px; font-size: 11.5px; background-color: rgba(255,255,255,0.14); background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 8px center; background-size: 10px 10px; border-color: rgba(255,255,255,0.25); color: #FFF; border-radius: var(--r-full);" title="भाषा चुनें">
               <option value="hi" style="color:#000;">🇮🇳 हिंदी</option>
               <option value="en" style="color:#000;">🇬🇧 English</option>
               <option value="ta" style="color:#000;">🌺 தமிழ்</option>
@@ -323,9 +323,12 @@
 
   // Close notification dropdown when clicking outside
   document.addEventListener('click', (e) => {
+    if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || (e.target.closest && e.target.closest('select')))) {
+      return;
+    }
     const wrap = document.getElementById("hdr-notif-wrap");
     const dropdown = document.getElementById("hdr-notif-dropdown");
-    if (wrap && dropdown && !wrap.contains(e.target)) {
+    if (wrap && dropdown && dropdown.style.display !== "none" && !wrap.contains(e.target)) {
       dropdown.style.display = "none";
     }
   });

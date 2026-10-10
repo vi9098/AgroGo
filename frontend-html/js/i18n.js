@@ -515,18 +515,22 @@
       }
     });
 
-    // 4. Translate Select Options & Optgroups
+    // 4. Translate Select Options & Optgroups (Non-destructive: only update if changed, never touch focused select)
+    const activeEl = document.activeElement;
     rootNode.querySelectorAll("select option").forEach(opt => {
+      const selectEl = opt.parentElement ? (opt.parentElement.tagName === "SELECT" ? opt.parentElement : opt.parentElement.parentElement) : null;
+      if (selectEl && (activeEl === selectEl || (activeEl && selectEl.contains(activeEl)))) {
+        return; // Do not disturb an open or focused select dropdown
+      }
       const text = opt.textContent.trim();
       if (!opt.dataset.origText) {
         opt.dataset.origText = text;
       }
-      if (isHindi) {
-        opt.textContent = opt.dataset.origText;
-      } else {
+      let targetText = opt.dataset.origText;
+      if (!isHindi) {
         const orig = opt.dataset.origText;
         if (DICT[orig]) {
-          opt.textContent = DICT[orig];
+          targetText = DICT[orig];
         } else {
           let updated = orig;
           for (const [hiStr, enStr] of Object.entries(DICT)) {
@@ -534,8 +538,11 @@
               updated = updated.split(hiStr).join(enStr);
             }
           }
-          opt.textContent = updated;
+          targetText = updated;
         }
+      }
+      if (opt.textContent !== targetText) {
+        opt.textContent = targetText;
       }
     });
 
@@ -545,13 +552,9 @@
       if (!grp.dataset.origLabel) {
         grp.dataset.origLabel = label;
       }
-      if (isHindi) {
-        grp.setAttribute("label", grp.dataset.origLabel);
-      } else {
-        const orig = grp.dataset.origLabel;
-        if (DICT[orig]) {
-          grp.setAttribute("label", DICT[orig]);
-        }
+      const targetLabel = isHindi ? grp.dataset.origLabel : (DICT[grp.dataset.origLabel] || grp.dataset.origLabel);
+      if (grp.getAttribute("label") !== targetLabel) {
+        grp.setAttribute("label", targetLabel);
       }
     });
 

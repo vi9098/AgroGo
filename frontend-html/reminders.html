@@ -178,6 +178,10 @@
       outline-offset: 2px !important;
     }
 
+    select:focus-visible, .pos-select:focus-visible, .form-select:focus-visible {
+      outline-offset: 0px !important;
+    }
+
     .pos-hero-desc {
       font-size: 15.5px;
       line-height: 1.65;
@@ -282,30 +286,39 @@
 
     .pos-select {
       height: 52px;
-      background: #FFFFFF;
+      background-color: #FFFFFF;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23191A23' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px 16px;
       border: 2px solid var(--pos-dark);
       border-radius: var(--pos-radius-sm);
-      padding: 0 16px;
+      padding: 0 44px 0 16px;
       font-size: 15px;
       font-family: inherit;
       font-weight: 600;
       color: var(--pos-dark);
       box-shadow: 0px 3px 0px var(--pos-dark);
-      outline: none;
+      outline: none !important;
       transition: none !important;
       transform: none !important;
       touch-action: auto !important;
       cursor: pointer;
       width: 100%;
       box-sizing: border-box;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
     }
 
-    .pos-select:focus {
-      background: #FFFFFF;
+    .pos-select:focus, .pos-select:focus-visible {
+      background-color: #FFFFFF;
       border-color: #000000;
-      box-shadow: 0px 3px 0px var(--pos-lime);
-      outline: none;
+      box-shadow: 0px 3px 0px var(--pos-dark) !important;
+      outline: 2px solid var(--pos-dark) !important;
+      outline-offset: 0px !important;
       transition: none !important;
+      transform: none !important;
     }
 
     /* Quick Click Chips */

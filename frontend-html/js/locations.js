@@ -350,9 +350,9 @@ function setupCascadingStateDistrict(stateSelectId, districtSelectId, options = 
   if (!stateEl || !distEl) return;
 
   // 1. Populate States cleanly if empty or not populated
+  const sortedStates = Object.keys(INDIA_LOCATIONS);
   if (stateEl.options.length <= 1) {
     stateEl.innerHTML = '<option value="">-- राज्य चुनें (Select State) --</option>';
-    const sortedStates = Object.keys(INDIA_LOCATIONS);
     sortedStates.forEach(state => {
       const opt = document.createElement("option");
       opt.value = state;

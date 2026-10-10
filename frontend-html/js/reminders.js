@@ -764,7 +764,11 @@ function setQuickCrop(cropName) {
   const custom = document.getElementById("schedule-custom-crop");
   if (select) {
     select.value = cropName;
+    currentCropName = cropName;
     if (custom) custom.style.display = "none";
+    try {
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    } catch (_) {}
   }
 }
 
@@ -776,6 +780,9 @@ function handleCropSelectChange(select) {
     custom.focus();
   } else {
     custom.style.display = "none";
+    if (select.value) {
+      currentCropName = select.value;
+    }
   }
 }
 
