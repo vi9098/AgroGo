@@ -534,8 +534,8 @@ async def get_system_health(admin: Dict[str, Any] = Depends(require_admin)):
             "operational": True
         },
         "sessions": {
-            "active_count": query_one("SELECT COUNT(*) as cnt FROM sessions")["cnt"],
-            "storage": "Server-side SQLite Persistent Session Store"
+            "active_count": (query_one("SELECT COUNT(*) as cnt FROM sessions") or {}).get("cnt", 0),
+            "storage": "Server-side Persistent Session Store"
         },
         "providers": [
             {"service": "Open-Meteo Weather API", "status": "ONLINE", "type": "Weather & Agromet", "latency_ms": 42.0},

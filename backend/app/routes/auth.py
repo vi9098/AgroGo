@@ -760,7 +760,8 @@ async def verify_otp(req: OTPVerify, request: Request, response: Response):
             INSERT INTO users (id, phone, name, preferred_language, state, district, village, consent_json, status, role, created_at)
             VALUES (?, ?, ?, 'hi', 'Uttar Pradesh', 'Varanasi', 'Rampur', ?, 'active', 'farmer', ?)
         """, (user_id, clean_phone, name, consent, now_str))
-        user_dict = dict(query_one("SELECT * FROM users WHERE id = ?", (user_id,)))
+        u_row = query_one("SELECT * FROM users WHERE id = ?", (user_id,))
+        user_dict = dict(u_row) if u_row else {"id": user_id, "phone": clean_phone, "name": name, "role": "farmer"}
 
     client_ip = request.client.host if request.client else ""
     user_agent = request.headers.get("user-agent", "")

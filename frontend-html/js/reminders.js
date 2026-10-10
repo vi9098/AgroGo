@@ -10,6 +10,10 @@ let currentAcreage = 2.5;
 let currentCropName = "गेहूं (Wheat)";
 let allStagesExpanded = false;
 
+function isTaskCompleted(r) {
+  return !!(r && (r.is_completed === 1 || r.is_completed === true || r.is_completed === "1" || r.is_completed === "true"));
+}
+
 function hideLoadingOverlay() {
   const overlay = document.getElementById("pos-loading-overlay") || document.getElementById("loading-overlay");
   if (overlay) {
@@ -199,7 +203,7 @@ function updateMetricsAndHero() {
   ];
 
   allReminders.forEach(r => {
-    const isCompleted = r.is_completed === 1;
+    const isCompleted = isTaskCompleted(r);
     const t = (r.reminder_type || r.category || "").toLowerCase();
     const title = (r.title || "").toLowerCase();
 
@@ -487,7 +491,7 @@ function expandAllProcessStages() {
  * Build HTML for a single task card inside a stage or list
  */
 function buildTaskCardHtml(r) {
-  const isDone = r.is_completed === 1;
+  const isDone = isTaskCompleted(r);
   const t = (r.reminder_type || r.category || "general").toLowerCase();
 
   let tagClass = "tag-irrigation";
@@ -587,16 +591,16 @@ function renderAllRemindersList() {
 
   let filtered = allReminders;
   if (currentFilter === "completed") {
-    filtered = allReminders.filter(r => r.is_completed === 1);
+    filtered = allReminders.filter(r => isTaskCompleted(r));
   } else if (currentFilter === "irrigation") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("irrigation") || (r.title || "").includes("सिंचाई")));
+    filtered = allReminders.filter(r => !isTaskCompleted(r) && ((r.reminder_type || r.category || "").includes("irrigation") || (r.title || "").includes("सिंचाई")));
   } else if (currentFilter === "fertilizer") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("fertilizer") || (r.title || "").includes("खाद") || (r.title || "").includes("यूरिया")));
+    filtered = allReminders.filter(r => !isTaskCompleted(r) && ((r.reminder_type || r.category || "").includes("fertilizer") || (r.title || "").includes("खाद") || (r.title || "").includes("यूरिया")));
   } else if (currentFilter === "pesticide") {
-    filtered = allReminders.filter(r => !r.is_completed && ((r.reminder_type || r.category || "").includes("pest") || (r.title || "").includes("कीट") || (r.title || "").includes("छिड़काव")));
+    filtered = allReminders.filter(r => !isTaskCompleted(r) && ((r.reminder_type || r.category || "").includes("pest") || (r.title || "").includes("कीट") || (r.title || "").includes("छिड़काव")));
   } else {
     // 'all' filter: sort uncompleted first
-    filtered = [...allReminders].sort((a, b) => a.is_completed - b.is_completed);
+    filtered = [...allReminders].sort((a, b) => (isTaskCompleted(a) ? 1 : 0) - (isTaskCompleted(b) ? 1 : 0));
   }
 
   if (filtered.length === 0) {

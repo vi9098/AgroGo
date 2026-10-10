@@ -296,7 +296,8 @@ class MarketDataProviderAdapter:
     def seed_mandi_fallbacks_if_empty(cls):
         """Seeds verified multi-state daily Mandi baseline records if table has no data."""
         ensure_mandi_table()
-        cnt = query_one("SELECT COUNT(*) as cnt FROM live_mandi_prices")["cnt"]
+        cnt_row = query_one("SELECT COUNT(*) as cnt FROM live_mandi_prices")
+        cnt = cnt_row.get("cnt", 0) if cnt_row else 0
         if cnt > 15:
             return
 
@@ -402,7 +403,8 @@ class MarketDataProviderAdapter:
         
         # Count total matches
         cnt_sql = f"SELECT COUNT(*) as total FROM live_mandi_prices{where_clause}"
-        total_rows = query_one(cnt_sql, tuple(params))["total"]
+        cnt_row = query_one(cnt_sql, tuple(params))
+        total_rows = cnt_row.get("total", 0) if cnt_row else 0
 
         # Fetch records
         sql = f"""

@@ -64,6 +64,7 @@ class SupabaseClient:
             "Prefer": "return=representation"
         }
         self._is_available: Optional[bool] = None
+        self._last_health_check: float = 0.0
 
     def is_configured(self) -> bool:
         return bool(self.url and self.api_key)
@@ -74,28 +75,35 @@ class SupabaseClient:
         return self._is_available
 
     def check_health(self) -> bool:
-        """Verifies live connectivity to Supabase PostgREST endpoint."""
+        """Verifies live connectivity to Supabase PostgREST endpoint with cooldown caching."""
         if not self.is_configured():
             self._is_available = False
             return False
+
+        import time
+        now = time.time()
+        # Cooldown: if health check failed recently, don't block requests with repeated DNS attempts
+        if self._is_available is False and (now - getattr(self, "_last_health_check", 0.0)) < 45.0:
+            return False
+
+        self._last_health_check = now
         try:
-            # Query a known table with limit=1 to verify PostgREST table read access
-            r = self.session.get(f"{self.url}/rest/v1/crops", headers=self._headers, params={"limit": "1"}, timeout=5.0)
+            # Query a known table with limit=1 to verify PostgREST table read access (fast 2.5s timeout)
+            r = self.session.get(f"{self.url}/rest/v1/crops", headers=self._headers, params={"limit": "1"}, timeout=2.5)
             if r.status_code in (200, 206):
                 self._is_available = True
                 logger.info(f"[Supabase] Live PostgREST connection verified on {self.url} (HTTP 200)")
                 return True
             # Alternative: verify GoTrue auth health
-            r_auth = self.session.get(f"{self.url}/auth/v1/health", headers=self._headers, timeout=5.0)
+            r_auth = self.session.get(f"{self.url}/auth/v1/health", headers=self._headers, timeout=2.5)
             if r_auth.status_code == 200:
                 self._is_available = True
                 logger.info(f"[Supabase] Live GoTrue connection verified on {self.url} (HTTP 200)")
                 return True
-            logger.warning(f"[Supabase Health] Check returned HTTP {r.status_code}: {r.text[:200]}")
             self._is_available = False
             return False
         except Exception as e:
-            logger.error(f"[Supabase Health Check] Connection error: {e}")
+            logger.debug(f"[Supabase Health Check] Connection error: {e}")
             self._is_available = False
             return False
 

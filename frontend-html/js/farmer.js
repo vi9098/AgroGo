@@ -90,15 +90,6 @@ async function checkAuthAndInit() {
     await loadFarmerCrops();
     await loadFarmerReminders();
     initSpeechRecognition();
-
-    // Verify Supabase Cloud Database live connection
-    try {
-      const supaStatus = await AgriAPI.getSupabaseStatus();
-      const pill = document.getElementById("supabase-cloud-pill");
-      if (pill && supaStatus && supaStatus.healthy) {
-        pill.innerHTML = `⚡ Supabase: <strong style="color:#C8E6C9;">सक्रिय (499k+ रिकॉर्ड्स)</strong>`;
-      }
-    } catch (_) {}
   } catch (e) {
     console.warn("Session check failed, redirecting to login:", e);
     window.location.href = "farmer-login.html";

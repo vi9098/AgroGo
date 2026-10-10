@@ -142,7 +142,8 @@ class AuthService:
                 INSERT INTO users (id, phone, name, password_hash, preferred_language, state, district, village, consent_json, created_at)
                 VALUES (?, ?, ?, ?, 'hi', 'Uttar Pradesh', 'Varanasi', 'Rampur', ?, ?)
             """, (user_id, phone, name, pwd_hash, consent, now_str))
-            user_data = dict(query_one("SELECT * FROM users WHERE id = ?", (user_id,)))
+            u_row = query_one("SELECT * FROM users WHERE id = ?", (user_id,))
+            user_data = dict(u_row) if u_row else {"id": user_id, "phone": phone, "name": name, "role": "farmer"}
 
         user_data["location"] = {
             "state": user_data.get("state", "Uttar Pradesh"),

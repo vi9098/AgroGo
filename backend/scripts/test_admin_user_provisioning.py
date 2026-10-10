@@ -58,8 +58,8 @@ def run_tests():
 
     # 3. Authenticated Admin Login
     login_res = client.post("/api/auth/login", json={
-        "identifier": "admin@legislative.com",
-        "password": "Legislative@admin",
+        "identifier": "admin@agrigo.com",
+        "password": "Admin@AgriGo2026",
         "role": "admin"
     })
     assert login_res.status_code == 200, f"Admin login failed: {login_res.text}"
