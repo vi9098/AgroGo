@@ -349,58 +349,66 @@ function setupCascadingStateDistrict(stateSelectId, districtSelectId, options = 
   const distEl = document.getElementById(districtSelectId);
   if (!stateEl || !distEl) return;
 
-  // 1. Populate States cleanly
-  stateEl.innerHTML = '<option value="">-- राज्य चुनें (Select State) --</option>';
-  const sortedStates = Object.keys(INDIA_LOCATIONS);
-  sortedStates.forEach(state => {
-    const opt = document.createElement("option");
-    opt.value = state;
-    opt.textContent = state;
-    stateEl.appendChild(opt);
-  });
+  // 1. Populate States cleanly if empty or not populated
+  if (stateEl.options.length <= 1) {
+    stateEl.innerHTML = '<option value="">-- राज्य चुनें (Select State) --</option>';
+    const sortedStates = Object.keys(INDIA_LOCATIONS);
+    sortedStates.forEach(state => {
+      const opt = document.createElement("option");
+      opt.value = state;
+      opt.textContent = state;
+      stateEl.appendChild(opt);
+    });
+  }
 
   // 2. On State Change -> Populate Districts
-  stateEl.addEventListener("change", () => {
-    const rawState = stateEl.value;
-    const resolvedState = resolveStateKey(rawState);
-    distEl.innerHTML = '<option value="">-- जिला चुनें (Select District) --</option>';
+  if (!stateEl._cascadingBound) {
+    stateEl._cascadingBound = true;
+    stateEl.addEventListener("change", () => {
+      const rawState = stateEl.value;
+      const resolvedState = resolveStateKey(rawState);
+      distEl.innerHTML = '<option value="">-- जिला चुनें (Select District) --</option>';
 
-    if (resolvedState && INDIA_LOCATIONS[resolvedState]) {
-      distEl.disabled = false;
-      const dists = INDIA_LOCATIONS[resolvedState];
-      Object.keys(dists).forEach(district => {
-        const opt = document.createElement("option");
-        opt.value = district;
-        opt.textContent = district;
-        distEl.appendChild(opt);
-      });
-    } else {
-      distEl.disabled = true;
-    }
+      if (resolvedState && INDIA_LOCATIONS[resolvedState]) {
+        distEl.disabled = false;
+        const dists = INDIA_LOCATIONS[resolvedState];
+        Object.keys(dists).forEach(district => {
+          const opt = document.createElement("option");
+          opt.value = district;
+          opt.textContent = district;
+          distEl.appendChild(opt);
+        });
+      } else {
+        distEl.disabled = true;
+      }
 
-    if (options.onStateChange) {
-      options.onStateChange(resolvedState || rawState);
-    }
-  });
+      if (options.onStateChange) {
+        options.onStateChange(resolvedState || rawState);
+      }
+    });
+  }
 
   // 3. On District Change -> Trigger Callback
-  distEl.addEventListener("change", () => {
-    const rawState = stateEl.value;
-    const resolvedState = resolveStateKey(rawState);
-    const selectedDist = distEl.value;
-    if (resolvedState && selectedDist && INDIA_LOCATIONS[resolvedState][selectedDist]) {
-      const info = INDIA_LOCATIONS[resolvedState][selectedDist];
-      if (options.onSelect) {
-        options.onSelect({
-          state: resolvedState,
-          district: selectedDist,
-          lat: info.lat,
-          lon: info.lon,
-          name: info.name
-        });
+  if (!distEl._cascadingBound) {
+    distEl._cascadingBound = true;
+    distEl.addEventListener("change", () => {
+      const rawState = stateEl.value;
+      const resolvedState = resolveStateKey(rawState);
+      const selectedDist = distEl.value;
+      if (resolvedState && selectedDist && INDIA_LOCATIONS[resolvedState][selectedDist]) {
+        const info = INDIA_LOCATIONS[resolvedState][selectedDist];
+        if (options.onSelect) {
+          options.onSelect({
+            state: resolvedState,
+            district: selectedDist,
+            lat: info.lat,
+            lon: info.lon,
+            name: info.name
+          });
+        }
       }
-    }
-  });
+    });
+  }
 
   // Set defaults if provided
   const targetState = resolveStateKey(options.defaultState) || sortedStates[0];

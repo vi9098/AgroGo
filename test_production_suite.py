@@ -280,5 +280,9 @@ def run_suite():
         print("SOME TESTS FAILED.")
         return 1
 
+def test_production_suite():
+    assert run_suite() == 0
+
 if __name__ == "__main__":
     sys.exit(run_suite())
+

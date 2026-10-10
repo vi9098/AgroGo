@@ -257,7 +257,7 @@
       gap: 6px;
     }
 
-    .pos-input, .pos-select {
+    .pos-input {
       height: 52px;
       background: #FFFFFF;
       border: 2px solid var(--pos-dark);
@@ -274,10 +274,38 @@
       box-sizing: border-box;
     }
 
-    .pos-input:focus, .pos-select:focus {
+    .pos-input:focus {
       background: #FFFFFF;
       border-color: #000000;
       box-shadow: 0px 4px 0px var(--pos-lime);
+    }
+
+    .pos-select {
+      height: 52px;
+      background: #FFFFFF;
+      border: 2px solid var(--pos-dark);
+      border-radius: var(--pos-radius-sm);
+      padding: 0 16px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--pos-dark);
+      box-shadow: 0px 3px 0px var(--pos-dark);
+      outline: none;
+      transition: none !important;
+      transform: none !important;
+      touch-action: auto !important;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .pos-select:focus {
+      background: #FFFFFF;
+      border-color: #000000;
+      box-shadow: 0px 3px 0px var(--pos-lime);
+      outline: none;
+      transition: none !important;
     }
 
     /* Quick Click Chips */
@@ -298,12 +326,13 @@
       color: var(--pos-dark);
       cursor: pointer;
       box-shadow: 0px 2px 0px var(--pos-border);
-      transition: all 0.1s;
+      transition: background-color 0.1s ease, border-color 0.1s ease;
     }
 
     .pos-chip:hover {
       background: var(--pos-lime);
-      transform: translateY(-1px);
+      border-color: var(--pos-dark);
+      transform: none;
     }
 
     /* Summary Metrics 3-Card Row (Positivus Services Style) */

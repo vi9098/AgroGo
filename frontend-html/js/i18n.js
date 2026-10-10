@@ -426,10 +426,16 @@
           const parent = node.parentElement;
           if (!parent) return NodeFilter.FILTER_REJECT;
           const tag = parent.tagName;
-          if (["SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE"].includes(tag)) {
+          if (["SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "SELECT", "OPTION", "OPTGROUP"].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (parent.closest && parent.closest("select")) {
             return NodeFilter.FILTER_REJECT;
           }
           if (parent.hasAttribute("data-no-translate")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (document.activeElement && (document.activeElement === parent || (document.activeElement.contains && document.activeElement.contains(parent)))) {
             return NodeFilter.FILTER_REJECT;
           }
           const val = node.nodeValue.trim();
@@ -570,16 +576,35 @@
       if (getLanguage() === "hi") return;
       let shouldTranslate = false;
       for (const m of mutations) {
+        if (m.target) {
+          const tName = m.target.tagName;
+          if (tName === "SELECT" || tName === "OPTION" || tName === "OPTGROUP") continue;
+          if (m.target.closest && m.target.closest("select")) continue;
+        }
         if (m.addedNodes.length > 0) {
-          shouldTranslate = true;
-          break;
+          for (const node of m.addedNodes) {
+            if (node.nodeType === 1) {
+              const nTag = node.tagName;
+              if (nTag !== "OPTION" && nTag !== "SELECT" && nTag !== "OPTGROUP" && !(node.closest && node.closest("select"))) {
+                shouldTranslate = true;
+                break;
+              }
+            } else if (node.nodeType === 3) {
+              const p = node.parentElement;
+              if (p && !["OPTION", "SELECT", "OPTGROUP"].includes(p.tagName) && !(p.closest && p.closest("select"))) {
+                shouldTranslate = true;
+                break;
+              }
+            }
+          }
+          if (shouldTranslate) break;
         }
       }
       if (shouldTranslate) {
         clearTimeout(translationTimeout);
         translationTimeout = setTimeout(() => {
           applyTranslation(getLanguage() === "hi" ? "hi" : "en");
-        }, 80);
+        }, 150);
       }
     });
 
@@ -592,18 +617,20 @@
     const current = getLanguage();
     setLanguage(current);
 
-    // Bind header select
+    // Bind header select safely
     const hdrSel = document.getElementById("hdr-lang-select");
-    if (hdrSel) {
+    if (hdrSel && !hdrSel._agrigoBound) {
+      hdrSel._agrigoBound = true;
       hdrSel.value = current;
       hdrSel.addEventListener("change", (e) => {
         setLanguage(e.target.value);
       });
     }
 
-    // Bind chat select
+    // Bind chat select safely
     const chatSel = document.getElementById("chat-lang-select");
-    if (chatSel) {
+    if (chatSel && !chatSel._agrigoBound) {
+      chatSel._agrigoBound = true;
       chatSel.value = current;
       chatSel.addEventListener("change", (e) => {
         setLanguage(e.target.value);

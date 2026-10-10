@@ -1,6 +1,12 @@
 import sys
+import os
 import socket
-import psycopg2
+
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
 
 HOST = "db.lebkgjebavldqqflwwox.supabase.co"
 PORT = 5432
@@ -16,10 +22,12 @@ except Exception as e:
     print(f"[!] TCP connection failed: {e}")
 
 # Check password if provided in args or env
-import os
 password = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("SUPABASE_DB_PASSWORD") or os.environ.get("PGPASSWORD")
 
 if password:
+    if psycopg2 is None:
+        print("[i] psycopg2 is not installed in the current environment. To enable direct PostgreSQL queries, install psycopg2-binary.")
+        sys.exit(0)
     print(f"[*] Attempting PostgreSQL login with provided password...")
     try:
         conn = psycopg2.connect(

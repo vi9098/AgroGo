@@ -121,11 +121,14 @@
       if (window.AgriI18n) {
         langSel.value = window.AgriI18n.getLanguage();
       }
-      langSel.addEventListener('change', (e) => {
-        if (window.AgriI18n) {
-          window.AgriI18n.setLanguage(e.target.value);
-        }
-      });
+      if (!langSel._agrigoBound) {
+        langSel._agrigoBound = true;
+        langSel.addEventListener('change', (e) => {
+          if (window.AgriI18n) {
+            window.AgriI18n.setLanguage(e.target.value);
+          }
+        });
+      }
     }
 
     if (window.AgriI18n && window.AgriI18n.applyTranslation) {

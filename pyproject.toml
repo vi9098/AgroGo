@@ -30,3 +30,10 @@ dependencies = [
 
 [tool.vercel]
 entrypoint = "backend.app.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+norecursedirs = ["backend/scripts", "frontend-html", ".agents", "docker"]
+addopts = "-ra --ignore=backend/scripts"
+python_files = ["test_production_suite.py"]
+
