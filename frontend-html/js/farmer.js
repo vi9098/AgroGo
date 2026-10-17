@@ -305,16 +305,85 @@ async function loadFarmerReminders() {
     const res = await AgriAPI.getFarmerReminders(currentFarmer.id);
     if (container) {
       if (!res || !res.reminders || res.reminders.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">⏰ कोई सक्रिय अनुस्मारक नहीं है।</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">🎉 सभी कार्य संपन्न हैं! कोई लंबित अनुस्मारक नहीं।</div>`;
       } else {
         container.innerHTML = "";
-        res.reminders.slice(0, 4).forEach(r => {
+        const pendingReminders = res.reminders.filter(r => !r.is_completed);
+        const displayList = (pendingReminders.length > 0 ? pendingReminders : res.reminders).slice(0, 4);
+
+        displayList.forEach(r => {
+          const isDone = !!(r.is_completed === 1 || r.is_completed === true || r.is_completed === "1");
+          const t = (r.reminder_type || "").toLowerCase();
+          const title = (r.title || "").toLowerCase();
+
+          let icon = "📋";
+          let badgeColor = "#E2E8F0";
+          let badgeText = "#334155";
+          if (t.includes("irrigation") || title.includes("सिंचाई") || title.includes("पानी")) {
+            icon = "💧";
+            badgeColor = "#E0F2FE";
+            badgeText = "#0369A1";
+          } else if (t.includes("fertilizer") || title.includes("खाद") || title.includes("यूरिया")) {
+            icon = "🌱";
+            badgeColor = "#FEF3C7";
+            badgeText = "#92400E";
+          } else if (t.includes("pest") || title.includes("कीट") || title.includes("रोग")) {
+            icon = "🛡️";
+            badgeColor = "#FEE2E2";
+            badgeText = "#B91C1C";
+          }
+
           const item = document.createElement("div");
-          item.style.cssText = "border-left: 3px solid var(--primary); padding-left: 8px; margin-bottom: 6px;";
-          const formattedDate = AgriAPI.formatLocalDateTime(r.created_at);
+          item.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FFFFFF;
+            border: 1px solid var(--border, #E2E8F0);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            transition: all 0.15s ease;
+            ${isDone ? 'opacity: 0.65; background: #F8FAFC;' : ''}
+          `;
+
           item.innerHTML = `
-            <strong>${r.title}</strong>
-            <div style="color: var(--text-muted); font-size: 11.5px;">${r.due_date || formattedDate}</div>
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+              <button 
+                type="button" 
+                onclick="handleToggleFarmerReminder('${r.id}')"
+                style="
+                  width: 22px; 
+                  height: 22px; 
+                  border-radius: 50%; 
+                  border: 1.5px solid ${isDone ? '#16A34A' : '#94A3B8'}; 
+                  background: ${isDone ? '#16A34A' : '#FFF'}; 
+                  color: #FFF; 
+                  font-size: 11px; 
+                  font-weight: 800; 
+                  cursor: pointer; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center;
+                  flex-shrink: 0;
+                  padding: 0;
+                "
+                title="${isDone ? 'पुनः सक्रिय करें' : 'पूर्ण चिह्नित करें'}"
+              >
+                ${isDone ? '✓' : ''}
+              </button>
+              <div style="overflow:hidden;">
+                <div style="font-weight:700; font-size:12px; color:var(--text, #0F172A); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; ${isDone ? 'text-decoration:line-through; color:#64748B;' : ''}">
+                  ${icon} ${r.title}
+                </div>
+                <div style="color:var(--text-muted, #64748B); font-size:11px;">
+                  देय: ${r.due_date || 'शीघ्र'}
+                </div>
+              </div>
+            </div>
+            <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; background:${badgeColor}; color:${badgeText}; flex-shrink:0;">
+              ${r.due_date && r.due_date.includes("आज") ? '🔥 आज' : '⏳ देय'}
+            </span>
           `;
           container.appendChild(item);
         });
@@ -322,6 +391,18 @@ async function loadFarmerReminders() {
     }
   } catch (e) {
     if (container) container.innerHTML = `<div style="text-align:center; padding:12px; color:#EF4444; font-size:12px;">अनुस्मारक लोड त्रुटि: ${e.message}</div>`;
+  }
+}
+
+async function handleToggleFarmerReminder(reminderId) {
+  try {
+    await AgriAPI.toggleReminder(reminderId);
+    await loadFarmerReminders();
+    if (window.AgriHeader && window.AgriHeader.refreshNotifications) {
+      window.AgriHeader.refreshNotifications();
+    }
+  } catch (err) {
+    alert("स्थिति बदलने में त्रुटि: " + err.message);
   }
 }
 

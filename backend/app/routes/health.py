@@ -20,12 +20,34 @@ async def readiness_check():
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 
+from pydantic import BaseModel
+from typing import Optional
+from app.supabase_client import supabase_client
+
+class SupabaseReconnectRequest(BaseModel):
+    url: Optional[str] = None
+    key: Optional[str] = None
+
 @router.get("/api/v1/supabase/status")
 @router.get("/api/supabase/status")
 async def supabase_status_endpoint():
     """Returns live Supabase PostgreSQL connection status and table row counts."""
     return {
         **get_supabase_status(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+@router.post("/api/v1/supabase/reconnect")
+@router.post("/api/supabase/reconnect")
+async def supabase_reconnect_endpoint(payload: Optional[SupabaseReconnectRequest] = None):
+    """Forces an immediate re-evaluation and reconnection to Supabase Cloud Database."""
+    url = payload.url if payload else None
+    key = payload.key if payload else None
+    result = supabase_client.reconnect(url=url, api_key=key)
+    return {
+        "status": "OK",
+        "result": result,
+        "supabase": get_supabase_status(),
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 

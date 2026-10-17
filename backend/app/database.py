@@ -736,11 +736,15 @@ def get_supabase_status() -> Dict[str, Any]:
                 counts[tbl] = supabase_client.count(tbl)
         except Exception:
             pass
+    pid = supabase_client.get_project_id()
     return {
         "configured": is_cfg,
         "healthy": is_ok,
         "url": supabase_client.url if is_cfg else None,
+        "project_id": pid,
         "status": "connected" if is_ok else "offline",
+        "error": getattr(supabase_client, "_last_error", None),
+        "restore_url": f"https://supabase.com/dashboard/project/{pid}" if pid else None,
         "counts": counts
     }
 

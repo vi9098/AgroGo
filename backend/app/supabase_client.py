@@ -65,6 +65,16 @@ class SupabaseClient:
         }
         self._is_available: Optional[bool] = None
         self._last_health_check: float = 0.0
+        self._last_error: Optional[str] = None
+
+    def get_project_id(self) -> str:
+        """Extracts the Supabase project reference ID from the URL."""
+        if not self.url:
+            return ""
+        host = self.url.replace("https://", "").replace("http://", "").split("/")[0]
+        if ".supabase.co" in host:
+            return host.split(".supabase.co")[0]
+        return host
 
     def is_configured(self) -> bool:
         return bool(self.url and self.api_key)
@@ -74,38 +84,86 @@ class SupabaseClient:
             return self.check_health()
         return self._is_available
 
-    def check_health(self) -> bool:
-        """Verifies live connectivity to Supabase PostgREST endpoint with cooldown caching."""
+    def check_health(self, force: bool = False) -> bool:
+        """Verifies live connectivity to Supabase PostgREST endpoint with cooldown caching and DNS diagnostics."""
         if not self.is_configured():
             self._is_available = False
+            self._last_error = "Supabase URL or API key not configured."
             return False
 
         import time
         now = time.time()
-        # Cooldown: if health check failed recently, don't block requests with repeated DNS attempts
-        if self._is_available is False and (now - getattr(self, "_last_health_check", 0.0)) < 45.0:
+        # Cooldown: if health check failed recently and not forced, don't block requests with repeated attempts
+        if not force and self._is_available is False and (now - getattr(self, "_last_health_check", 0.0)) < 45.0:
             return False
 
         self._last_health_check = now
+        
+        # 1. DNS Pre-flight Check
         try:
-            # Query a known table with limit=1 to verify PostgREST table read access (fast 2.5s timeout)
-            r = self.session.get(f"{self.url}/rest/v1/crops", headers=self._headers, params={"limit": "1"}, timeout=2.5)
+            import socket
+            host = self.url.replace("https://", "").replace("http://", "").split("/")[0]
+            socket.gethostbyname(host)
+        except Exception as dns_err:
+            self._is_available = False
+            pid = self.get_project_id()
+            self._last_error = (
+                f"DNS resolution failed ({dns_err}). If this is a free-tier Supabase project, "
+                f"it may be paused due to inactivity. Visit https://supabase.com/dashboard/project/{pid} to restore it."
+            )
+            logger.warning(f"[Supabase Health Check] {self._last_error}")
+            return False
+
+        # 2. REST & Auth Health Check
+        try:
+            r = self.session.get(f"{self.url}/rest/v1/crops", headers=self._headers, params={"limit": "1"}, timeout=3.0)
             if r.status_code in (200, 206):
                 self._is_available = True
+                self._last_error = None
                 logger.info(f"[Supabase] Live PostgREST connection verified on {self.url} (HTTP 200)")
                 return True
-            # Alternative: verify GoTrue auth health
-            r_auth = self.session.get(f"{self.url}/auth/v1/health", headers=self._headers, timeout=2.5)
+            r_auth = self.session.get(f"{self.url}/auth/v1/health", headers=self._headers, timeout=3.0)
             if r_auth.status_code == 200:
                 self._is_available = True
+                self._last_error = None
                 logger.info(f"[Supabase] Live GoTrue connection verified on {self.url} (HTTP 200)")
                 return True
             self._is_available = False
+            self._last_error = f"Supabase responded with HTTP {r.status_code}: {r.text[:120]}"
             return False
         except Exception as e:
-            logger.debug(f"[Supabase Health Check] Connection error: {e}")
             self._is_available = False
+            self._last_error = f"Connection error: {e}"
+            logger.debug(f"[Supabase Health Check] Connection error: {e}")
             return False
+
+    def reconnect(self, url: Optional[str] = None, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Forces an immediate reconfiguration and health check against Supabase."""
+        if url:
+            self.url = url.rstrip("/")
+        if api_key:
+            self.api_key = api_key
+            self.secret_key = api_key
+            self.publishable_key = api_key
+
+        self._headers = {
+            "apikey": self.api_key,
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+        self._is_available = None
+        self._last_health_check = 0.0
+        self._last_error = None
+
+        ok = self.check_health(force=True)
+        return {
+            "connected": ok,
+            "url": self.url,
+            "error": self._last_error,
+            "project_id": self.get_project_id(),
+            "restore_dashboard_url": f"https://supabase.com/dashboard/project/{self.get_project_id()}" if self.get_project_id() else None
+        }
 
     def select(
         self,
