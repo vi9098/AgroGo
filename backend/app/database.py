@@ -68,6 +68,8 @@ def init_sql_schema():
                 district TEXT DEFAULT 'Varanasi',
                 village TEXT DEFAULT 'Rampur',
                 consent_json TEXT,
+                security_question TEXT,
+                security_answer_hash TEXT,
                 created_at TEXT,
                 status TEXT DEFAULT 'active',
                 role TEXT DEFAULT 'farmer'
@@ -361,6 +363,14 @@ def init_sql_schema():
             CREATE INDEX IF NOT EXISTS idx_mandi_commodity ON live_mandi_prices(commodity);
             CREATE INDEX IF NOT EXISTS idx_mandi_state ON live_mandi_prices(state);
         """)
+        # Ensure migration columns exist on existing local sqlite databases
+        for tbl, col, ctype in [
+            ("users", "security_question", "TEXT"),
+            ("users", "security_answer_hash", "TEXT"),
+        ]:
+            existing_cols = [r[1] for r in cur.execute(f"PRAGMA table_info({tbl})").fetchall()]
+            if col not in existing_cols:
+                cur.execute(f"ALTER TABLE {tbl} ADD COLUMN {col} {ctype}")
         conn.commit()
     finally:
         conn.close()
@@ -513,7 +523,7 @@ def parse_and_query_supabase(query: str, params: tuple = ()) -> List[Dict[str, A
     q_upper = q.upper()
 
     if not q_upper.startswith("SELECT"):
-        return []
+        return None
 
     # Count queries
     count_match = re.match(r"^SELECT\s+COUNT\(\*\)(?:\s+AS\s+([a-zA-Z0-9_]+))?\s+FROM\s+([a-zA-Z0-9_]+)\s*$", q, re.IGNORECASE)
@@ -526,7 +536,7 @@ def parse_and_query_supabase(query: str, params: tuple = ()) -> List[Dict[str, A
     # Table name
     m = re.search(r"FROM\s+([a-zA-Z0-9_]+)", q, re.IGNORECASE)
     if not m:
-        return []
+        return None
     table = m.group(1).lower()
 
     # Order
@@ -585,7 +595,7 @@ def parse_and_query_supabase(query: str, params: tuple = ()) -> List[Dict[str, A
         order=order_val,
         limit=limit_val
     )
-    return rows if rows is not None else []
+    return rows
 
 def execute_supabase_write(query: str, params: tuple = ()) -> Any:
     """Translates INSERT, UPDATE, DELETE queries to Supabase PostgREST."""
@@ -690,7 +700,7 @@ def query_db(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
     if supabase_client.is_available():
         try:
             rows = parse_and_query_supabase(query, params)
-            if rows:
+            if rows is not None:
                 return rows
         except Exception as e:
             logger.debug(f"[Supabase Query Bypassed] {e}")

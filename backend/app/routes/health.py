@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import datetime
-from app.database import get_supabase_status
+from app.database import get_supabase_status, query_db
 
 router = APIRouter(tags=["Health Checks"])
 
@@ -28,3 +28,14 @@ async def supabase_status_endpoint():
         **get_supabase_status(),
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
+
+@router.get("/api/v1/supabase/query")
+@router.get("/api/supabase/query")
+async def supabase_query_proxy(table: str, limit: int = 50):
+    """Secure proxy for fetching rows from Supabase with SQLite fallback without exposing secret keys to client."""
+    clean_table = "".join(c for c in table if c.isalnum() or c == "_")
+    allowed_tables = ["crops", "farms", "reminders", "crop_cycles", "live_mandi_prices", "district_crop_benchmarks", "knowledge_docs", "knowledge_sources"]
+    if clean_table not in allowed_tables:
+        raise HTTPException(status_code=400, detail="Table access restricted.")
+    rows = query_db(f"SELECT * FROM {clean_table} LIMIT ?", (limit,))
+    return rows

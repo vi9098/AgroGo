@@ -640,6 +640,9 @@
           <button class="btn btn-primary" id="btn-apply-weather-loc" onclick="handleApplyWeatherLocation()" style="padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;">
             🌤️ मौसम देखें
           </button>
+          <button type="button" class="btn-use-location" onclick="detectCurrentLocation({ stateSelectId: 'weather-state-select', districtSelectId: 'weather-district-select', onConfirmed: handleApplyWeatherLocation })" style="background:#DCFCE7; border:1.5px solid #86EFAC; color:#15803D; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s;" onmouseover="this.style.background='#BBF7D0'" onmouseout="this.style.background='#DCFCE7'" title="जीपीएस से वर्तमान स्थान का मौसम देखें">
+            <span>📍</span> वर्तमान स्थान
+          </button>
         </div>
       </div>
     </div>

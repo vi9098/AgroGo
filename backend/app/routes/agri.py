@@ -9,6 +9,9 @@ import shutil
 import os
 import uuid
 import datetime
+import json
+import math
+import requests
 
 from app.database import query_db, query_one, execute_db
 from app.services.agri_knowledge import AgriKnowledgeService, AGROVOC_CROPS, AGROVOC_PROBLEMS
@@ -417,3 +420,113 @@ def get_geo_hierarchy():
     """
     hierarchy = ml_service.get_supported_states_and_districts()
     return {"status": "OK", "states_count": len(hierarchy), "hierarchy": hierarchy}
+
+# Canonical locations registry for reverse geocoding & verified location queries
+LOCATIONS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend-html", "js", "india_locations_complete.json"))
+CANONICAL_LOCATIONS: Dict[str, Any] = {}
+if os.path.exists(LOCATIONS_PATH):
+    try:
+        with open(LOCATIONS_PATH, "r", encoding="utf-8") as f:
+            CANONICAL_LOCATIONS = json.load(f)
+    except Exception:
+        pass
+
+def _resolve_canonical_state(state_query: str) -> Optional[str]:
+    if not state_query:
+        return None
+    import re
+    q = state_query.strip().lower()
+    for s in CANONICAL_LOCATIONS.keys():
+        if s.lower() == q or q in s.lower() or s.lower() in q:
+            return s
+        en_match = re.search(r'\(([^)]+)\)', s)
+        if en_match and (en_match.group(1).lower() == q or q in en_match.group(1).lower() or en_match.group(1).lower() in q):
+            return s
+    return None
+
+def _resolve_canonical_district(state_key: str, district_query: str) -> Optional[str]:
+    if not state_key or not district_query or state_key not in CANONICAL_LOCATIONS:
+        return None
+    dists = CANONICAL_LOCATIONS[state_key]
+    q = district_query.strip().lower()
+    for d in dists.keys():
+        if d.lower() == q or q in d.lower() or d.lower() in q:
+            return d
+    return None
+
+def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0 # Earth radius in km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+@router.get("/agriculture/locations/all")
+def get_all_canonical_locations():
+    """Returns verified dataset of all 36 Indian States/UTs and their corresponding districts."""
+    return {
+        "status": "OK",
+        "total_states": len(CANONICAL_LOCATIONS),
+        "total_districts": sum(len(d) for d in CANONICAL_LOCATIONS.values()),
+        "locations": CANONICAL_LOCATIONS
+    }
+
+@router.get("/agriculture/reverse-geocode")
+def reverse_geocode_location(lat: float = Query(...), lon: float = Query(...)):
+    """
+    Reverse geocodes latitude/longitude into locality, district, state,
+    matching against canonical Indian geographic registry with offline nearest-district fallback.
+    """
+    locality = ""
+    raw_state = ""
+    raw_district = ""
+    display_name = ""
+
+    # 1. Attempt OSM Nominatim reverse geocode with short timeout
+    try:
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&accept-language=en,hi"
+        r = requests.get(url, headers={"User-Agent": "AgriGo-Platform/2.0 (agri@agrigo.in)", "Accept": "application/json"}, timeout=3.5)
+        if r.status_code == 200:
+            data = r.json()
+            display_name = data.get("display_name", "")
+            addr = data.get("address", {})
+            raw_state = addr.get("state", "")
+            raw_district = addr.get("state_district") or addr.get("district") or addr.get("county") or addr.get("city") or ""
+            locality = addr.get("village") or addr.get("town") or addr.get("suburb") or addr.get("city") or ""
+    except Exception:
+        pass
+
+    matched_state = _resolve_canonical_state(raw_state)
+    matched_district = _resolve_canonical_district(matched_state, raw_district) if matched_state else None
+
+    # 2. If match failed (or Nominatim failed/offline), use geographic proximity to find closest verified district
+    if not matched_state or not matched_district:
+        best_dist = float("inf")
+        best_state = None
+        best_district_key = None
+        for s_key, d_map in CANONICAL_LOCATIONS.items():
+            for d_key, d_info in d_map.items():
+                d_lat = d_info.get("lat")
+                d_lon = d_info.get("lon")
+                if d_lat is not None and d_lon is not None:
+                    h_dist = _haversine(lat, lon, d_lat, d_lon)
+                    if h_dist < best_dist:
+                        best_dist = h_dist
+                        best_state = s_key
+                        best_district_key = d_key
+        if best_state and best_district_key:
+            matched_state = best_state
+            matched_district = best_district_key
+            if not locality:
+                locality = best_district_key.split('(')[0].strip()
+
+    return {
+        "status": "OK",
+        "matched_state": matched_state or "उत्तर प्रदेश (Uttar Pradesh)",
+        "matched_district": matched_district or "वाराणसी (Varanasi)",
+        "locality": locality or "स्थानीय क्षेत्र",
+        "display_name": display_name or f"{matched_district}, {matched_state}",
+        "lat": lat,
+        "lon": lon
+    }

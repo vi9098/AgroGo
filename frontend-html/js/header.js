@@ -82,6 +82,10 @@
               </a>
             </div>
 
+            <button id="hdr-voice-btn" onclick="window.AgriVoiceNav && window.AgriVoiceNav.toggleListening()" style="cursor:pointer; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); color:#FFF; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'" title="आवाज से चलाएं (Voice Navigation) • Alt+V">
+              <span>🎙️</span> <span>बोलें</span>
+            </button>
+
             <select id="hdr-lang-select" class="form-select" style="width: auto; padding: 4px 24px 4px 10px; font-size: 11.5px; background-color: rgba(255,255,255,0.14); background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 8px center; background-size: 10px 10px; border-color: rgba(255,255,255,0.25); color: #FFF; border-radius: var(--r-full);" title="भाषा चुनें">
               <option value="hi" style="color:#000;">🇮🇳 हिंदी</option>
               <option value="en" style="color:#000;">🇬🇧 English</option>
@@ -459,6 +463,15 @@
       injectHeader({ page: pg });
     }
     setTimeout(checkAndShowCookieConsent, 600);
+
+    // Auto-inject Voice Navigation assistant across all pages if not already loaded
+    if (!window.AgriVoiceNav && typeof document !== "undefined" && !document.getElementById("script-voice-nav")) {
+      const vScript = document.createElement("script");
+      vScript.id = "script-voice-nav";
+      vScript.src = "js/voice-nav.js";
+      vScript.defer = true;
+      document.head.appendChild(vScript);
+    }
   });
 
   window.AgriHeader = {

@@ -244,9 +244,9 @@ class ReminderEngine:
         desc = f"किसान मौखिक/लिखित अनुरोध: {text}"
 
         execute_db("""
-            INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, category, priority, created_at)
-            VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'high', ?)
-        """, (rem_id, farmer_id, title, desc, due_date, rem_type, rem_type, now.isoformat()))
+            INSERT INTO reminders (id, farmer_id, title, description, due_date, is_completed, reminder_type, priority, created_at)
+            VALUES (?, ?, ?, ?, ?, 0, ?, 'high', ?)
+        """, (rem_id, farmer_id, title, desc, due_date, rem_type, now.isoformat()))
 
         return {
             "id": rem_id,

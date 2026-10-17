@@ -143,8 +143,11 @@
         </div>
 
         <!-- Location Info with Cascading State & District -->
-        <div class="section-title">
-          <span>📍</span> स्थान विवरण (Select State & District)
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div><span>📍</span> स्थान विवरण (Select State & District)</div>
+          <button type="button" class="btn-use-location" onclick="detectCurrentLocation({ stateSelectId: 'reg-state', districtSelectId: 'reg-district', villageInputId: 'reg-village' })" style="background:#DCFCE7; border:1.5px solid #86EFAC; color:#15803D; font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s;" onmouseover="this.style.background='#BBF7D0'" onmouseout="this.style.background='#DCFCE7'">
+            <span>📍</span> वर्तमान स्थान का उपयोग करें
+          </button>
         </div>
 
         <div class="form-row">

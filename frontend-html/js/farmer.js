@@ -593,10 +593,13 @@ function handleStateChange() {
     districts = Object.keys(window.INDIA_LOCATIONS[state]);
   }
   if (!districts || districts.length === 0) {
-    districts = ["वाराणसी (Varanasi)", "लखनऊ (Lucknow)"];
+    distSelect.innerHTML = '<option value="">-- जिला उपलब्ध नहीं --</option>';
+    distSelect.disabled = true;
+    return;
   }
 
-  distSelect.innerHTML = "";
+  distSelect.disabled = false;
+  distSelect.innerHTML = '<option value="">-- जिला चुनें (Select District) --</option>';
   districts.forEach(d => {
     const opt = document.createElement("option");
     opt.value = d;

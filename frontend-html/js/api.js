@@ -307,20 +307,12 @@ const AgriAPI = (() => {
     getSupabaseStatus: () => request("/api/v1/supabase/status"),
 
     supabaseFetch: async (table, params = "") => {
-      const SUPABASE_URL = window.SUPABASE_URL || "";
-      const SUPABASE_KEY = window.SUPABASE_KEY || "";
-      if (!SUPABASE_URL || !SUPABASE_KEY) {
+      try {
+        return await request(`/api/v1/supabase/query?table=${encodeURIComponent(table)}`);
+      } catch (err) {
+        console.warn(`[AgriAPI supabaseFetch] Falling back for table ${table}:`, err);
         return [];
       }
-      const url = `${SUPABASE_URL}/rest/v1/${table}${params ? (params.startsWith("?") ? params : "?" + params) : "?select=*"}`;
-      const res = await fetch(url, {
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json"
-        }
-      });
-      return await res.json();
     },
 
     // Legacy aliases
